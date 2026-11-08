@@ -12,7 +12,7 @@ class CarInfoAppService: CarAppService()  {
 	var carApp: CarInfoApp? = null
 	var readoutController: ReadoutCommandsReceiver? = null
 
-	override fun shouldStartApp(): Boolean = true
+	override fun shouldStartApp(): Boolean = false  // i3 Dash shows the car data instead
 
 	override fun onCarStart() {
 		Log.i(MainService.TAG, "Starting car info app")

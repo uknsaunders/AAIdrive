@@ -31,7 +31,8 @@ const val TAG = "MapView"
 class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess, val carAppAssets: CarAppResources,
              val mapAppMode: MapAppMode, val locationProvider: CarLocationProvider,
              val interaction: MapInteractionController, val mapPlaceSearch: MapPlaceSearch, val map: VirtualDisplayScreenCapture,
-             val title: String = "Map") {
+             val title: String = "Map",
+             val amName: String? = null, val amIcon: ByteArray? = null) {
 
 	val carappListener = CarAppListener()
 	val carConnection: BMWRemotingServer
@@ -44,6 +45,7 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 	val stateInput: RHMIState.PlainState
 	val stateInputState: InputState<MapResult>
 	val searchResultsView: SearchResultsView
+	var amHandle: Int? = null   // the car menu entry, when amName is given
 
 	// map state
 	var frameUpdater = FrameUpdater(map, object: FrameModeListener {
@@ -110,6 +112,33 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 		// register for events from the car
 		carConnection.rhmi_addActionEventHandler(rhmiHandle, "me.hufman.androidautoidrive.mapview", -1)
 		carConnection.rhmi_addHmiEventHandler(rhmiHandle, "me.hufman.androidautoidrive.mapview", -1, -1)
+
+		// optionally add a named icon to the car's menus that opens the full screen view
+		if (amName != null) {
+			amHandle = carConnection.am_create("0", "\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0000".toByteArray())
+			carConnection.am_addAppEventHandler(amHandle, "me.hufman.androidautoidrive.mapview.am")
+			createAmApp()
+		}
+	}
+
+	fun createAmApp() {
+		val handle = amHandle ?: return
+		val name = amName ?: return
+		val amInfo = mutableMapOf<Int, Any>(
+				0 to 145,   // basecore version
+				1 to name,  // app name
+				2 to (amIcon ?: ""),
+				3 to "VehicleInformation",   // section
+				4 to true,
+				5 to 790,   // weight
+				8 to fullImageView.state.id  // mainstateId
+		)
+		for (languageCode in 101..123) {
+			amInfo[languageCode] = name
+		}
+		synchronized(carConnection) {
+			carConnection.am_registerApp(handle, "androidautoidrive.i3dash", amInfo)
+		}
 	}
 
 	fun onCreate(handler: Handler) {
@@ -129,6 +158,16 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 	inner class CarAppListener: BaseBMWRemotingClient() {
 		var server: BMWRemotingServer? = null
 		var app: RHMIApplication? = null
+
+		override fun am_onAppEvent(handle: Int?, ident: String?, appId: String?, event: BMWRemoting.AMEvent?) {
+			Log.i(TAG, "Opening $title from the car's menu")
+			try {
+				app?.events?.values?.filterIsInstance<RHMIEvent.FocusEvent>()?.firstOrNull()?.triggerEvent(mapOf(0 to fullImageView.state.id))
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't open $title", e)
+			}
+			createAmApp()
+		}
 		override fun rhmi_onActionEvent(handle: Int?, ident: String?, actionId: Int?, args: MutableMap<*, *>?) {
 			Log.w(TAG, "Received rhmi_onActionEvent: handle=$handle ident=$ident actionId=$actionId args=$args")
 			try {

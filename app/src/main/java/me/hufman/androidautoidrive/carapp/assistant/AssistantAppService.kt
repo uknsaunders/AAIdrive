@@ -8,8 +8,9 @@ import me.hufman.androidautoidrive.utils.GraphicsHelpersAndroid
 class AssistantAppService: CarAppService() {
 	var carappAssistant: AssistantApp? = null
 
+	// i3 Dash: the voice assistant entry is switched off
 	override fun shouldStartApp(): Boolean {
-		return true
+		return false
 	}
 
 	override fun onCarStart() {

@@ -73,7 +73,8 @@ class DashAppService: CarAppService() {
 				MapInteractionControllerIntent(applicationContext),
 				DashPlaceSearch(carLocationProvider),
 				screenCapture,
-				"i3 Dash")
+				"i3 Dash", "i3 Dash",
+				resources.openRawResource(me.hufman.androidautoidrive.R.raw.i3dash_entry).use { it.readBytes() })
 		this.mapApp = mapApp
 		mapApp.onCreate(handler)
 	}
