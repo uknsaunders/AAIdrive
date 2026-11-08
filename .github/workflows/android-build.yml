@@ -1,11 +1,8 @@
 name: build  # used as the badge name
 
+# i3 Dash fork: the upstream test matrix only runs when started by hand
 on:
-  push:
-    branches: ['*']
-    tags: ['*']
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch:
 
 env:
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

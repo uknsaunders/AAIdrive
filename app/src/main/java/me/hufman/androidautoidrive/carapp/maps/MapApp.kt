@@ -30,7 +30,8 @@ const val TAG = "MapView"
 
 class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess, val carAppAssets: CarAppResources,
              val mapAppMode: MapAppMode, val locationProvider: CarLocationProvider,
-             val interaction: MapInteractionController, val mapPlaceSearch: MapPlaceSearch, val map: VirtualDisplayScreenCapture) {
+             val interaction: MapInteractionController, val mapPlaceSearch: MapPlaceSearch, val map: VirtualDisplayScreenCapture,
+             val title: String = "Map") {
 
 	val carappListener = CarAppListener()
 	val carConnection: BMWRemotingServer
@@ -73,7 +74,7 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 		Log.i(TAG, "Locating components to use")
 		val unclaimedStates = LinkedList(carApp.states.values)
 		menuView = MenuView(unclaimedStates.removeFirst { MenuView.fits(it) }, interaction, mapPlaceSearch, frameUpdater, mapAppMode)
-		fullImageView = FullImageView(unclaimedStates.removeFirst { FullImageView.fits(it) }, "Map", mapAppMode, object : FullImageInteraction {
+		fullImageView = FullImageView(unclaimedStates.removeFirst { FullImageView.fits(it) }, title, mapAppMode, object : FullImageInteraction {
 			override fun navigateUp() {
 				interaction.zoomIn(1)
 			}

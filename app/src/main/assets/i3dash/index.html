@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>i3 Dash</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* i3 Dash for the iDrive screen: drawn on the phone, sent to the car as pictures.
+   Wide layout: top strip, car + stats on the left third, sat nav on the right two-thirds.
+   No touch: the iDrive knob turns between pages. */
+:root{
+  --bg:#0a0e13; --panel:#111821; --panel2:#18212c; --line:#243243; --ink:#e7edf4; --muted:#8597ab;
+  --accent:#4c93ff; --accent-ink:#06101f; --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
+  --f-d:"Saira Semi Condensed","Arial Narrow",sans-serif; --f-b:"Barlow",system-ui,sans-serif;
+}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-b);overflow:hidden}
+*{box-sizing:border-box}
+.num{font-family:var(--f-d);font-variant-numeric:tabular-nums}
+.lbl{font:600 11px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+#app{display:grid;grid-template-rows:44px 1fr;height:100vh;width:100vw}
+header{display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font:700 18px var(--f-d)}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.tabs{display:flex;gap:6px}
+.tab{height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:var(--panel2);font:600 13px var(--f-b);display:flex;align-items:center;color:var(--muted)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sp{flex:1}
+.wx{font:600 17px var(--f-d)} .wx span{font:500 12px var(--f-b);color:var(--muted);margin-left:4px}
+.clock{font:600 20px var(--f-d)}
+.body{display:grid;grid-template-columns:36% 1fr;min-height:0}
+.body.wide{grid-template-columns:0 1fr}
+aside{position:relative;padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-right:1px solid var(--line);overflow:hidden;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end}
+.soc{font:700 48px var(--f-d);line-height:.85}.soc small{font-size:20px;color:var(--muted)}
+.spd{font:600 30px var(--f-d);line-height:1;text-align:right}
+.carwrap{position:relative;width:78%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
+.carwrap img{position:absolute;inset:0;width:100%;height:100%}
+.tag{position:absolute;transform:translate(-50%,-50%);font:600 12px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
+.tag:empty{display:none}
+.dot{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:rgba(76,147,255,.5)}
+.pbar{position:relative;height:8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+.pbar .f{position:absolute;top:0;bottom:0}
+.pbar .z{position:absolute;left:37.5%;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.m{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;min-width:0}
+.m .k{font:500 11px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m .v{font:600 19px var(--f-d);line-height:1.1;white-space:nowrap}
+.m .v small{font:500 11px var(--f-b);color:var(--muted);margin-left:2px}
+.frost{position:absolute;inset:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
+.frost h2{margin:0;font:600 22px var(--f-d)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:5px 14px;margin:0;font-size:15px}
+.kv dt{color:#a9b8c8}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.hint{margin-top:auto;color:var(--muted);font-size:12px}
+.nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
+#map{position:absolute;inset:0}
+.turn{position:absolute;left:12px;top:12px;max-width:62%;display:flex;gap:12px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px}
+.turn svg{width:44px;height:44px;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.turn .d{font:700 30px var(--f-d);line-height:1}
+.turn .i{font:600 15px var(--f-b)}
+.eta{position:absolute;left:12px;bottom:12px;display:flex;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 14px}
+.eta b{display:block;font:600 21px var(--f-d);line-height:1.05}
+.puck{position:absolute;left:50%;top:72%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:grid;place-items:center;z-index:5}
+.puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
+.puck svg{width:15px;height:15px;fill:#fff}
+.mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px;text-align:center;max-width:70%}
+.pages{position:absolute;right:12px;bottom:12px;display:flex;gap:5px;z-index:6}
+.pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
+.maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
+.maplibregl-ctrl-attrib a{color:var(--muted)!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><i></i>i3 Dash</div>
+    <div class="tabs" id="tabs"></div>
+    <span class="sp"></span>
+    <span class="wx num" id="wx"></span>
+    <span class="clock num" id="clock">--:--</span>
+  </header>
+  <div class="body" id="body">
+    <aside>
+      <div class="top">
+        <div><div class="lbl">Battery</div><div class="soc num"><span id="soc">--</span><small>%</small></div></div>
+        <div><div class="lbl" style="text-align:right">Speed</div><div class="spd num"><span id="spd">--</span> <span class="lbl" id="spdU">mph</span></div></div>
+      </div>
+      <div class="carwrap">
+        <img id="car" src="cars/mineral-grey--black.webp" alt="">
+        <span class="dot" style="left:72.3%;top:69%"></span><span class="tag" id="tgRange" style="left:63%;top:88%"></span>
+        <span class="dot" style="left:72.3%;top:22%"></span><span class="tag" id="tgCabin" style="left:80%;top:22%"></span>
+        <span class="dot" style="left:93.3%;top:64%"></span>
+      </div>
+      <div><div class="pbar"><div class="f" id="pf"></div><div class="z"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px"><span>regen</span><span id="pwTxt">--</span><span>drive</span></div></div>
+      <div class="g3">
+        <div class="m"><div class="k">Car range</div><div class="v" id="rCar">--</div></div>
+        <div class="m"><div class="k">At journey rate</div><div class="v" id="rJ">--</div></div>
+        <div class="m"><div class="k">Eco Pro gained</div><div class="v" id="rEco">--</div></div>
+        <div class="m"><div class="k">Journey</div><div class="v" id="jDist">--</div></div>
+        <div class="m"><div class="k">Efficiency</div><div class="v" id="jEff">--</div></div>
+        <div class="m"><div class="k">Car average</div><div class="v" id="jAvg">--</div></div>
+      </div>
+      <div id="panel"></div>
+    </aside>
+    <section class="nav">
+      <div id="map"></div>
+      <div class="puck"><i><svg viewBox="0 0 24 24"><path d="M12 3l7 17-7-4-7 4z"/></svg></i></div>
+      <div class="turn" id="turn" hidden><svg viewBox="0 0 48 48"><g id="arrow"><path d="M24 44V16M14 26l10-10 10 10"/></g></svg><div><div class="d num" id="turnD">--</div><div class="i" id="turnI">--</div></div></div>
+      <div class="eta" id="eta" hidden>
+        <div><b class="num" id="eArr">--</b><span class="lbl">Arrive</span></div>
+        <div><b class="num" id="eRem">--</b><span class="lbl">To go</span></div>
+        <div><b class="num" id="eBat" style="color:var(--good)">--</b><span class="lbl">Battery on arrival</span></div>
+      </div>
+      <div class="mapmsg" id="mapmsg" hidden></div>
+      <div class="pages" id="pages"></div>
+    </section>
+  </div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const N=window.I3Native||{speak(){},log(){},navigationEnded(){}};
+const log=m=>{try{N.log(String(m))}catch(e){}};
+const store={get(k,d){try{const v=localStorage.getItem('i3.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('i3.'+k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- settings ---------- */
+const USABLE_KWH=store.get('usableKwh',27.2);   // 94 Ah pack; 60 Ah = 18.8, 120 Ah = 37.9
+const PAINTS=['mineral-grey','capparis-white','fluid-black','ionic-silver','laurus-grey','melbourne-red','imperial-blue','galvanic-gold','jucaro-beige'];
+const PAINT_NAMES=['Mineral Grey','Capparis White','Fluid Black','Ionic Silver','Laurus Grey','Melbourne Red','Imperial Blue','Galvanic Gold','Jucaro Beige'];
+const BELTS=['black','body','frozen-grey','i-blue'],BELT_NAMES=['Black','Body colour','Frozen Grey','BMW i Blue'];
+let paint=store.get('paint',0); // index into body*4+belt
+function paintCar(){const b=Math.floor(paint/4)%9,e=paint%4;$('#car').src='cars/'+PAINTS[b]+'--'+BELTS[e]+'.webp'}
+paintCar();
+
+/* ---------- live data from the car ---------- */
+const D={};let miles=true,fahr=false;
+const MI=0.621371;
+const f=(v,d=0)=>v==null||isNaN(v)?'--':(+v).toFixed(d);
+const dist=km=>miles?km*MI:km, du=()=>miles?'mi':'km';
+const temp=c=>fahr?c*1.8+32:c, tu=()=>fahr?'°F':'°C';
+const sm=(v,u)=>v==='--'?'--':v+'<small>'+u+'</small>';
+
+/* journey: starts when the car first reports data, resets after 30 minutes without data */
+let J=store.get('journey',null),trips=store.get('trips',[]);
+function journeyTick(){
+  const now=Date.now();
+  if(!J||now-J.last>30*60000){
+    if(J&&J.km>0.3){trips.unshift({start:J.start,end:J.last,km:J.km,kwh:J.kwh});trips=trips.slice(0,30);store.set('trips',trips)}
+    J={start:now,last:now,km:0,kwh:0,odo0:D.odoKm??null,soc0:D.soc??null,lastSpeedT:now};
+  }
+  if(J.odo0==null&&D.odoKm!=null)J.odo0=D.odoKm;
+  if(J.soc0==null&&D.soc!=null)J.soc0=D.soc;
+  const dt=(now-J.lastSpeedT)/3600000;J.lastSpeedT=now;
+  if(D.odoKm!=null&&J.odo0!=null&&D.odoKm-J.odo0>=1)J.km=D.odoKm-J.odo0;
+  else if(D.speedKmh!=null)J.km+=D.speedKmh*Math.min(dt,0.01);
+  if(D.soc!=null&&J.soc0!=null)J.kwh=Math.max(0,(J.soc0-D.soc)/100*USABLE_KWH);
+  J.last=now;store.set('journey',J);
+}
+function kmPerKwh(){
+  if(J&&J.km>3&&J.kwh>0.3)return J.km/J.kwh;
+  if(D.avgConsumption){const u=String(D.avgConsumptionUnit||'');if(/MI|MPKWH|MILE/i.test(u))return D.avgConsumption/MI;return 100/D.avgConsumption}
+  return 6.3;
+}
+
+window.i3feed=function(d){
+  Object.assign(D,d);
+  if(D.units){const [dd,tt]=String(D.units).split(',');miles=dd==='Miles';fahr=tt==='FAHRENHEIT'}
+  journeyTick();render();
+  if(D.lat!=null)onPosition(D.lat,D.lon,D.heading);
+};
+
+/* ---------- pages, turned with the iDrive knob ---------- */
+const PAGES=['Car','Battery','Journey','Map','Paint'];let page=0;
+$('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab" data-i="${i}">${p}</span>`).join('');
+$('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
+window.i3knob=function(dir){
+  if(PAGES[page]==='Paint'){paint=(paint+(dir>0?1:35))%36;store.set('paint',paint);paintCar();drawPanel();return}
+  page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
+};
+window.i3shown=function(){if(PAGES[page]==='Paint'){page=0;showPage()}};
+function showPage(){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
+  document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
+  $('#body').classList.toggle('wide',PAGES[page]==='Map');
+  setTimeout(()=>map&&map.resize(),50);
+  drawPanel();
+}
+function drawPanel(){
+  const p=PAGES[page],el=$('#panel');
+  if(p==='Battery'){
+    el.innerHTML=`<div class="frost"><h2>High-voltage battery</h2><dl class="kv">
+      <dt>Charge</dt><dd>${f(D.soc,1)}%</dd>
+      <dt>Energy left (est.)</dt><dd>${f(D.soc!=null?D.soc/100*USABLE_KWH:null,1)} kWh</dd>
+      <dt>Range (car estimate)</dt><dd>${D.rangeKm!=null?f(dist(D.rangeKm))+' '+du():'--'}</dd>
+      <dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd>
+      <dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>
+      <dt>Odometer</dt><dd>${D.odoKm!=null?Math.round(dist(D.odoKm)).toLocaleString()+' '+du():'--'}</dd></dl>
+      <div class="hint">Turn the iDrive knob for the next page</div></div>`;
+  }else if(p==='Journey'){
+    const rows=[];if(J)rows.push({start:J.start,km:J.km,kwh:J.kwh,now:true});rows.push(...trips.slice(0,5));
+    el.innerHTML=`<div class="frost"><h2>Journeys</h2>${rows.map(r=>`<div class="m" style="display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:600">${r.now?'This journey':new Date(r.start).toLocaleString([], {weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="k">${f(dist(r.km),1)} ${du()} · ${f(r.kwh,1)} kWh</div></div>
+      <div class="v">${r.km>0.5&&r.kwh>0.1?(miles?f(r.km*MI/r.kwh,1)+'<small>mi/kWh</small>':f(r.kwh/r.km*100,1)+'<small>kWh/100km</small>'):'--'}</div></div>`).join('')}
+      <div class="hint">Energy is estimated from the change in battery %</div></div>`;
+  }else if(p==='Paint'){
+    const b=Math.floor(paint/4)%9,e=paint%4;
+    el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
+      <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
+      <div class="hint" style="margin-top:6px">Turn the knob to change colour · press to finish</div></div>`;
+  }else el.innerHTML='';
+}
+showPage();
+
+/* ---------- rendering ---------- */
+function render(){
+  $('#soc').textContent=f(D.soc);
+  const sp=D.speedKmh;$('#spd').textContent=sp!=null?f(miles?sp*MI:sp):'--';$('#spdU').textContent=miles?'mph':'km/h';
+  // torque: negative while regenerating, positive while driving
+  const tq=D.torqueNm,pf=$('#pf'),z=37.5;
+  if(tq==null){pf.style.width='0';$('#pwTxt').textContent='--'}
+  else if(tq<0){const w=Math.min(1,-tq/150)*z;pf.style.left=(z-w)+'%';pf.style.width=w+'%';pf.style.background='var(--good)';$('#pwTxt').textContent='regen '+f(-tq)+' Nm'}
+  else{const w=Math.min(1,tq/250)*(100-z);pf.style.left=z+'%';pf.style.width=w+'%';pf.style.background='var(--warn)';$('#pwTxt').textContent=f(tq)+' Nm'}
+  $('#tgRange').textContent=D.rangeKm!=null?f(dist(D.rangeKm))+' '+du():'';
+  $('#tgCabin').textContent=D.cabinC!=null?f(temp(D.cabinC))+'°':'';
+  $('#rCar').innerHTML=sm(D.rangeKm!=null?f(dist(D.rangeKm)):'--',du());
+  const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
+  $('#rJ').innerHTML=sm(k&&D.soc!=null?f(dist(D.soc/100*USABLE_KWH*k)):'--',du());
+  $('#rEco').innerHTML=sm(D.ecoWonKm!=null?f(dist(D.ecoWonKm),1):'--',du());
+  $('#jDist').innerHTML=sm(J?f(dist(J.km),1):'--',du());
+  $('#jEff').innerHTML=sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100km');
+  $('#jAvg').innerHTML=D.avgConsumption!=null?sm(f(D.avgConsumption,1),String(D.avgConsumptionUnit||'').replace(/_/g,'/').toLowerCase()):'--';
+  $('#wx').innerHTML=D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'';
+  if(PAGES[page]==='Battery')drawPanel();
+}
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})},1000);
+
+/* ---------- sat nav: MapLibre + OpenFreeMap maps, OSRM routing ---------- */
+let map=null,pos=null,heading=0,route=null,spoken={};
+const DEFAULT=[-2.035,49.195];
+function mapMsg(t){const m=$('#mapmsg');m.textContent=t;m.hidden=!t}
+try{
+  if(!window.maplibregl)throw new Error('no maplibre');
+  map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
+    interactive:false,attributionControl:{compact:true},fadeDuration:0});
+  map.on('load',()=>{
+    map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
+    map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
+    mapMsg('');
+  });
+  map.on('error',e=>log('map error '+(e&&e.error&&e.error.message)));
+  mapMsg('Loading map…');
+}catch(e){mapMsg('The map needs mobile data on your phone');log(e.message)}
+function placeCamera(){
+  if(!map||!pos)return;
+  const h=map.getContainer().clientHeight;
+  map.jumpTo({center:pos,bearing:heading,pitch:60,zoom:route?16.5:16,padding:{top:h*0.45,bottom:0,left:0,right:0}});
+}
+let lastSaved=0;
+function onPosition(lat,lon,hd){
+  pos=[lon,lat];
+  if(hd!=null&&!isNaN(hd))heading=((hd%360)+360)%360; // already turned into a compass bearing on the phone
+  placeCamera();
+  if(Date.now()-lastSaved>60000){lastSaved=Date.now();store.set('lastPos',pos)}
+  if(route)navUpdate();
+}
+
+/* routing */
+function hav(a,b){const r=Math.PI/180,dLa=(b[1]-a[1])*r,dLo=(b[0]-a[0])*r,s=Math.sin(dLa/2)**2+Math.cos(a[1]*r)*Math.cos(b[1]*r)*Math.sin(dLo/2)**2;return 12742000*Math.asin(Math.sqrt(s))}
+async function routeTo(lat,lon){
+  const from=pos||store.get('lastPos',DEFAULT);
+  try{
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${from[0]},${from[1]};${lon},${lat}?overview=full&geometries=geojson&steps=true`);
+    const j=await r.json();if(!j.routes||!j.routes.length)throw new Error(j.message||'no route');
+    const rt=j.routes[0],coords=rt.geometry.coordinates,cum=[0];
+    for(let i=1;i<coords.length;i++)cum.push(cum[i-1]+hav(coords[i-1],coords[i]));
+    const steps=[];let acc=0;for(const leg of rt.legs)for(const s of leg.steps){steps.push({at:acc,s});acc+=s.distance}
+    const scale=cum[cum.length-1]/(acc||1);steps.forEach(x=>x.at*=scale);
+    route={coords,cum,steps,total:cum[cum.length-1],dur:rt.duration,dest:[lon,lat],idx:0,along:0,off:0};spoken={};
+    map&&map.getSource('route')&&map.getSource('route').setData({type:'Feature',geometry:rt.geometry});
+    $('#turn').hidden=false;$('#eta').hidden=false;navUpdate();
+  }catch(e){log('route failed '+e.message);N.speak('Sorry, I could not find a route');}
+}
+window.i3navigate=(lat,lon)=>{page=0;showPage();routeTo(lat,lon)};
+window.i3recalc=()=>{if(route)routeTo(route.dest[1],route.dest[0])};
+window.i3stopNav=()=>{route=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});placeCamera()};
+function project(p){
+  const R=route,c=R.coords,lat0=p[1]*Math.PI/180,kx=111320*Math.cos(lat0),ky=110540;let best={d:1e12,along:R.along,i:R.idx};
+  for(let i=Math.max(0,R.idx-30);i<Math.min(c.length-1,R.idx+400);i++){
+    const ax=(c[i][0]-p[0])*kx,ay=(c[i][1]-p[1])*ky,bx=(c[i+1][0]-p[0])*kx,by=(c[i+1][1]-p[1])*ky,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+    let t=l2?-(ax*dx+ay*dy)/l2:0;t=Math.max(0,Math.min(1,t));const d=Math.hypot(ax+t*dx,ay+t*dy);
+    if(d<best.d)best={d,i,along:R.cum[i]+t*(R.cum[i+1]-R.cum[i])}}
+  return best;
+}
+const MOD={straight:0,'slight right':40,right:90,'sharp right':135,uturn:180,'sharp left':-135,left:-90,'slight left':-40};
+const ord=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:n%10<4?n%10:0]);
+function stepText(s){const m=s.maneuver,mod=m.modifier||'',road=s.name||s.ref||'',to=road?' onto '+road:'';
+  switch(m.type){case'depart':return'Head off'+(road?' on '+road:'');case'arrive':return'Arrive at your destination';
+    case'roundabout':case'rotary':return'At the roundabout, take the '+ord(m.exit||1)+' exit'+to;case'roundabout turn':return'At the roundabout, turn '+mod+to;
+    case'fork':return'Keep '+(mod.includes('left')?'left':'right')+to;case'end of road':return'At the end of the road, turn '+mod+to;
+    case'continue':case'new name':return!mod||mod==='straight'?'Continue'+(road?' on '+road:''):'Bear '+mod+to;
+    default:return mod==='straight'?'Continue'+to:mod?'Turn '+mod+to:'Continue'+to}}
+function fmtD(m){if(miles){const mi=m/1609.34;return mi<0.1?Math.max(10,Math.round(m*1.0936/10)*10)+' yd':mi<10?mi.toFixed(1)+' mi':Math.round(mi)+' mi'}return m<1000?Math.max(10,Math.round(m/10)*10)+' m':(m/1000).toFixed(1)+' km'}
+function navUpdate(){
+  if(!route||!pos)return;
+  const pr=project(pos);route.idx=pr.i;
+  if(pr.d>70){if(++route.off>=4){route.off=0;log('off route');window.i3recalc();return}}else route.off=0;
+  route.along=Math.max(route.along,pr.along);
+  const rem=Math.max(0,route.total-route.along);
+  if(rem<30){$('#turnD').textContent='Arrived';$('#turnI').textContent='';if(!spoken.arr){spoken.arr=1;N.speak('You have arrived');setTimeout(()=>{window.i3stopNav();N.navigationEnded()},8000)}return}
+  const next=route.steps.find(x=>x.at>route.along+8)||route.steps[route.steps.length-1],dn=Math.max(0,next.at-route.along),txt=stepText(next.s);
+  $('#turnD').textContent=fmtD(dn);$('#turnI').textContent=txt;
+  const t=next.s.maneuver.type;$('#arrow').setAttribute('transform',t==='arrive'?'':`rotate(${MOD[next.s.maneuver.modifier]??0} 24 26)`);
+  const key=Math.round(next.at);
+  if(dn<400&&dn>120&&!spoken[key+'a']){spoken[key+'a']=1;N.speak('In '+fmtD(dn).replace('yd','yards').replace(' mi',' miles').replace(' km',' kilometres').replace(/(\d) m$/,'$1 metres')+', '+txt)}
+  if(dn<=60&&!spoken[key+'b']){spoken[key+'b']=1;N.speak(txt)}
+  const remSec=route.dur*rem/route.total;
+  $('#eArr').textContent=new Date(Date.now()+remSec*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  $('#eRem').textContent=fmtD(rem);
+  if(D.soc!=null){const arr=D.soc-(rem/1000/kmPerKwh())/USABLE_KWH*100;$('#eBat').textContent=f(Math.max(0,arr))+'%';$('#eBat').style.color=arr<10?'var(--bad)':arr<20?'var(--warn)':'var(--good)'}
+}
+log('i3 Dash page ready '+innerWidth+'x'+innerHeight);
+</script>
+</body>
+</html>

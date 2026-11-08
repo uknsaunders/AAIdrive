@@ -81,6 +81,13 @@ android {
 
     signingConfigs {
         release
+        // i3 Dash: a fixed key so each new build installs over the last one
+        i3dash {
+            storeFile file("../i3dash-debug.keystore")
+            storePassword "android"
+            keyAlias "i3dash"
+            keyPassword "android"
+        }
     }
     if (isRunningOnCI) {
         // configure keystore
@@ -117,6 +124,7 @@ android {
             signingConfig signingConfigs.release
         }
         debug {
+            signingConfig signingConfigs.i3dash
             if (runProguardInDebug || isRunningOnCI) {        // make sure to run tests against minified code in CI, but local dev can be fast
                 postprocessing {
                     removeUnusedCode true

@@ -75,3 +75,7 @@
 
 # And Spotify SDK
 -dontwarn com.spotify.base.annotations.NotNull
+# i3 Dash: keep the methods the dashboard page calls through window.I3Native
+-keepclassmembers class me.hufman.androidautoidrive.carapp.dash.DashController$Bridge {
+    @android.webkit.JavascriptInterface <methods>;
+}

@@ -1,10 +1,8 @@
 name: usage
 
+# i3 Dash fork: not used
 on:
-  schedule:
-    - cron: '15 15 * * *'
-  push:
-    branches: ['usage']
+  workflow_dispatch:
 
 jobs:
   updateUsage:
