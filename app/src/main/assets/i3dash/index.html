@@ -209,7 +209,7 @@ function drawPanel(){
     el.innerHTML=`<div class="frost"><h2>High-voltage battery</h2><dl class="kv">
       <dt>Charge</dt><dd>${f(D.soc,1)}%</dd>
       <dt>Energy left (est.)</dt><dd>${f(D.soc!=null?D.soc/100*USABLE_KWH:null,1)} kWh</dd>
-      <dt>Range (car estimate)</dt><dd>${D.rangeKm!=null?f(dist(D.rangeKm))+' '+du():'--'}</dd>
+      <dt>Range (car estimate)</dt><dd>${D.rangeKm!=null?f(D.rangeKm)+' '+du():'--'}</dd>
       <dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd>
       <dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>
       <dt>Odometer</dt><dd>${D.odoKm!=null?Math.round(dist(D.odoKm)).toLocaleString()+' '+du():'--'}</dd></dl>
@@ -239,9 +239,9 @@ function render(){
   if(tq==null){pf.style.width='0';$('#pwTxt').textContent='--'}
   else if(tq<0){const w=Math.min(1,-tq/150)*z;pf.style.left=(z-w)+'%';pf.style.width=w+'%';pf.style.background='var(--good)';$('#pwTxt').textContent='regen '+f(-tq)+' Nm'}
   else{const w=Math.min(1,tq/250)*(100-z);pf.style.left=z+'%';pf.style.width=w+'%';pf.style.background='var(--warn)';$('#pwTxt').textContent=f(tq)+' Nm'}
-  $('#tgRange').textContent=D.rangeKm!=null?f(dist(D.rangeKm))+' '+du():'';
+  $('#tgRange').textContent=D.rangeKm!=null?f(D.rangeKm)+' '+du():'';
   $('#tgCabin').textContent=D.cabinC!=null?f(temp(D.cabinC))+'°':'';
-  $('#rCar').innerHTML=sm(D.rangeKm!=null?f(dist(D.rangeKm)):'--',du());
+  $('#rCar').innerHTML=sm(D.rangeKm!=null?f(D.rangeKm):'--',du());
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
   $('#rJ').innerHTML=sm(k&&D.soc!=null?f(dist(D.soc/100*USABLE_KWH*k)):'--',du());
   const eco=D.ecoWonKm==null?null:(D.ecoWonKm>300?D.ecoWonKm/1000:D.ecoWonKm); // some cars report metres
