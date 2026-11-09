@@ -27,13 +27,13 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-b);overflow:hidden}
 *{box-sizing:border-box}
 .num{font-family:var(--f-d);font-variant-numeric:tabular-nums}
-.lbl{font:600 11px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.lbl{font:600 13px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 #app{display:grid;grid-template-rows:40px 1fr;height:100vh;width:100vw;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
 header{display:flex;align-items:center;gap:14px;padding:0 6px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:8px;font:700 18px var(--f-d)}
 .brand i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .tabs{display:flex;gap:6px}
-.tab{height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:var(--panel2);font:600 13px var(--f-b);display:flex;align-items:center;color:var(--muted)}
+.tab{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);font:600 15px var(--f-b);display:flex;align-items:center;color:var(--muted)}
 .tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .sp{flex:1}
 .wx{font:600 17px var(--f-d)} .wx span{font:500 12px var(--f-b);color:var(--muted);margin-left:4px}
@@ -46,37 +46,38 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .spd{font:600 26px var(--f-d);line-height:1;text-align:right}
 .carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
-.tag{position:absolute;transform:translate(-50%,-50%);font:600 12px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
+.tag{position:absolute;transform:translate(-50%,-50%);font:600 15px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
 .tag:empty{display:none}
 .dot{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:rgba(76,147,255,.5)}
 .pbar{position:relative;height:8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .pbar .f{position:absolute;top:0;bottom:0}
 .pbar .z{position:absolute;left:37.5%;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pscale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:2px}
 .m{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px 8px;min-width:0}
-.m .k{font:500 11px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m .v{font:600 17px var(--f-d);line-height:1.1;white-space:nowrap}
-.m .v small{font:500 11px var(--f-b);color:var(--muted);margin-left:2px}
+.m .k{font:600 14px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m .v{font:600 23px var(--f-d);line-height:1.1;white-space:nowrap}
+.m .v small{font:500 14px var(--f-b);color:var(--muted);margin-left:2px}
 .frost{position:absolute;inset:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
 .frost h2{margin:0;font:600 22px var(--f-d)}
-.kv{display:grid;grid-template-columns:1fr auto;gap:5px 14px;margin:0;font-size:15px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 14px;margin:0;font-size:18px}
 .kv dt{color:#a9b8c8}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
-.hint{margin-top:auto;color:var(--muted);font-size:12px}
+.hint{margin-top:auto;color:var(--muted);font-size:14px}
 .nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
 #map{position:absolute;inset:0}
 .turn{position:absolute;left:12px;top:12px;max-width:62%;display:flex;gap:12px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px}
 .turn svg{width:44px;height:44px;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .turn .d{font:700 30px var(--f-d);line-height:1}
-.turn .i{font:600 15px var(--f-b)}
+.turn .i{font:600 17px var(--f-b)}
 .eta{position:absolute;left:12px;bottom:12px;display:flex;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 14px}
-.eta b{display:block;font:600 21px var(--f-d);line-height:1.05}
+.eta b{display:block;font:600 24px var(--f-d);line-height:1.05}
 .puck{position:absolute;left:50%;top:72%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:grid;place-items:center;z-index:5}
 .puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
 .puck svg{width:15px;height:15px;fill:#fff}
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px;text-align:center;max-width:70%}
 .pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
 .pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
-.diag{position:absolute;right:16px;top:10px;font:500 11px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:right}
+.diag{position:absolute;right:16px;top:10px;font:500 13px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:right}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
@@ -104,11 +105,11 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <span class="dot" style="left:93.3%;top:64%"></span>
       </div>
       <div><div class="pbar"><div class="f" id="pf"></div><div class="z"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px"><span>regen</span><span id="pwTxt">--</span><span>drive</span></div></div>
+        <div class="pscale"><span>regen</span><span id="pwTxt">--</span><span>drive</span></div></div>
       <div class="g3">
         <div class="m"><div class="k">Car range</div><div class="v" id="rCar">--</div></div>
-        <div class="m"><div class="k">At journey rate</div><div class="v" id="rJ">--</div></div>
-        <div class="m"><div class="k">Eco Pro gained</div><div class="v" id="rEco">--</div></div>
+        <div class="m"><div class="k">Journey rate</div><div class="v" id="rJ">--</div></div>
+        <div class="m"><div class="k">Eco Pro +</div><div class="v" id="rEco">--</div></div>
         <div class="m"><div class="k">Journey</div><div class="v" id="jDist">--</div></div>
         <div class="m"><div class="k">Efficiency</div><div class="v" id="jEff">--</div></div>
         <div class="m"><div class="k">Car average</div><div class="v" id="jAvg">--</div></div>
@@ -191,7 +192,7 @@ const PAGES=['Car','Battery','Journey','Map','Paint'];let page=0;
 $('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab" data-i="${i}">${p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
-  if(PAGES[page]==='Paint'){paint=(paint+(dir>0?1:35))%36;store.set('paint',paint);paintCar();drawPanel();return}
+  if(PAGES[page]==='Paint'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
   page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
 };
 window.i3shown=function(){if(PAGES[page]==='Paint'){page=0;showPage()}};
@@ -224,7 +225,7 @@ function drawPanel(){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
-      <div class="hint" style="margin-top:6px">Turn the knob to change colour · press to finish</div></div>`;
+      <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
   }else el.innerHTML='';
 }
 showPage();
@@ -246,8 +247,8 @@ function render(){
   const eco=D.ecoWonKm==null?null:(D.ecoWonKm>300?D.ecoWonKm/1000:D.ecoWonKm); // some cars report metres
   $('#rEco').innerHTML=sm(eco!=null?f(dist(eco),1):'--',du());
   $('#jDist').innerHTML=sm(J?f(dist(J.km),1):'--',du());
-  $('#jEff').innerHTML=sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100km');
-  $('#jAvg').innerHTML=D.avgConsumption!=null?sm(f(D.avgConsumption,1),String(D.avgConsumptionUnit||'').replace(/_/g,'/').toLowerCase()):'--';
+  $('#jEff').innerHTML=sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100');
+  $('#jAvg').innerHTML=D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--';
   $('#wx').innerHTML=D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'';
   if(PAGES[page]==='Battery')drawPanel();
 }
