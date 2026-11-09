@@ -4,12 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>i3 Dash</title>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="lib/maplibre-gl.css">
+<link rel="stylesheet" href="lib/leaflet.css">
 <style>
 /* i3 Dash for the iDrive screen: drawn on the phone, sent to the car as pictures.
    Wide layout: top strip, car + stats on the left third, sat nav on the right two-thirds.
    No touch: the iDrive knob turns between pages. */
+@font-face{font-family:"Saira Semi Condensed";src:url(fonts/SairaSemiCondensed-SemiBold.ttf);font-weight:500 600}
+@font-face{font-family:"Saira Semi Condensed";src:url(fonts/SairaSemiCondensed-Bold.ttf);font-weight:700}
+@font-face{font-family:"Barlow";src:url(fonts/Barlow-Regular.ttf);font-weight:400}
+@font-face{font-family:"Barlow";src:url(fonts/Barlow-Medium.ttf);font-weight:500}
+@font-face{font-family:"Barlow";src:url(fonts/Barlow-SemiBold.ttf);font-weight:600 700}
+/* the iDrive draws its own status bar across the top and its sidebar arc down the left,
+   so everything is kept inside these margins */
+:root{--safe-top:46px;--safe-left:40px;--safe-right:34px;--safe-bottom:6px}
 :root{
   --bg:#0a0e13; --panel:#111821; --panel2:#18212c; --line:#243243; --ink:#e7edf4; --muted:#8597ab;
   --accent:#4c93ff; --accent-ink:#06101f; --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
@@ -20,8 +28,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 *{box-sizing:border-box}
 .num{font-family:var(--f-d);font-variant-numeric:tabular-nums}
 .lbl{font:600 11px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-#app{display:grid;grid-template-rows:44px 1fr;height:100vh;width:100vw}
-header{display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+#app{display:grid;grid-template-rows:40px 1fr;height:100vh;width:100vw;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
+header{display:flex;align-items:center;gap:14px;padding:0 6px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:8px;font:700 18px var(--f-d)}
 .brand i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .tabs{display:flex;gap:6px}
@@ -32,11 +40,11 @@ header{display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--
 .clock{font:600 20px var(--f-d)}
 .body{display:grid;grid-template-columns:36% 1fr;min-height:0}
 .body.wide{grid-template-columns:0 1fr}
-aside{position:relative;padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-right:1px solid var(--line);overflow:hidden;min-width:0}
+aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);overflow:hidden;min-width:0}
 .top{display:flex;justify-content:space-between;align-items:flex-end}
-.soc{font:700 48px var(--f-d);line-height:.85}.soc small{font-size:20px;color:var(--muted)}
-.spd{font:600 30px var(--f-d);line-height:1;text-align:right}
-.carwrap{position:relative;width:78%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
+.soc{font:700 40px var(--f-d);line-height:.85}.soc small{font-size:20px;color:var(--muted)}
+.spd{font:600 26px var(--f-d);line-height:1;text-align:right}
+.carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
 .tag{position:absolute;transform:translate(-50%,-50%);font:600 12px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
 .tag:empty{display:none}
@@ -45,9 +53,9 @@ aside{position:relative;padding:10px 12px;display:flex;flex-direction:column;gap
 .pbar .f{position:absolute;top:0;bottom:0}
 .pbar .z{position:absolute;left:37.5%;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.m{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;min-width:0}
+.m{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px 8px;min-width:0}
 .m .k{font:500 11px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m .v{font:600 19px var(--f-d);line-height:1.1;white-space:nowrap}
+.m .v{font:600 17px var(--f-d);line-height:1.1;white-space:nowrap}
 .m .v small{font:500 11px var(--f-b);color:var(--muted);margin-left:2px}
 .frost{position:absolute;inset:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
 .frost h2{margin:0;font:600 22px var(--f-d)}
@@ -66,8 +74,10 @@ aside{position:relative;padding:10px 12px;display:flex;flex-direction:column;gap
 .puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
 .puck svg{width:15px;height:15px;fill:#fff}
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px;text-align:center;max-width:70%}
-.pages{position:absolute;right:12px;bottom:12px;display:flex;gap:5px;z-index:6}
+.pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
 .pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
+.diag{position:absolute;right:16px;top:10px;font:500 11px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:right}
+.leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
 </style>
@@ -116,11 +126,13 @@ aside{position:relative;padding:10px 12px;display:flex;flex-direction:column;gap
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
       <div class="pages" id="pages"></div>
+      <div class="diag" id="diag"></div>
     </section>
   </div>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="lib/maplibre-gl.js"></script>
+<script src="lib/leaflet.js"></script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
@@ -187,7 +199,7 @@ function showPage(){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
   document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
   $('#body').classList.toggle('wide',PAGES[page]==='Map');
-  setTimeout(()=>map&&map.resize(),50);
+  setTimeout(()=>{map&&map.resize();flat&&flat.invalidateSize()},50);
   drawPanel();
 }
 function drawPanel(){
@@ -231,34 +243,63 @@ function render(){
   $('#rCar').innerHTML=sm(D.rangeKm!=null?f(dist(D.rangeKm)):'--',du());
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
   $('#rJ').innerHTML=sm(k&&D.soc!=null?f(dist(D.soc/100*USABLE_KWH*k)):'--',du());
-  $('#rEco').innerHTML=sm(D.ecoWonKm!=null?f(dist(D.ecoWonKm),1):'--',du());
+  const eco=D.ecoWonKm==null?null:(D.ecoWonKm>300?D.ecoWonKm/1000:D.ecoWonKm); // some cars report metres
+  $('#rEco').innerHTML=sm(eco!=null?f(dist(eco),1):'--',du());
   $('#jDist').innerHTML=sm(J?f(dist(J.km),1):'--',du());
   $('#jEff').innerHTML=sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100km');
   $('#jAvg').innerHTML=D.avgConsumption!=null?sm(f(D.avgConsumption,1),String(D.avgConsumptionUnit||'').replace(/_/g,'/').toLowerCase()):'--';
   $('#wx').innerHTML=D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'';
   if(PAGES[page]==='Battery')drawPanel();
 }
-setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})},1000);
+function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+tickClock();setInterval(tickClock,1000);
 
-/* ---------- sat nav: MapLibre + OpenFreeMap maps, OSRM routing ---------- */
-let map=null,pos=null,heading=0,route=null,spoken={};
+/* ---------- sat nav: MapLibre 3D map (OpenFreeMap), 2D fallback, OSRM routing ---------- */
+let map=null,flat=null,flatRoute=null,pos=null,heading=0,route=null,spoken={};
 const DEFAULT=[-2.035,49.195];
 function mapMsg(t){const m=$('#mapmsg');m.textContent=t;m.hidden=!t}
-try{
-  if(!window.maplibregl)throw new Error('no maplibre');
-  map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
-    interactive:false,attributionControl:{compact:true},fadeDuration:0});
-  map.on('load',()=>{
-    map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-    map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
-    map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
-    mapMsg('');
-  });
-  map.on('error',e=>log('map error '+(e&&e.error&&e.error.message)));
-  mapMsg('Loading map…');
-}catch(e){mapMsg('The map needs mobile data on your phone');log(e.message)}
+function diag(t){$('#diag').textContent=t;log('map: '+t)}
+function webglOk(){try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){return false}}
+function startFlatMap(reason){
+  // 2D fallback that needs no graphics acceleration: raster map pictures (CARTO, from OpenStreetMap data)
+  try{
+    if(map){try{map.remove()}catch(e){}map=null}
+    const c=store.get('lastPos',DEFAULT);
+    flat=L.map('map',{zoomControl:false,attributionControl:true,dragging:false,keyboard:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,fadeAnimation:false,zoomAnimation:false}).setView([c[1],c[0]],16);
+    const t=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(flat);
+    t.on('tileerror',()=>diag('2D map: map pictures not loading — check mobile data'));
+    t.on('load',()=>{mapMsg('');diag('2D map ('+reason+')')});
+    flatRoute=L.polyline([],{color:'#4c93ff',weight:7}).addTo(flat);
+    mapMsg('Loading map…');
+  }catch(e){mapMsg('Map unavailable: '+e.message);diag('2D map failed: '+e.message)}
+}
+function startMap(){
+  if(!window.maplibregl){startFlatMap('3D library missing');return}
+  if(!webglOk()){startFlatMap('no 3D graphics here');return}
+  try{
+    map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
+      interactive:false,attributionControl:{compact:true},fadeDuration:0,preserveDrawingBuffer:true});
+    let loaded=false;
+    map.on('load',()=>{
+      loaded=true;
+      map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+      map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
+      map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
+      mapMsg('');diag('3D map');placeCamera();
+    });
+    map.on('error',e=>{const m=(e&&e.error&&e.error.message)||'error';diag('3D map: '+m)});
+    mapMsg('Loading map…');
+    // if the style hasn't arrived in 20 seconds, fall back to the 2D map
+    setTimeout(()=>{if(!loaded)startFlatMap('3D map timed out')},20000);
+  }catch(e){startFlatMap('3D failed: '+e.message)}
+}
+startMap();
+// quick internet check, shown on screen, so problems are easy to spot from the driver's seat
+fetch('https://tiles.openfreemap.org/styles/liberty',{cache:'no-store'}).then(r=>log('internet ok '+r.status)).catch(e=>diag('No internet from the phone ('+e.message+')'));
 function placeCamera(){
-  if(!map||!pos)return;
+  if(!pos)return;
+  if(flat){flat.setView([pos[1],pos[0]],route?17:16,{animate:false});return}
+  if(!map)return;
   const h=map.getContainer().clientHeight;
   map.jumpTo({center:pos,bearing:heading,pitch:60,zoom:route?16.5:16,padding:{top:h*0.45,bottom:0,left:0,right:0}});
 }
@@ -267,6 +308,7 @@ function onPosition(lat,lon,hd){
   pos=[lon,lat];
   if(hd!=null&&!isNaN(hd))heading=((hd%360)+360)%360; // already turned into a compass bearing on the phone
   placeCamera();
+  if(flat)$('.puck svg').style.transform='rotate('+heading+'deg)';
   if(Date.now()-lastSaved>60000){lastSaved=Date.now();store.set('lastPos',pos)}
   if(route)navUpdate();
 }
@@ -284,12 +326,13 @@ async function routeTo(lat,lon){
     const scale=cum[cum.length-1]/(acc||1);steps.forEach(x=>x.at*=scale);
     route={coords,cum,steps,total:cum[cum.length-1],dur:rt.duration,dest:[lon,lat],idx:0,along:0,off:0};spoken={};
     map&&map.getSource('route')&&map.getSource('route').setData({type:'Feature',geometry:rt.geometry});
+    flatRoute&&flatRoute.setLatLngs(coords.map(c=>[c[1],c[0]]));
     $('#turn').hidden=false;$('#eta').hidden=false;navUpdate();
   }catch(e){log('route failed '+e.message);N.speak('Sorry, I could not find a route');}
 }
 window.i3navigate=(lat,lon)=>{page=0;showPage();routeTo(lat,lon)};
 window.i3recalc=()=>{if(route)routeTo(route.dest[1],route.dest[0])};
-window.i3stopNav=()=>{route=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});placeCamera()};
+window.i3stopNav=()=>{route=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});flatRoute&&flatRoute.setLatLngs([]);placeCamera()};
 function project(p){
   const R=route,c=R.coords,lat0=p[1]*Math.PI/180,kx=111320*Math.cos(lat0),ky=110540;let best={d:1e12,along:R.along,i:R.idx};
   for(let i=Math.max(0,R.idx-30);i<Math.min(c.length-1,R.idx+400);i++){
