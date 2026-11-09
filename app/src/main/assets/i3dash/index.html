@@ -17,7 +17,7 @@
 @font-face{font-family:"Barlow";src:url(fonts/Barlow-SemiBold.ttf);font-weight:600 700}
 /* the iDrive draws its own status bar across the top and its sidebar arc down the left,
    so everything is kept inside these margins */
-:root{--safe-top:46px;--safe-left:40px;--safe-right:34px;--safe-bottom:6px}
+:root{--safe-top:46px;--safe-left:40px;--safe-right:84px;--safe-bottom:6px}
 :root{
   --bg:#0a0e13; --panel:#111821; --panel2:#18212c; --line:#243243; --ink:#e7edf4; --muted:#8597ab;
   --accent:#4c93ff; --accent-ink:#06101f; --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
@@ -27,68 +27,69 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-b);overflow:hidden}
 *{box-sizing:border-box}
 .num{font-family:var(--f-d);font-variant-numeric:tabular-nums}
-.lbl{font:600 13px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-#app{display:grid;grid-template-rows:40px 1fr;height:100vh;width:100vw;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
+.lbl{font:600 16px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+#app{display:grid;grid-template-rows:46px 1fr;height:100vh;width:100vw;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
 header{display:flex;align-items:center;gap:14px;padding:0 6px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:8px;font:700 18px var(--f-d)}
 .brand i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .tabs{display:flex;gap:6px}
-.tab{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);font:600 15px var(--f-b);display:flex;align-items:center;color:var(--muted)}
+.tab{height:38px;padding:0 16px;border-radius:19px;border:1px solid var(--line);background:var(--panel2);font:600 19px var(--f-b);display:flex;align-items:center;color:var(--muted)}
 .tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .sp{flex:1}
 .wx{font:600 17px var(--f-d)} .wx span{font:500 12px var(--f-b);color:var(--muted);margin-left:4px}
 .clock{font:600 20px var(--f-d)}
-.body{display:grid;grid-template-columns:36% 1fr;min-height:0}
+.body{display:grid;grid-template-columns:50% 1fr;min-height:0}
 .body.wide{grid-template-columns:0 1fr}
 aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);overflow:hidden;min-width:0}
 .top{display:flex;justify-content:space-between;align-items:flex-end}
-.soc{font:700 40px var(--f-d);line-height:.85}.soc small{font-size:20px;color:var(--muted)}
-.spd{font:600 26px var(--f-d);line-height:1;text-align:right}
+.soc{font:700 56px var(--f-d);line-height:.85}.soc small{font-size:26px;color:var(--muted)}
+.spd{font:600 40px var(--f-d);line-height:1;text-align:right}
 .carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
-.tag{position:absolute;transform:translate(-50%,-50%);font:600 15px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
+.tag{position:absolute;transform:translate(-50%,-50%);font:600 20px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
 .tag:empty{display:none}
 .dot{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:rgba(76,147,255,.5)}
 .pbar{position:relative;height:8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .pbar .f{position:absolute;top:0;bottom:0}
 .pbar .z{position:absolute;left:37.5%;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45}
-.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.pscale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:2px}
-.m{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px 8px;min-width:0}
-.m .k{font:600 14px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m .v{font:600 23px var(--f-d);line-height:1.1;white-space:nowrap}
-.m .v small{font:500 14px var(--f-b);color:var(--muted);margin-left:2px}
-.frost{position:absolute;inset:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
-.frost h2{margin:0;font:600 22px var(--f-d)}
-.kv{display:grid;grid-template-columns:1fr auto;gap:6px 14px;margin:0;font-size:18px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.pscale{display:flex;justify-content:space-between;font-size:16px;color:var(--muted);margin-top:2px}
+.m{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:4px 10px;min-width:0}
+.m .k{font:600 18px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m .v{font:600 32px var(--f-d);line-height:1.1;white-space:nowrap}
+.m .v small{font:500 17px var(--f-b);color:var(--muted);margin-left:2px}
+.frost{position:absolute;inset:0;padding:16px 20px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
+.frost h2{margin:0;font:600 30px var(--f-d)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:7px 16px;margin:0;font-size:23px}
 .kv dt{color:#a9b8c8}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
-.np{position:absolute;left:10px;right:10px;top:62px;display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border-radius:10px;background:rgba(17,24,33,.62);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);z-index:3}
-.np img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex:none;background:var(--panel2)}
-.np .t{font:600 16px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np .a{font:500 13px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.np .x{min-width:0;flex:1}.np .st{font:600 13px var(--f-d);color:var(--muted)}
+.np{position:absolute;right:12px;top:12px;width:min(56%,420px);display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border-radius:10px;background:rgba(17,24,33,.62);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);z-index:3}
+.np img{width:44px;height:44px;border-radius:6px;object-fit:cover;flex:none;background:var(--panel2)}
+.np .t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np .a{font:500 16px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np .x{min-width:0;flex:1}.np .st{font:600 18px var(--f-d);color:var(--muted)}
 .mus{display:flex;gap:16px;align-items:center;margin-top:4px}
-.mus img{width:150px;height:150px;border-radius:12px;object-fit:cover;flex:none;background:var(--panel2);box-shadow:0 6px 24px rgba(0,0,0,.45)}
-.mus .t{font:600 24px var(--f-d);line-height:1.1}.mus .a{font:500 18px var(--f-b);color:#c3cfdb;margin-top:4px}.mus .al{font:500 15px var(--f-b);color:var(--muted);margin-top:2px}
-.src{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mus img{width:180px;height:180px;border-radius:12px;object-fit:cover;flex:none;background:var(--panel2);box-shadow:0 6px 24px rgba(0,0,0,.45)}
+.mus .t{font:600 32px var(--f-d);line-height:1.1}.mus .a{font:500 23px var(--f-b);color:#c3cfdb;margin-top:4px}.mus .al{font:500 19px var(--f-b);color:var(--muted);margin-top:2px}
+.src{display:inline-flex;align-items:center;gap:6px;font:600 16px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .src i{width:8px;height:8px;border-radius:50%;background:var(--good)}.src i.p{background:var(--muted)}
 .prog{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.prog b{display:block;height:100%;background:var(--ink)}
-.times{display:flex;justify-content:space-between;font:500 14px var(--f-d);color:var(--muted);margin-top:3px}
-.hint{margin-top:auto;color:var(--muted);font-size:14px}
+.times{display:flex;justify-content:space-between;font:500 17px var(--f-d);color:var(--muted);margin-top:3px}
+.hint{margin-top:auto;color:var(--muted);font-size:17px}
 .nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
 #map{position:absolute;inset:0}
 .turn{position:absolute;left:12px;top:12px;max-width:62%;display:flex;gap:12px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px}
 .turn svg{width:44px;height:44px;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.turn .d{font:700 30px var(--f-d);line-height:1}
-.turn .i{font:600 17px var(--f-b)}
+.turn .d{font:700 36px var(--f-d);line-height:1}
+.turn .i{font:600 21px var(--f-b)}
 .eta{position:absolute;left:12px;bottom:12px;display:flex;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 14px}
-.eta b{display:block;font:600 24px var(--f-d);line-height:1.05}
+.eta b{display:block;font:600 30px var(--f-d);line-height:1.05}
 .puck{position:absolute;left:50%;top:72%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:grid;place-items:center;z-index:5}
 .puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
 .puck svg{width:15px;height:15px;fill:#fff}
-.mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px;text-align:center;max-width:70%}
+.mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:18px;text-align:center;max-width:70%}
 .pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
 .pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
-.diag{position:absolute;right:16px;top:10px;font:500 13px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:right}
+.diag{position:absolute;left:12px;bottom:12px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
+.diag:empty{display:none}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
@@ -97,16 +98,13 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 <body>
 <div id="app">
   <header>
-    <div class="brand"><i></i>i3 Dash</div>
     <div class="tabs" id="tabs"></div>
-    <span class="sp"></span>
-    <span class="wx num" id="wx"></span>
-    <span class="clock num" id="clock">--:--</span>
   </header>
   <div class="body" id="body">
     <aside>
       <div class="top">
         <div><div class="lbl">Battery</div><div class="soc num"><span id="soc">--</span><small>%</small></div></div>
+        <div style="text-align:center"><div class="lbl">Outside</div><div class="spd num" id="wx">--</div></div>
         <div><div class="lbl" style="text-align:right">Speed</div><div class="spd num"><span id="spd">--</span> <span class="lbl" id="spdU">mph</span></div></div>
       </div>
       <div class="carwrap">
@@ -125,7 +123,6 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div class="m"><div class="k">Efficiency</div><div class="v" id="jEff">--</div></div>
         <div class="m"><div class="k">Car average</div><div class="v" id="jAvg">--</div></div>
       </div>
-      <div class="np" id="np" hidden></div>
       <div id="panel"></div>
     </aside>
     <section class="nav">
@@ -138,6 +135,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div><b class="num" id="eBat" style="color:var(--good)">--</b><span class="lbl">Battery on arrival</span></div>
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
+      <div class="np" id="np" hidden></div>
       <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
     </section>
@@ -259,7 +257,7 @@ function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60
 let artUrl='';
 window.i3art=function(u){artUrl=u||'';_c.delete('#nph');drawNowPlaying();if(PAGES[page]==='Music')drawPanel()};
 function drawNowPlaying(){
-  const m=D.media,show=!!(m&&m.title)&&PAGES[page]==='Car';
+  const m=D.media,show=!!(m&&m.title)&&PAGES[page]!=='Music';
   const el=$('#np');if(el.hidden===show)el.hidden=!show;
   if(!show)return;
   H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div></div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
@@ -285,12 +283,11 @@ function render(){
   H('#jDist',sm(J?f(dist(J.km),1):'--',du()));
   H('#jEff',sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100'));
   H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
-  H('#wx',D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'');
+  T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
   if(PAGES[page]==='Battery'||PAGES[page]==='Music')drawPanel();
   drawNowPlaying();
 }
-function tickClock(){T('#clock',new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}))}
-tickClock();setInterval(tickClock,1000);
+
 
 /* ---------- sat nav: MapLibre 3D map (OpenFreeMap), 2D fallback, OSRM routing ---------- */
 let map=null,flat=null,flatRoute=null,pos=null,heading=0,route=null,spoken={};
@@ -306,7 +303,7 @@ function startFlatMap(reason){
     flat=L.map('map',{zoomControl:false,attributionControl:true,dragging:false,keyboard:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,fadeAnimation:false,zoomAnimation:false}).setView([c[1],c[0]],16);
     const t=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(flat);
     t.on('tileerror',()=>diag('2D map: map pictures not loading — check mobile data'));
-    t.on('load',()=>{mapMsg('');diag('2D map ('+reason+')')});
+    t.on('load',()=>{mapMsg('');diag('');log('2D map ('+reason+')')});
     flatRoute=L.polyline([],{color:'#4c93ff',weight:7}).addTo(flat);
     mapMsg('Loading map…');
   }catch(e){mapMsg('Map unavailable: '+e.message);diag('2D map failed: '+e.message)}
@@ -315,7 +312,7 @@ function startMap(){
   if(!window.maplibregl){startFlatMap('3D library missing');return}
   if(!webglOk()){startFlatMap('no 3D graphics here');return}
   try{
-    map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
+    map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/dark',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
       interactive:false,attributionControl:{compact:true},fadeDuration:0,preserveDrawingBuffer:true});
     let loaded=false;
     map.on('load',()=>{
@@ -323,7 +320,9 @@ function startMap(){
       map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
       map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
       map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
-      mapMsg('');diag('3D map');placeCamera();
+      try{if(!map.getLayer('building-3d'))map.addLayer({id:'building-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
+        paint:{'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-color':'#2a3646','fill-extrusion-height':['coalesce',['get','render_height'],6],'fill-extrusion-opacity':0.85}},'route-casing')}catch(e){log('3d buildings: '+e.message)}
+      mapMsg('');diag('');placeCamera();
     });
     map.on('error',e=>{const m=(e&&e.error&&e.error.message)||'error';diag('3D map: '+m)});
     mapMsg('Loading map…');
@@ -333,7 +332,7 @@ function startMap(){
 }
 startMap();
 // quick internet check, shown on screen, so problems are easy to spot from the driver's seat
-fetch('https://tiles.openfreemap.org/styles/liberty',{cache:'no-store'}).then(r=>log('internet ok '+r.status)).catch(e=>diag('No internet from the phone ('+e.message+')'));
+fetch('https://tiles.openfreemap.org/styles/dark',{cache:'no-store'}).then(r=>log('internet ok '+r.status)).catch(e=>diag('No internet from the phone ('+e.message+')'));
 function placeCamera(){
   if(!pos)return;
   if(flat){flat.setView([pos[1],pos[0]],route?17:16,{animate:false});return}
