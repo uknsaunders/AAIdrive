@@ -41,6 +41,8 @@ jobs:
         uses: ./.github/actions/download-externals-action
 
       - name: Build i3 Dash
+        env:
+          W3W_API_KEY: ${{ secrets.W3W_API_KEY }}
         run: ./gradlew assembleNomapNonalyticsFullDebug --stacktrace
 
       - name: Name the app file

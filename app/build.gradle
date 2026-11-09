@@ -77,6 +77,9 @@ android {
 
         // show the donation information, which is not allowed in the play store
         buildConfigField "boolean", "SHOW_DONATION", "true"
+
+        // i3 Dash: what3words API key, from the W3W_API_KEY GitHub secret
+        buildConfigField "String", "W3W_API_KEY", '"' + (System.env.W3W_API_KEY ? System.env.W3W_API_KEY : "") + '"'
     }
 
     signingConfigs {
