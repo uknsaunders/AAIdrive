@@ -53,6 +53,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
 .tag{position:absolute;transform:translate(-50%,-50%);font:600 20px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
 .tag:empty{display:none}
+.ty{display:none;position:absolute;transform:translate(-50%,-50%);width:23%;aspect-ratio:1;border-radius:50%;border:5px solid var(--warn);box-shadow:0 0 16px var(--warn),inset 0 0 16px var(--warn);z-index:3}
+.ty.low,.ty.bad{display:block}.ty.bad{border-color:var(--bad);box-shadow:0 0 16px var(--bad),inset 0 0 16px var(--bad)}
+.ty i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 22px var(--f-d);white-space:nowrap;background:rgba(10,14,19,.85);border-radius:5px;padding:0 6px;font-style:normal}
 .dot{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:rgba(76,147,255,.5)}
 .pbar{position:relative;height:8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .pbar .f{position:absolute;top:0;bottom:0}
@@ -115,9 +118,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div class="ovr"><div class="lbl">Speed</div><div class="spd num"><span id="spd">--</span> <span class="lbl" id="spdU">mph</span></div></div>
       <div class="carwrap">
         <img id="car" src="cars/mineral-grey--black.webp" alt="">
-        <span class="dot" style="left:72.3%;top:69%"></span><span class="tag" id="tgRange" style="left:63%;top:88%"></span>
         <span class="dot" style="left:72.3%;top:22%"></span><span class="tag" id="tgCabin" style="left:80%;top:22%"></span>
-        <span class="dot" style="left:93.3%;top:64%"></span>
+        <span class="ty" id="ty-fl" style="left:18%;top:75%"></span><span class="ty" id="ty-fr" style="left:57.7%;top:76%"></span>
+        <span class="ty" id="ty-rl" style="left:78%;top:66%"></span><span class="ty" id="ty-rr" style="left:93%;top:68%"></span>
       </div>
       </div>
       <div><div class="pbar"><div class="f" id="pf"></div><div class="z"></div></div>
@@ -257,7 +260,7 @@ function drawPanel(){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
-      <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd></dl>
+      <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd><dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd></dl>
       <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
   }else el.innerHTML='';
 }
@@ -279,6 +282,39 @@ async function fetchWx(){
     const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+p[1].toFixed(2)+'&longitude='+p[0].toFixed(2)+'&current=weather_code,is_day');
     const j=await r.json();wxKey=wxFromCode(j.current.weather_code,j.current.is_day===1)}catch(e){log('weather: '+e.message)}
   setWxIcon();
+}
+/* tyre pressures: found by name among whatever tyre-related data the car sends, shown only when low */
+const TY_LOW=1.9,TY_BAD=1.6;
+function tyreScan(){
+  const out={};
+  const walk=(o,path)=>{
+    if(o&&typeof o==='object'){for(const k in o)walk(o[k],path+'.'+k);return}
+    if(typeof o!=='number'||[0,255,1023,4095,65535].includes(o))return;
+    const w=path.replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase().split(/[^a-z]+/).filter(Boolean);
+    if(w.some(x=>/^(temp|temperature|warn|warning|status|state|flag|mode|threshold|target|setpoint)$/.test(x)))return;
+    const has=a=>w.some(x=>a.includes(x));
+    const fr=has(['front','fl','fr','vl','vr','vorn','vorne']),re=has(['rear','back','rl','rr','hl','hr','hinten']);
+    const le=has(['left','fl','rl','vl','hl','links','l']),ri=has(['right','fr','rr','vr','hr','rechts','r']);
+    if(fr===re||le===ri)return;
+    out[(fr?'f':'r')+(le?'l':'r')]=o>=100?o/100:(o>=10?o/14.504:o);   // kPa, psi or bar
+  };
+  for(const k in D)if(k.startsWith('tyre:'))walk(D[k],k.slice(5));
+  return out;
+}
+function drawTyres(){
+  const v=tyreScan();
+  for(const pos of ['fl','fr','rl','rr']){
+    const el=$('#ty-'+pos),b=v[pos],low=b!=null&&b<TY_LOW;
+    const cls='ty'+(low?(b<TY_BAD?' bad':' low'):'');
+    if(el.className!==cls)el.className=cls;
+    H('#ty-'+pos,low?'<i>'+pos.toUpperCase()+' '+b.toFixed(1)+' bar</i>':'');
+  }
+}
+function tyreInfo(){
+  const v=tyreScan(),keys=Object.keys(D).filter(k=>k.startsWith('tyre:'));
+  if(Object.keys(v).length)return ['fl','fr','rl','rr'].map(p=>v[p]!=null?p.toUpperCase()+' '+v[p].toFixed(1):'').filter(Boolean).join('  ')+' bar';
+  if(keys.length)return 'car sends '+keys.map(k=>k.slice(5)).join(', ')+' – '+JSON.stringify(D[keys[0]]).slice(0,60);
+  return 'no tyre data from the car';
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -305,7 +341,7 @@ function render(){
   if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
   else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
   else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
-  T('#tgRange',D.rangeKm!=null?f(D.rangeKm)+' '+du():'');
+  drawTyres();
   T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
   H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
@@ -316,7 +352,7 @@ function render(){
   H('#jEff',sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100'));
   H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
   T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
-  if(PAGES[page]==='Battery'||PAGES[page]==='Music')drawPanel();
+  if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info')drawPanel();
   drawNowPlaying();
   const mh=$('#mhint'),wantHint=!route;if(mh.hidden===wantHint)mh.hidden=!wantHint;
 }

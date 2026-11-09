@@ -126,9 +126,31 @@ class DashController(val context: Context,
 		watch(CDS.ENGINE.RPMSPEED, "rpm", false) {
 			it.tryAsJsonPrimitive("RPMSpeed")?.tryAsInt
 		}
+		watchTyres()
 		watch(CDS.VEHICLE.UNITS, "units", true) {
 			val units = CDSVehicleUnits.fromCdsProperty(it)
 			"${units.distanceUnits.name},${units.temperatureUnits.name}"
+		}
+	}
+
+	/**
+	 * Tyre pressures: the exact CDS name isn't known up front, so watch every car property
+	 * whose name looks tyre-related and let the page work out which number is which tyre
+	 */
+	private fun watchTyres() {
+		try {
+			CDS::class.java.declaredClasses.filter { it.isEnum }.forEach { group ->
+				group.enumConstants?.forEach { constant ->
+					val name = (constant as? Enum<*>)?.name ?: return@forEach
+					val property = constant as? CDSProperty ?: return@forEach
+					if (Regex("TIRE|TYRE|RDC|PRESSURE").containsMatchIn(name) && !name.contains("BARO")) {
+						Log.i(TAG, "Watching tyre property $name")
+						watch(property, "tyre:$name", true) { JSONObject(it.toString()) }
+					}
+				}
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't look for tyre properties", e)
 		}
 	}
 
