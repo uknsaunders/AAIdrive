@@ -62,6 +62,17 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .frost h2{margin:0;font:600 22px var(--f-d)}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 14px;margin:0;font-size:18px}
 .kv dt{color:#a9b8c8}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.np{position:absolute;left:10px;right:10px;top:62px;display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border-radius:10px;background:rgba(17,24,33,.62);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);z-index:3}
+.np img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex:none;background:var(--panel2)}
+.np .t{font:600 16px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np .a{font:500 13px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np .x{min-width:0;flex:1}.np .st{font:600 13px var(--f-d);color:var(--muted)}
+.mus{display:flex;gap:16px;align-items:center;margin-top:4px}
+.mus img{width:150px;height:150px;border-radius:12px;object-fit:cover;flex:none;background:var(--panel2);box-shadow:0 6px 24px rgba(0,0,0,.45)}
+.mus .t{font:600 24px var(--f-d);line-height:1.1}.mus .a{font:500 18px var(--f-b);color:#c3cfdb;margin-top:4px}.mus .al{font:500 15px var(--f-b);color:var(--muted);margin-top:2px}
+.src{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.src i{width:8px;height:8px;border-radius:50%;background:var(--good)}.src i.p{background:var(--muted)}
+.prog{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.prog b{display:block;height:100%;background:var(--ink)}
+.times{display:flex;justify-content:space-between;font:500 14px var(--f-d);color:var(--muted);margin-top:3px}
 .hint{margin-top:auto;color:var(--muted);font-size:14px}
 .nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
 #map{position:absolute;inset:0}
@@ -114,6 +125,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div class="m"><div class="k">Efficiency</div><div class="v" id="jEff">--</div></div>
         <div class="m"><div class="k">Car average</div><div class="v" id="jAvg">--</div></div>
       </div>
+      <div class="np" id="np" hidden></div>
       <div id="panel"></div>
     </aside>
     <section class="nav">
@@ -137,6 +149,10 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
+const _c=new Map();
+function T(sel,v){v=String(v);if(_c.get(sel+'t')===v)return;_c.set(sel+'t',v);$(sel).textContent=v}
+function H(sel,v){v=String(v);if(_c.get(sel+'h')===v)return;_c.set(sel+'h',v);$(sel).innerHTML=v}
+function S(el,k,v){if(el.style[k]!==v)el.style[k]=v}
 const N=window.I3Native||{speak(){},log(){},navigationEnded(){}};
 const log=m=>{try{N.log(String(m))}catch(e){}};
 const store={get(k,d){try{const v=localStorage.getItem('i3.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('i3.'+k,JSON.stringify(v))}catch(e){}}};
@@ -188,7 +204,7 @@ window.i3feed=function(d){
 };
 
 /* ---------- pages, turned with the iDrive knob ---------- */
-const PAGES=['Car','Battery','Journey','Map','Paint'];let page=0;
+const PAGES=['Car','Music','Battery','Journey','Map','Paint'];let page=0;
 $('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab" data-i="${i}">${p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
@@ -199,12 +215,13 @@ window.i3shown=function(){if(PAGES[page]==='Paint'){page=0;showPage()}};
 function showPage(){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
   document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
-  $('#body').classList.toggle('wide',PAGES[page]==='Map');
-  setTimeout(()=>{map&&map.resize();flat&&flat.invalidateSize()},50);
-  drawPanel();
+  const wasWide=$('#body').classList.contains('wide'),isWide=PAGES[page]==='Map';
+  $('#body').classList.toggle('wide',isWide);
+  if(wasWide!==isWide){map&&map.resize();flat&&flat.invalidateSize()}
+  drawPanel();drawNowPlaying();
 }
 function drawPanel(){
-  const p=PAGES[page],el=$('#panel');
+  const p=PAGES[page],el={set innerHTML(v){H('#panel',v)}};
   if(p==='Battery'){
     el.innerHTML=`<div class="frost"><h2>High-voltage battery</h2><dl class="kv">
       <dt>Charge</dt><dd>${f(D.soc,1)}%</dd>
@@ -221,6 +238,15 @@ function drawPanel(){
       <div class="k">${f(dist(r.km),1)} ${du()} · ${f(r.kwh,1)} kWh</div></div>
       <div class="v">${r.km>0.5&&r.kwh>0.1?(miles?f(r.km*MI/r.kwh,1)+'<small>mi/kWh</small>':f(r.kwh/r.km*100,1)+'<small>kWh/100km</small>'):'--'}</div></div>`).join('')}
       <div class="hint">Energy is estimated from the change in battery %</div></div>`;
+  }else if(p==='Music'){
+    const m=D.media,art=artUrl||'';
+    if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Allow i3 Dash notification access on your phone to show what is playing.':'Nothing playing.'}</div>
+      <div style="color:var(--muted);font-size:15px">Start Spotify, Amazon Music, Apple Music or BBC Sounds on your phone, or pick them from the car’s Media menu.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
+    const pct=m.dur>0?Math.min(100,m.pos/m.dur*100):0;
+    el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
+      <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
+      ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
+      <div class="hint">Use the steering wheel buttons to skip · turn the knob for the next page</div></div>`;
   }else if(p==='Paint'){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
@@ -228,38 +254,49 @@ function drawPanel(){
       <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
   }else el.innerHTML='';
 }
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+let artUrl='';
+window.i3art=function(u){artUrl=u||'';_c.delete('#nph');drawNowPlaying();if(PAGES[page]==='Music')drawPanel()};
+function drawNowPlaying(){
+  const m=D.media,show=!!(m&&m.title)&&PAGES[page]==='Car';
+  const el=$('#np');if(el.hidden===show)el.hidden=!show;
+  if(!show)return;
+  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div></div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
+}
 showPage();
 
 /* ---------- rendering ---------- */
 function render(){
-  $('#soc').textContent=f(D.soc);
-  const sp=D.speedKmh;$('#spd').textContent=sp!=null?f(miles?sp*MI:sp):'--';$('#spdU').textContent=miles?'mph':'km/h';
+  T('#soc',f(D.soc));
+  const sp=D.speedKmh;T('#spd',sp!=null?f(miles?sp*MI:sp):'--');T('#spdU',miles?'mph':'km/h');
   // torque: negative while regenerating, positive while driving
   const tq=D.torqueNm,pf=$('#pf'),z=37.5;
-  if(tq==null){pf.style.width='0';$('#pwTxt').textContent='--'}
-  else if(tq<0){const w=Math.min(1,-tq/150)*z;pf.style.left=(z-w)+'%';pf.style.width=w+'%';pf.style.background='var(--good)';$('#pwTxt').textContent='regen '+f(-tq)+' Nm'}
-  else{const w=Math.min(1,tq/250)*(100-z);pf.style.left=z+'%';pf.style.width=w+'%';pf.style.background='var(--warn)';$('#pwTxt').textContent=f(tq)+' Nm'}
-  $('#tgRange').textContent=D.rangeKm!=null?f(D.rangeKm)+' '+du():'';
-  $('#tgCabin').textContent=D.cabinC!=null?f(temp(D.cabinC))+'°':'';
-  $('#rCar').innerHTML=sm(D.rangeKm!=null?f(D.rangeKm):'--',du());
+  if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
+  else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
+  else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
+  T('#tgRange',D.rangeKm!=null?f(D.rangeKm)+' '+du():'');
+  T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
+  H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
-  $('#rJ').innerHTML=sm(k&&D.soc!=null?f(dist(D.soc/100*USABLE_KWH*k)):'--',du());
+  H('#rJ',sm(k&&D.soc!=null?f(dist(D.soc/100*USABLE_KWH*k)):'--',du()));
   const eco=D.ecoWonKm==null?null:(D.ecoWonKm>300?D.ecoWonKm/1000:D.ecoWonKm); // some cars report metres
-  $('#rEco').innerHTML=sm(eco!=null?f(dist(eco),1):'--',du());
-  $('#jDist').innerHTML=sm(J?f(dist(J.km),1):'--',du());
-  $('#jEff').innerHTML=sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100');
-  $('#jAvg').innerHTML=D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--';
-  $('#wx').innerHTML=D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'';
-  if(PAGES[page]==='Battery')drawPanel();
+  H('#rEco',sm(eco!=null?f(dist(eco),1):'--',du()));
+  H('#jDist',sm(J?f(dist(J.km),1):'--',du()));
+  H('#jEff',sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100'));
+  H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
+  H('#wx',D.ambientC!=null?f(temp(D.ambientC))+tu()+'<span>outside</span>':'');
+  if(PAGES[page]==='Battery'||PAGES[page]==='Music')drawPanel();
+  drawNowPlaying();
 }
-function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+function tickClock(){T('#clock',new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}))}
 tickClock();setInterval(tickClock,1000);
 
 /* ---------- sat nav: MapLibre 3D map (OpenFreeMap), 2D fallback, OSRM routing ---------- */
 let map=null,flat=null,flatRoute=null,pos=null,heading=0,route=null,spoken={};
 const DEFAULT=[-2.035,49.195];
 function mapMsg(t){const m=$('#mapmsg');m.textContent=t;m.hidden=!t}
-function diag(t){$('#diag').textContent=t;log('map: '+t)}
+function diag(t){if(_c.get('diag')===t)return;_c.set('diag',t);$('#diag').textContent=t;log('map: '+t)}
 function webglOk(){try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){return false}}
 function startFlatMap(reason){
   // 2D fallback that needs no graphics acceleration: raster map pictures (CARTO, from OpenStreetMap data)
@@ -309,7 +346,7 @@ function onPosition(lat,lon,hd){
   pos=[lon,lat];
   if(hd!=null&&!isNaN(hd))heading=((hd%360)+360)%360; // already turned into a compass bearing on the phone
   placeCamera();
-  if(flat)$('.puck svg').style.transform='rotate('+heading+'deg)';
+  if(flat)S($('.puck svg'),'transform','rotate('+Math.round(heading)+'deg)');
   if(Date.now()-lastSaved>60000){lastSaved=Date.now();store.set('lastPos',pos)}
   if(route)navUpdate();
 }

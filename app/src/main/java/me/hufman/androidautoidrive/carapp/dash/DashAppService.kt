@@ -10,7 +10,6 @@ import me.hufman.androidautoidrive.MutableAppSettingsReceiver
 import me.hufman.androidautoidrive.carapp.CarAppService
 import me.hufman.androidautoidrive.carapp.maps.MapApp
 import me.hufman.androidautoidrive.carapp.maps.MapAppMode
-import me.hufman.androidautoidrive.carapp.maps.MapInteractionControllerIntent
 import me.hufman.androidautoidrive.carapp.maps.MapsInteractionControllerListener
 import me.hufman.androidautoidrive.carapp.maps.VirtualDisplayScreenCapture
 import me.hufman.androidautoidrive.carapp.music.MusicAppMode
@@ -70,7 +69,7 @@ class DashAppService: CarAppService() {
 		val mapApp = MapApp(iDriveConnectionStatus, securityAccess,
 				CarAppAssetResources(applicationContext, "smartthings"),
 				mapAppMode, carLocationProvider,
-				MapInteractionControllerIntent(applicationContext),
+				dashController,     // knob turns go straight to the page, not through an Android broadcast
 				DashPlaceSearch(carLocationProvider),
 				screenCapture,
 				"i3 Dash", "i3 Dash",
