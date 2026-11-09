@@ -36,7 +36,9 @@ header{display:flex;align-items:center;gap:14px;padding:0 6px;border-bottom:1px 
 .tab{height:38px;padding:0 16px;border-radius:19px;border:1px solid var(--line);background:var(--panel2);font:600 19px var(--f-b);display:flex;align-items:center;color:var(--muted)}
 .tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .sp{flex:1}
-.wx{font:600 17px var(--f-d)} .wx span{font:500 12px var(--f-b);color:var(--muted);margin-left:4px}
+.wxb{display:flex;align-items:center;gap:6px;margin-left:12px;font:600 28px var(--f-d)}
+.wxi svg{width:32px;height:32px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.ti{width:38px;padding:0!important;justify-content:center;font:700 22px var(--f-d)!important}
 .clock{font:600 20px var(--f-d)}
 .body{display:grid;grid-template-columns:50% 1fr;min-height:0}
 .body.wide{grid-template-columns:0 1fr}
@@ -44,6 +46,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .top{display:flex;justify-content:space-between;align-items:flex-end}
 .soc{font:700 56px var(--f-d);line-height:.85}.soc small{font-size:26px;color:var(--muted)}
 .spd{font:600 40px var(--f-d);line-height:1;text-align:right}
+.carzone{position:relative;flex:1 1 auto;min-height:0;display:flex;justify-content:center}
+.ovl{position:absolute;left:2px;top:0}.ovr{position:absolute;right:2px;top:0;text-align:right}
+.carzone .carwrap{flex:none;align-self:stretch;width:auto;max-width:none;margin:0}
 .carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
 .tag{position:absolute;transform:translate(-50%,-50%);font:600 20px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
@@ -88,7 +93,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:18px;text-align:center;max-width:70%}
 .pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
 .pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
-.diag{position:absolute;left:12px;bottom:12px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
+.mhint{position:absolute;left:12px;bottom:12px;font:600 21px var(--f-b);background:rgba(10,14,19,.78);border:1px solid var(--line);border-radius:10px;padding:6px 14px;z-index:6}
+.mhint b{color:var(--accent)}
+.diag{position:absolute;left:12px;bottom:62px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
 .diag:empty{display:none}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
@@ -99,19 +106,19 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 <div id="app">
   <header>
     <div class="tabs" id="tabs"></div>
+    <span class="wxb"><span class="wxi" id="wxi"></span><span class="num" id="wx">--</span></span>
   </header>
   <div class="body" id="body">
     <aside>
-      <div class="top">
-        <div><div class="lbl">Battery</div><div class="soc num"><span id="soc">--</span><small>%</small></div></div>
-        <div style="text-align:center"><div class="lbl">Outside</div><div class="spd num" id="wx">--</div></div>
-        <div><div class="lbl" style="text-align:right">Speed</div><div class="spd num"><span id="spd">--</span> <span class="lbl" id="spdU">mph</span></div></div>
-      </div>
+      <div class="carzone">
+        <div class="ovl"><div class="lbl">Battery</div><div class="soc num"><span id="soc">--</span><small>%</small></div></div>
+        <div class="ovr"><div class="lbl">Speed</div><div class="spd num"><span id="spd">--</span> <span class="lbl" id="spdU">mph</span></div></div>
       <div class="carwrap">
         <img id="car" src="cars/mineral-grey--black.webp" alt="">
         <span class="dot" style="left:72.3%;top:69%"></span><span class="tag" id="tgRange" style="left:63%;top:88%"></span>
         <span class="dot" style="left:72.3%;top:22%"></span><span class="tag" id="tgCabin" style="left:80%;top:22%"></span>
         <span class="dot" style="left:93.3%;top:64%"></span>
+      </div>
       </div>
       <div><div class="pbar"><div class="f" id="pf"></div><div class="z"></div></div>
         <div class="pscale"><span>regen</span><span id="pwTxt">--</span><span>drive</span></div></div>
@@ -135,6 +142,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div><b class="num" id="eBat" style="color:var(--good)">--</b><span class="lbl">Battery on arrival</span></div>
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
+      <div class="mhint" id="mhint">Press the knob <b>›</b> Search destination</div>
       <div class="np" id="np" hidden></div>
       <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
@@ -202,14 +210,14 @@ window.i3feed=function(d){
 };
 
 /* ---------- pages, turned with the iDrive knob ---------- */
-const PAGES=['Car','Music','Battery','Journey','Map','Paint'];let page=0;
-$('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab" data-i="${i}">${p}</span>`).join('');
+const PAGES=['Car','Music','Battery','Journey','Map','Info'];let page=0;
+$('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab${p==='Info'?' ti':''}" data-i="${i}">${p==='Info'?'i':p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
-  if(PAGES[page]==='Paint'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
+  if(PAGES[page]==='Info'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
   page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
 };
-window.i3shown=function(){if(PAGES[page]==='Paint'){page=0;showPage()}};
+window.i3shown=function(){if(PAGES[page]==='Info'){page=0;showPage()}};
 function showPage(){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
   document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
@@ -244,24 +252,48 @@ function drawPanel(){
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
-      <div class="hint">Use the steering wheel buttons to skip · turn the knob for the next page</div></div>`;
-  }else if(p==='Paint'){
+      <div class="hint">${m.playing?`<b style="color:var(--accent)">Hear it in the car:</b> press MEDIA, then choose ${esc(m.app||'your music app')}`:'Use the steering wheel buttons to skip · turn the knob for the next page'}</div></div>`;
+  }else if(p==='Info'){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
+      <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd></dl>
       <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
   }else el.innerHTML='';
+}
+const WX_SVG={
+ sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+ moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+ cloud:'<path d="M6.5 19h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 10.1 4.4 4.4 0 0 0 6.5 19z"/>',
+ partly:'<circle cx="8" cy="8" r="3"/><path d="M8 2v1.5M2 8h1.5M3.8 3.8l1 1M12.2 3.8l-1 1"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .4-6.97A5 5 0 0 0 9.3 12.8 3.7 3.7 0 0 0 9 20z"/>',
+ rain:'<path d="M6.5 15h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 6.1 4.4 4.4 0 0 0 6.5 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/>',
+ snow:'<path d="M6.5 15h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 6.1 4.4 4.4 0 0 0 6.5 15z"/><path d="M8 19h.01M12 19h.01M16 19h.01M10 22h.01M14 22h.01" stroke-width="2.6"/>',
+ fog:'<path d="M4 8h16M6 12h12M4 16h16M7 20h10"/>',
+ storm:'<path d="M6.5 14h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 5.1 4.4 4.4 0 0 0 6.5 14z"/><path d="M12.5 15l-2.5 4h4l-2.5 4"/>',
+ thermo:'<path d="M10 14.8V5a2 2 0 0 1 4 0v9.8a4 4 0 1 1-4 0z"/>'};
+let wxKey='thermo';
+function setWxIcon(){H('#wxi','<svg viewBox="0 0 24 24">'+WX_SVG[wxKey]+'</svg>')}
+function wxFromCode(c,day){if(c==null)return 'thermo';if(c===0)return day?'sun':'moon';if(c<=2)return day?'partly':'cloud';if(c===3)return 'cloud';if(c<=48)return 'fog';if(c<=67)return 'rain';if(c<=77)return 'snow';if(c<=82)return 'rain';if(c<=86)return 'snow';return 'storm'}
+async function fetchWx(){
+  try{const p=pos||store.get('lastPos',DEFAULT);
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+p[1].toFixed(2)+'&longitude='+p[0].toFixed(2)+'&current=weather_code,is_day');
+    const j=await r.json();wxKey=wxFromCode(j.current.weather_code,j.current.is_day===1)}catch(e){log('weather: '+e.message)}
+  setWxIcon();
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 let artUrl='';
 window.i3art=function(u){artUrl=u||'';_c.delete('#nph');drawNowPlaying();if(PAGES[page]==='Music')drawPanel()};
+let wasPlaying=false,npSince=0;
 function drawNowPlaying(){
   const m=D.media,show=!!(m&&m.title)&&PAGES[page]!=='Music';
+  const nowPlaying=!!(m&&m.playing);if(nowPlaying&&!wasPlaying)npSince=Date.now();wasPlaying=nowPlaying;
   const el=$('#np');if(el.hidden===show)el.hidden=!show;
   if(!show)return;
-  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div></div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
+  const fresh=nowPlaying&&Date.now()-npSince<30000;
+  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">Hear it: press MEDIA › ${esc(m.app||'it')}</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
 }
+setWxIcon();
 showPage();
 
 /* ---------- rendering ---------- */
@@ -286,6 +318,7 @@ function render(){
   T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
   if(PAGES[page]==='Battery'||PAGES[page]==='Music')drawPanel();
   drawNowPlaying();
+  const mh=$('#mhint'),wantHint=!route;if(mh.hidden===wantHint)mh.hidden=!wantHint;
 }
 
 
@@ -331,6 +364,7 @@ function startMap(){
   }catch(e){startFlatMap('3D failed: '+e.message)}
 }
 startMap();
+setTimeout(fetchWx,4000);setInterval(fetchWx,15*60000);
 // quick internet check, shown on screen, so problems are easy to spot from the driver's seat
 fetch('https://tiles.openfreemap.org/styles/dark',{cache:'no-store'}).then(r=>log('internet ok '+r.status)).catch(e=>diag('No internet from the phone ('+e.message+')'));
 function placeCamera(){
