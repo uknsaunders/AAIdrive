@@ -1,6 +1,7 @@
 package me.hufman.androidautoidrive.carapp.dash
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.Presentation
 import android.content.ComponentName
 import android.content.Context
@@ -67,6 +68,9 @@ class DashController(val context: Context,
 		/** after a knob turn, hold back data updates so the new page reaches the car first */
 		const val KNOB_QUIET_MS = 1200L
 		const val MEDIA_INTERVAL_MS = 1000L
+
+		/** The running dashboard, so the phone screen can hand it destinations */
+		@Volatile var instance: DashController? = null
 	}
 
 	private val handler = Handler(context.mainLooper)
@@ -74,13 +78,15 @@ class DashController(val context: Context,
 	private val data = ConcurrentHashMap<String, Any>()
 	private val carInfo = CarInformation()
 	private var presentation: DashPresentation? = null
-	private var pushing = false
+	@Volatile private var pushing = false
+	@Volatile private var pageLoaded = false
 	private var tts: TextToSpeech? = null
 	private var ttsReady = false
 	@Volatile private var quietUntil = 0L
 	private var lastArtKey: String? = null
 
 	init {
+		instance = this
 		carLocationProvider.callback = { location -> onLocation(location) }
 		watchCarData()
 	}
@@ -190,6 +196,7 @@ class DashController(val context: Context,
 			val json = JSONObject()
 			data.forEach { (k, v) -> json.put(k, v) }
 			json.put("t", System.currentTimeMillis())
+			json.put("tariffP", DashStore.tariff(context))
 			js("window.i3feed && window.i3feed($json)")
 			handler.postDelayed(this, PUSH_INTERVAL_MS)
 		}
@@ -209,6 +216,7 @@ class DashController(val context: Context,
 		Log.i(TAG, "Closing the dashboard after ${SHUTDOWN_DELAY_MS}ms in the background")
 		presentation?.dismiss()
 		presentation = null
+		pageLoaded = false
 	}
 
 	override fun showMap() {
@@ -216,13 +224,17 @@ class DashController(val context: Context,
 			handler.removeCallbacks(shutdownRunnable)
 			if (presentation == null) {
 				Log.i(TAG, "Creating the dashboard on ${virtualDisplay.display}")
-				presentation = DashPresentation(context, virtualDisplay.display, Bridge())
+				presentation = DashPresentation(context, virtualDisplay.display, Bridge()) {
+					pageLoaded = true
+					deliverPending()
+				}
 			}
 			if (presentation?.isShowing == false) {
 				presentation?.show()
 			}
 			js("window.i3shown && window.i3shown()")
 			carLocationProvider.start()
+			handler.post { deliverPending() }
 			if (!pushing) {
 				pushing = true
 				handler.post(pushRunnable)
@@ -286,8 +298,33 @@ class DashController(val context: Context,
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't read what's playing", e)
 			}
+			try {
+				readCall()
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't read the call", e)
+			}
 			handler.postDelayed(this, MEDIA_INTERVAL_MS)
 		}
+	}
+
+	/** A phone call in progress or ringing, from the phone app's call notification */
+	private fun readCall() {
+		val service = NotificationListenerServiceImpl.runningInstance
+		val notifications = try { service?.activeNotifications } catch (e: Exception) { null }
+		val call = notifications?.firstOrNull { it.notification.category == Notification.CATEGORY_CALL }
+		if (call == null) {
+			data["call"] = JSONObject.NULL
+			return
+		}
+		val extras = call.notification.extras
+		val callType = extras.getInt("android.callType", 0)    // 1 incoming, 2 ongoing (Android 12+)
+		val ongoing = callType == 2 || (callType == 0 && extras.getBoolean("android.showChronometer", false))
+		val info = JSONObject()
+		info.put("name", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "")
+		info.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: "")
+		info.put("ongoing", ongoing)
+		info.put("since", call.notification.`when`)
+		data["call"] = info
 	}
 
 	private fun readMedia() {
@@ -296,7 +333,7 @@ class DashController(val context: Context,
 			manager.getActiveSessions(ComponentName(context, NotificationListenerServiceImpl::class.java))
 		} catch (e: SecurityException) {
 			data["mediaPermission"] = false
-			data.remove("media")
+			data["media"] = JSONObject.NULL
 			return
 		}
 		data["mediaPermission"] = true
@@ -305,7 +342,7 @@ class DashController(val context: Context,
 		val metadata = controller?.metadata
 		val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
 		if (controller == null || metadata == null || title == null) {
-			data.remove("media")
+			data["media"] = JSONObject.NULL
 			return
 		}
 		val state = controller.playbackState
@@ -346,7 +383,23 @@ class DashController(val context: Context,
 		return "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
 	}
 
+	/**
+	 * Hands a destination sent from the phone to the dashboard page.
+	 * Returns false if the page isn't on the car's screen yet, in which case it waits until it is.
+	 */
+	fun deliverPending(): Boolean {
+		if (!(pageLoaded && pushing)) return false
+		handler.post {
+			val dest = DashStore.takePending(context) ?: return@post
+			mapAppMode.currentNavDestination = LatLong(dest.lat, dest.lon)
+			js("window.i3navigate && window.i3navigate(${dest.lat}, ${dest.lon}, ${JSONObject.quote(dest.name)})")
+		}
+		return true
+	}
+
 	fun onDestroy() {
+		if (instance === this) instance = null
+		pageLoaded = false
 		pushing = false
 		handler.removeCallbacksAndMessages(null)
 		scope.cancel()
@@ -393,7 +446,8 @@ class DashController(val context: Context,
 /**
  * Shows the i3 Dash web page on the hidden display that is captured and sent to the car
  */
-class DashPresentation(context: Context, display: Display, private val bridge: Any): Presentation(context, display) {
+class DashPresentation(context: Context, display: Display, private val bridge: Any,
+                       private val onLoaded: () -> Unit = {}): Presentation(context, display) {
 	var webView: WebView? = null
 		private set
 
@@ -410,7 +464,11 @@ class DashPresentation(context: Context, display: Display, private val bridge: A
 		@Suppress("DEPRECATION")
 		webView.settings.allowUniversalAccessFromFileURLs = true
 		webView.addJavascriptInterface(bridge, "I3Native")
-		webView.webViewClient = WebViewClient()
+		webView.webViewClient = object: WebViewClient() {
+			override fun onPageFinished(view: WebView?, url: String?) {
+				onLoaded()
+			}
+		}
 		webView.webChromeClient = object: WebChromeClient() {
 			override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
 				Log.i(DashController.TAG, "console: ${consoleMessage?.message()} (${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()})")

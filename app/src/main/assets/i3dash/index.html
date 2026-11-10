@@ -96,6 +96,14 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:18px;text-align:center;max-width:70%}
 .pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
 .pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
+.lim{position:absolute;right:18px;bottom:44px;width:84px;height:84px;border-radius:50%;background:#fff;border:8px solid #d62c2c;display:grid;place-items:center;z-index:6;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.lim b{font:700 38px var(--f-d);color:#111;line-height:1}
+.lim.over{border-color:#ff9f1a;box-shadow:0 0 18px #ff9f1a}.lim.bad{box-shadow:0 0 24px #ff2d2d}
+.call{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:22px 26px;background:rgba(10,14,19,.74);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:12px}
+.call .cn{font:700 46px var(--f-d);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.call .cs{font:500 22px var(--f-b);color:#c3cfdb}
+.call .ci{width:58px;height:58px;border-radius:50%;background:var(--good);display:grid;place-items:center}
+.call .ci svg{width:32px;height:32px;fill:#fff}
 .mhint{position:absolute;left:12px;bottom:12px;font:600 21px var(--f-b);background:rgba(10,14,19,.78);border:1px solid var(--line);border-radius:10px;padding:6px 14px;z-index:6}
 .mhint b{color:var(--accent)}
 .diag{position:absolute;left:12px;bottom:62px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
@@ -134,6 +142,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div class="m"><div class="k">Car average</div><div class="v" id="jAvg">--</div></div>
       </div>
       <div id="panel"></div>
+      <div class="call" id="call" hidden></div>
     </aside>
     <section class="nav">
       <div id="map"></div>
@@ -147,6 +156,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
       <div class="mapmsg" id="mapmsg" hidden></div>
       <div class="mhint" id="mhint">Press the knob <b>›</b> Search destination</div>
       <div class="np" id="np" hidden></div>
+      <div class="lim" id="lim" hidden></div>
       <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
     </section>
@@ -188,7 +198,7 @@ let J=store.get('journey',null),trips=store.get('trips',[]);
 function journeyTick(){
   const now=Date.now();
   if(!J||now-J.last>30*60000){
-    if(J&&J.km>0.3){trips.unshift({start:J.start,end:J.last,km:J.km,kwh:J.kwh});trips=trips.slice(0,30);store.set('trips',trips)}
+    if(J&&J.km>0.3){trips.unshift({start:J.start,end:J.last,km:J.km,kwh:J.kwh});trips=trips.slice(0,600);store.set('trips',trips)}
     J={start:now,last:now,km:0,kwh:0,odo0:D.odoKm??null,soc0:D.soc??null,lastSpeedT:now};
   }
   if(J.odo0==null&&D.odoKm!=null)J.odo0=D.odoKm;
@@ -238,15 +248,27 @@ function drawPanel(){
       <dt>Range (car estimate)</dt><dd>${D.rangeKm!=null?f(D.rangeKm)+' '+du():'--'}</dd>
       <dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd>
       <dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>
+      <dt>Nearest charger (approx.)</dt><dd>${(()=>{const n=nearestCharger();return n?esc(fmtD(n.d*1.25))+' · '+esc(n.c.name.slice(0,18)):'--'})()}</dd>
       <dt>Odometer</dt><dd>${D.odoKm!=null?Math.round(dist(D.odoKm)).toLocaleString()+' '+du():'--'}</dd></dl>
       <div class="hint">Turn the iDrive knob for the next page</div></div>`;
   }else if(p==='Journey'){
-    const rows=[];if(J)rows.push({start:J.start,km:J.km,kwh:J.kwh,now:true});rows.push(...trips.slice(0,5));
-    el.innerHTML=`<div class="frost"><h2>Journeys</h2>${rows.map(r=>`<div class="m" style="display:flex;justify-content:space-between;align-items:center">
+    const all=trips.slice();if(J&&J.km>0.3)all.unshift({start:J.start,km:J.km,kwh:J.kwh,now:true});
+    const now=Date.now(),day=864e5,midnight=new Date().setHours(0,0,0,0);
+    const sum=(a,b)=>{let km=0,kwh=0;for(const t of all)if(t.start>=a&&t.start<b){km+=t.km;kwh+=t.kwh}return{km,kwh}};
+    const price=(D.tariffP!=null?D.tariffP:28)/100*1.1;      // pounds per kWh, plus about 10% charging losses
+    const tiles=[['Today',sum(midnight,now+1)],['7 days',sum(now-7*day,now+1)],['30 days',sum(now-30*day,now+1)]].map(([k,t])=>{
+      const cost=t.kwh*price,d=dist(t.km);
+      return `<div class="m"><div class="k">${k}</div><div class="v">${f(d,0)}<small>${du()}</small></div><div class="k">£${cost.toFixed(2)}${d>1?' · '+Math.round(cost*100/d)+'p/'+du():''}</div></div>`}).join('');
+    const eff=[];for(let i=13;i>=0;i--){const t=sum(midnight-i*day,midnight-i*day+day);eff.push(t.kwh>0.3&&t.km>1?dist(t.km)/t.kwh:null)}
+    const vals=eff.filter(v=>v!=null),mx=Math.max(1,...vals),avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+    const bars=eff.map((v,i)=>v==null?'':`<rect x="${i*30+3}" y="${(60-v/mx*56).toFixed(1)}" width="24" height="${(v/mx*56).toFixed(1)}" rx="3" fill="${v>=avg?'#19c37d':'#4c93ff'}"/>`).join('');
+    const rows=all.slice(0,2).map(r=>`<div class="m" style="display:flex;justify-content:space-between;align-items:center">
       <div><div style="font-weight:600">${r.now?'This journey':new Date(r.start).toLocaleString([], {weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
-      <div class="k">${f(dist(r.km),1)} ${du()} · ${f(r.kwh,1)} kWh</div></div>
-      <div class="v">${r.km>0.5&&r.kwh>0.1?(miles?f(r.km*MI/r.kwh,1)+'<small>mi/kWh</small>':f(r.kwh/r.km*100,1)+'<small>kWh/100km</small>'):'--'}</div></div>`).join('')}
-      <div class="hint">Energy is estimated from the change in battery %</div></div>`;
+      <div class="k">${f(dist(r.km),1)} ${du()} · ${f(r.kwh,1)} kWh · £${(r.kwh*price).toFixed(2)}</div></div>
+      <div class="v">${r.km>0.5&&r.kwh>0.1?f(dist(r.km)/r.kwh,1)+'<small>'+du()+'/kWh</small>':'--'}</div></div>`).join('');
+    el.innerHTML=`<div class="frost"><h2>Journeys &amp; costs</h2><div class="g3">${tiles}</div>
+      <div><div class="k" style="color:var(--muted);font-size:16px">${du()}/kWh each day, last 14 days${avg?' · average '+avg.toFixed(1):''}</div><svg viewBox="0 0 420 62" style="width:100%;height:62px">${bars}</svg></div>
+      ${rows}<div class="hint">Battery energy used + 10% charging losses, at ${f(price/1.1*100,0)}p/kWh (set on the phone)</div></div>`;
   }else if(p==='Music'){
     const m=D.media,art=artUrl||'';
     if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Allow i3 Dash notification access on your phone to show what is playing.':'Nothing playing.'}</div>
@@ -316,6 +338,80 @@ function tyreInfo(){
   if(keys.length)return 'car sends '+keys.map(k=>k.slice(5)).join(', ')+' – '+JSON.stringify(D[keys[0]]).slice(0,60);
   return 'no tyre data from the car';
 }
+/* ---------- speed limit (OpenStreetMap road data) ---------- */
+let lim=null,limKey='',limBusy=false,limTry=0;
+const inJersey=p=>p[1]>49.1&&p[1]<49.3&&p[0]>-2.3&&p[0]<-1.95;
+async function fetchLimit(){
+  if(!pos||limBusy||Date.now()-limTry<7000)return;
+  const key=Math.round(pos[1]*1500)+','+Math.round(pos[0]*1000);   // about 70 m cells
+  if(key===limKey)return;
+  limBusy=true;limTry=Date.now();
+  try{
+    const q='[out:json][timeout:8];way(around:22,'+pos[1].toFixed(5)+','+pos[0].toFixed(5)+')["highway"]["maxspeed"];out tags 6;';
+    const j=await (await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))).json();
+    limKey=key;let best=null;
+    for(const e of j.elements||[]){
+      const m=String((e.tags||{}).maxspeed).match(/^(\d+)\s*(mph)?/);
+      if(m){const v={v:+m[1],mph:!!m[2]||inJersey(pos)};if(!best||v.v<best.v)best=v}   // lowest at a junction, to be safe
+    }
+    lim=best;
+  }catch(e){log('limit: '+e.message)}
+  limBusy=false;
+}
+function limDisplay(){
+  if(!lim)return null;
+  return miles?(lim.mph?lim.v:Math.round(lim.v/1.609344/5)*5):(lim.mph?Math.round(lim.v*1.609344/5)*5:lim.v);
+}
+function drawLimit(){
+  const el=$('#lim'),v=limDisplay();
+  if(v==null){if(!el.hidden)el.hidden=true;return}
+  if(el.hidden)el.hidden=false;
+  const kmh=D.speedKmh!=null?D.speedKmh:(D.gpsSpeedMs!=null?D.gpsSpeedMs*3.6:null);
+  const over=kmh==null?0:(miles?kmh*MI:kmh)-v;
+  const cls='lim'+(over>8?' bad':over>0.5?' over':'');
+  if(el.className!==cls)el.className=cls;
+  H('#lim','<b>'+v+'</b>');
+}
+
+/* ---------- charging points (OpenStreetMap) ---------- */
+let chargers=[],chgAt=null,chgTry=0,chgBusy=false,chgLayer=null;
+async function fetchChargers(){
+  if(!pos||chgBusy||Date.now()-chgTry<60000)return;
+  if(chgAt&&hav(pos,chgAt)<3000)return;
+  chgBusy=true;chgTry=Date.now();
+  try{
+    const q='[out:json][timeout:15];node["amenity"="charging_station"](around:20000,'+pos[1].toFixed(4)+','+pos[0].toFixed(4)+');out body 80;';
+    const j=await (await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))).json();
+    chargers=(j.elements||[]).map(e=>({lon:e.lon,lat:e.lat,name:(e.tags&&(e.tags.name||e.tags.operator||e.tags.network))||'Charging point'}));
+    chgAt=pos;drawChargers();
+  }catch(e){log('chargers: '+e.message)}
+  chgBusy=false;
+}
+function drawChargers(){
+  const fc={type:'FeatureCollection',features:chargers.map(c=>({type:'Feature',geometry:{type:'Point',coordinates:[c.lon,c.lat]},properties:{name:c.name}}))};
+  try{
+    if(map&&map.getSource('chargers'))map.getSource('chargers').setData(fc);
+    if(flat){if(chgLayer)chgLayer.clearLayers();else chgLayer=L.layerGroup().addTo(flat);
+      chargers.forEach(c=>L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:2,fillColor:'#19c37d',fillOpacity:1}).addTo(chgLayer))}
+  }catch(e){log('draw chargers: '+e.message)}
+}
+function nearestCharger(){
+  if(!pos||!chargers.length)return null;
+  let best=null,bd=1e12;
+  for(const c of chargers){const d=hav(pos,[c.lon,c.lat]);if(d<bd){bd=d;best=c}}
+  return best?{c:best,d:bd}:null;
+}
+
+/* ---------- phone call ---------- */
+function drawCall(){
+  const c=D.call,el=$('#call');
+  if(!c){if(!el.hidden)el.hidden=true;return}
+  if(el.hidden)el.hidden=false;
+  const label=c.ongoing?'On call · '+mmss(Math.max(0,Date.now()-c.since)):'Incoming call';
+  H('#call',`<div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
+    <div class="cs">${label}</div><div class="cn">${esc(c.name||'Unknown caller')}</div>
+    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Use the car’s phone controls to hang up':'Answer with the steering wheel or iDrive'}</div>`);
+}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 let artUrl='';
@@ -341,7 +437,7 @@ function render(){
   if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
   else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
   else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
-  drawTyres();
+  drawTyres();drawLimit();drawCall();
   T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
   H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
@@ -391,6 +487,9 @@ function startMap(){
       map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
       try{if(!map.getLayer('building-3d'))map.addLayer({id:'building-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
         paint:{'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-color':'#2a3646','fill-extrusion-height':['coalesce',['get','render_height'],6],'fill-extrusion-opacity':0.85}},'route-casing')}catch(e){log('3d buildings: '+e.message)}
+      try{map.addSource('chargers',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+        map.addLayer({id:'chargers',type:'circle',source:'chargers',paint:{'circle-radius':9,'circle-color':'#19c37d','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}},'route-casing');
+        drawChargers()}catch(e){log('chargers layer: '+e.message)}
       mapMsg('');diag('');placeCamera();
     });
     map.on('error',e=>{const m=(e&&e.error&&e.error.message)||'error';diag('3D map: '+m)});
@@ -413,6 +512,7 @@ function placeCamera(){
 let lastSaved=0;
 function onPosition(lat,lon,hd){
   pos=[lon,lat];
+  fetchLimit();fetchChargers();
   if(hd!=null&&!isNaN(hd))heading=((hd%360)+360)%360; // already turned into a compass bearing on the phone
   placeCamera();
   if(flat)S($('.puck svg'),'transform','rotate('+Math.round(heading)+'deg)');
@@ -437,7 +537,7 @@ async function routeTo(lat,lon){
     $('#turn').hidden=false;$('#eta').hidden=false;navUpdate();
   }catch(e){log('route failed '+e.message);N.speak('Sorry, I could not find a route');}
 }
-window.i3navigate=(lat,lon)=>{page=0;showPage();routeTo(lat,lon)};
+window.i3navigate=(lat,lon,name)=>{page=0;showPage();routeTo(lat,lon);if(name)N.speak('Navigating to '+name)};
 window.i3recalc=()=>{if(route)routeTo(route.dest[1],route.dest[0])};
 window.i3stopNav=()=>{route=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});flatRoute&&flatRoute.setLatLngs([]);placeCamera()};
 function project(p){

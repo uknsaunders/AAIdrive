@@ -79,3 +79,4 @@
 -keepclassmembers class me.hufman.androidautoidrive.carapp.dash.DashController$Bridge {
     @android.webkit.JavascriptInterface <methods>;
 }
+-keepclassmembers class me.hufman.androidautoidrive.carapp.dash.SendDestinationActivity$Phone { @android.webkit.JavascriptInterface <methods>; }

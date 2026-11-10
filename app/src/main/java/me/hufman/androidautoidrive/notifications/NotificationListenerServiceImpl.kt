@@ -38,6 +38,9 @@ class NotificationListenerServiceImpl: NotificationListenerService() {
 		const val INTENT_STOP_LISTENER = "me.hufman.androidaudoidrive.PhoneNotificationUpdate.STOP_LISTENER"
 		const val INTENT_REQUEST_DATA = "me.hufman.androidaudoidrive.PhoneNotificationUpdate.REQUEST_DATA"
 
+		/** The running listener, so i3 Dash can look at the current call notification */
+		@Volatile var runningInstance: NotificationListenerServiceImpl? = null
+
 		private val _serviceState = MutableLiveData(false)
 		val serviceState = _serviceState as LiveData<Boolean>   // only valid while the service is running
 
@@ -91,6 +94,7 @@ class NotificationListenerServiceImpl: NotificationListenerService() {
 
 	override fun onCreate() {
 		super.onCreate()
+		runningInstance = this
 
 		// load the emoji dictionary
 		UnicodeCleaner.init(this)
@@ -129,6 +133,7 @@ class NotificationListenerServiceImpl: NotificationListenerService() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		if (runningInstance === this) runningInstance = null
 		try {
 			this.unregisterReceiver(broadcastReceiver)
 		} catch (e: Exception) {}

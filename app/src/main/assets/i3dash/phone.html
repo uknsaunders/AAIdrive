@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Send to car</title>
+<style>
+:root{--bg:#0b1016;--panel:#141b24;--panel2:#1b2430;--line:#263241;--ink:#eef3f8;--muted:#8ea0b3;--accent:#4c93ff;--good:#19c37d;--bad:#ff5d5d}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:24px;margin:6px 0 2px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 8px;font-weight:600}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+.pill{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+.pill.ok{color:var(--good);border-color:#1f5a44}.pill.warn{color:#ffb454;border-color:#6b4a1b}
+.row{display:flex;gap:8px}
+input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:14px;font-size:17px}
+input:focus{outline:2px solid var(--accent);border-color:transparent}
+button{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:0 18px;font-size:16px;font-weight:600;min-height:46px}
+button.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-weight:500}
+button.small{min-height:38px;padding:0 14px;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
+.card .n{font-weight:600;font-size:17px;word-break:break-word}.card .d{color:var(--muted);font-size:14px;margin-top:2px;word-break:break-word}
+.card .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.msg{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:15px}
+.msg.err{border-color:#6b2a2a;color:#ffb3b3}.msg.ok{border-color:#1f5a44;color:#9df0c6}
+.save{display:flex;gap:8px;margin-top:10px}
+.empty{color:var(--muted);font-size:14px;padding:4px 2px}
+a{color:var(--accent)}
+</style></head>
+<body><main>
+<h1>Send to car</h1>
+<p class="sub">Type a place or postcode, a ///what3words address, or paste a Google Maps link.</p>
+<div class="pills" id="pills"></div>
+<div class="row"><input id="q" type="text" inputmode="text" autocomplete="off" autocapitalize="none" placeholder="Where to?" enterkeyhint="go"><button id="go">Find</button></div>
+<div id="msg"></div>
+<div id="results"></div>
+<h2>Saved places</h2><div id="places"></div>
+<h2>Recent</h2><div id="recents"></div>
+<h2>Electricity price</h2>
+<div class="row"><input id="tariff" type="text" inputmode="decimal" placeholder="pence per kWh"><button class="ghost" id="saveTariff">Save</button></div>
+<p class="sub" style="margin-top:8px">Used for the cost per mile on the car's Journey page.</p>
+</main>
+<script>
+// in a normal browser (testing) there is no phone bridge, so fake a tiny one
+const P=window.Phone||(()=>{let places=[{name:'Home',lat:49.19,lon:-2.03}],recents=[],tariff=28;const pend={};
+  return{shared:()=>'',resolve:(id,t)=>setTimeout(()=>window.onResolved(id,{error:null,items:[{name:t,detail:'Test result, Jersey',lat:49.2,lon:-2.1}]}),200),
+  go:(la,lo,n)=>{recents.unshift({name:n,lat:la,lon:lo});return 'queued'},places:()=>JSON.stringify(places),recents:()=>JSON.stringify(recents),
+  savePlace:(n,la,lo)=>{places=places.filter(p=>p.name.toLowerCase()!==n.toLowerCase());places.unshift({name:n,lat:la,lon:lo})},
+  deletePlace:n=>{places=places.filter(p=>p.name!==n)},tariff:()=>tariff,setTariff:p=>{tariff=p},status:()=>JSON.stringify({car:false,w3w:false})}})();
+const $=s=>document.querySelector(s);
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let seq=0,items=[];
+function say(text,cls){$('#msg').innerHTML=text?`<div class="msg ${cls||''}">${esc(text)}</div>`:''}
+function pills(){
+  let st={car:false,w3w:false};try{st=JSON.parse(P.status())}catch(e){}
+  $('#pills').innerHTML=`<span class="pill ${st.car?'ok':''}">${st.car?'Car connected':'Car not connected yet'}</span><span class="pill ${st.w3w?'ok':'warn'}">${st.w3w?'what3words ready':'what3words key missing'}</span>`;
+}
+function card(p,kind,i){
+  const acts=[`<button class="small" data-a="go" data-k="${kind}" data-i="${i}">Navigate</button>`];
+  if(kind==='res')acts.push(`<button class="small ghost" data-a="save" data-k="${kind}" data-i="${i}">Save</button>`);
+  if(kind==='place')acts.push(`<button class="small ghost" data-a="del" data-k="${kind}" data-i="${i}">Delete</button>`);
+  return `<div class="card" id="c-${kind}-${i}"><div class="n">${esc(p.name)}</div>${p.detail?`<div class="d">${esc(p.detail)}</div>`:''}<div class="acts">${acts.join('')}</div></div>`;
+}
+let lists={res:[],place:[],recent:[]};
+function load(){
+  lists.place=JSON.parse(P.places());lists.recent=JSON.parse(P.recents());
+  $('#places').innerHTML=lists.place.length?lists.place.map((p,i)=>card(p,'place',i)).join(''):'<div class="empty">Nothing saved yet. Find a place, then tap Save and name it (Home, Work…).</div>';
+  $('#recents').innerHTML=lists.recent.length?lists.recent.map((p,i)=>card(p,'recent',i)).join(''):'<div class="empty">Places you send to the car appear here.</div>';
+  $('#tariff').value=P.tariff();
+}
+function find(text){
+  text=(text||$('#q').value).trim();if(!text)return;
+  $('#q').value=text;say('Looking…');$('#results').innerHTML='';
+  const id=++seq;P.resolve(id,text);
+}
+window.onResolved=(id,r)=>{
+  if(id!==seq)return;
+  if(r.error){say(r.error,'err');return}
+  lists.res=r.items||[];
+  if(!lists.res.length){say('Nothing found. Try a postcode, or add the town.','err');$('#results').innerHTML='';return}
+  say('');$('#results').innerHTML=lists.res.map((p,i)=>card(p,'res',i)).join('');
+};
+window.onShared=()=>{const t=P.shared();if(t){$('#q').value=t;find(t)}};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]');if(!b)return;
+  const kind=b.dataset.k,i=+b.dataset.i,p=(lists[kind]||[])[i];if(!p)return;
+  if(b.dataset.a==='go'){
+    const r=P.go(p.lat,p.lon,p.name);pills();
+    say(r==='sent'?'Sent. Navigation is starting on the car.':'Saved for the car. It will start as soon as i3 Dash is on the car screen.','ok');load();
+  }else if(b.dataset.a==='del'){P.deletePlace(p.name);load()}
+  else if(b.dataset.a==='save'){
+    const host=$('#c-'+kind+'-'+i);if(host.querySelector('.save'))return;
+    host.insertAdjacentHTML('beforeend',`<div class="save"><input placeholder="Name, e.g. Home" value="" data-name><button class="small" data-a="dosave" data-k="${kind}" data-i="${i}">OK</button></div>`);
+    host.querySelector('[data-name]').focus();
+  }else if(b.dataset.a==='dosave'){
+    const name=b.parentElement.querySelector('[data-name]').value.trim();if(!name)return;
+    P.savePlace(name,p.lat,p.lon);say('Saved as '+name+'.','ok');load();
+  }
+});
+$('#go').onclick=()=>find();
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
+$('#saveTariff').onclick=()=>{const v=parseFloat(String($('#tariff').value).replace(',','.'));if(v>0&&v<200){P.setTariff(v);say('Price saved: '+v+'p per kWh.','ok')}else say('Enter pence per kWh, e.g. 28','err')};
+pills();load();window.onShared();
+</script></body></html>
