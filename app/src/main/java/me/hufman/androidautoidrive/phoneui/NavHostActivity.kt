@@ -2,20 +2,11 @@ package me.hufman.androidautoidrive.phoneui
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.MenuInflater
-import android.view.View
-import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.navigation.NavigationView
 import me.hufman.androidautoidrive.*
-import me.hufman.androidautoidrive.databinding.NavHeaderBinding
 import me.hufman.androidautoidrive.phoneui.viewmodels.ConnectionStatusModel
 import me.hufman.androidautoidrive.phoneui.viewmodels.viewModels
 
@@ -40,60 +31,22 @@ class NavHostActivity: AppCompatActivity() {
 
 		setContentView(R.layout.activity_navhost)
 		val navToolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.nav_toolbar)
-		val navView = findViewById<NavigationView>(R.id.nav_view)
 		setSupportActionBar(navToolbar)
 
-		// Set each of the menu entries as a top level destination
-		val navMenu = PopupMenu(this, null).menu.also {
-			MenuInflater(this).inflate(R.menu.menu_main, it)
-		}
-		val drawerLayout = findViewById<View>(R.id.drawer_layout) as? DrawerLayout
-		val appBarConfig = AppBarConfiguration(navMenu, drawerLayout)
+		// the home screen is the only top level page, everything else gets a back arrow
+		val appBarConfig = AppBarConfiguration(setOf(R.id.nav_overview))
 		val navController = findNavController(R.id.nav_host_fragment)
-		setupActionBarWithNavController(navController, appBarConfig)        // title updater
-		navToolbar.setupWithNavController(navController, appBarConfig)     // hamburger click handler
-		navView.setupWithNavController(navController)                      // nav menu click handler
+		setupActionBarWithNavController(navController, appBarConfig)
+	}
 
-		setupNavHeader()
-
-		setupNavMenu()
-
-		drawerLayout?.post { drawerLayout.openDrawer(GravityCompat.START) }
+	override fun onSupportNavigateUp(): Boolean {
+		return findNavController(R.id.nav_host_fragment).navigateUp() || super.onSupportNavigateUp()
 	}
 
 	override fun onResume() {
 		super.onResume()
 
 		startService()
-	}
-
-	fun setupNavHeader() {
-		val navView = findViewById<NavigationView>(R.id.nav_view)
-		val binding = NavHeaderBinding.inflate(layoutInflater, navView, false)
-		binding.lifecycleOwner = this
-		binding.viewModel = connectionViewModel
-		navView.removeHeaderView(navView.getHeaderView(0))
-		navView.addHeaderView(binding.root)
-
-		val paneConnectionStatus = navView.getHeaderView(0).findViewById<View>(R.id.paneConnectionStatus)
-		paneConnectionStatus.setOnClickListener {
-			findNavController(R.id.nav_host_fragment).navigate(R.id.nav_connection)
-			val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
-			drawerLayout?.closeDrawer(GravityCompat.START)
-		}
-	}
-
-	fun setupNavMenu() {
-		val themeAttrs = obtainStyledAttributes(R.style.optionMapVisible, arrayOf(android.R.attr.visibility).toIntArray())
-		val mapVisibility = themeAttrs.getInt(0, 0)
-		themeAttrs.recycle()
-		val navView = findViewById<NavigationView>(R.id.nav_view)
-		navView.menu.findItem(R.id.nav_maps).isVisible = mapVisibility == View.VISIBLE
-
-		val advancedSetting = BooleanLiveSetting(this, AppSettings.KEYS.SHOW_ADVANCED_SETTINGS)
-		advancedSetting.observe(this, Observer {
-			navView.menu.findItem(R.id.nav_connection).isVisible = it
-		})
 	}
 
 	fun startService() {

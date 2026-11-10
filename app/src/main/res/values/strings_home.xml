@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_send">Send to car</string>
+    <string name="home_send_sub">A place, postcode, what3words or a Google Maps link</string>
+    <string name="home_music_sub">Choose which music apps show in the car</string>
+    <string name="home_notifications_sub">Messages and alerts on the car screen</string>
+    <string name="home_navigation_sub">Navigation status and destinations</string>
+    <string name="home_maps_sub">Map style and testing</string>
+    <string name="home_calendar_sub">Appointments in the car</string>
+    <string name="home_assistants_sub">Voice assistant shortcuts</string>
+    <string name="home_carinfo_sub">What the car reports</string>
+    <string name="home_addons_sub">Extra apps for the car</string>
+    <string name="home_settings_sub">Language, analytics, advanced</string>
+    <string name="home_support_sub">Help and about</string>
+    <string name="home_section_main">Features</string>
+    <string name="home_section_more">More</string>
+    <string name="home_step_phone">Phone linked to the car</string>
+    <string name="home_step_ready">Car link ready</string>
+    <string name="home_step_connected">Connected to the car</string>
+    <string name="home_help">Connection help</string>
+</resources>
