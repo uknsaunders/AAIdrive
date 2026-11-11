@@ -127,6 +127,7 @@ android {
             signingConfig signingConfigs.release
         }
         debug {
+            applicationIdSuffix ".i3dash"       // installs next to the original AAIdrive instead of replacing it
             signingConfig signingConfigs.i3dash
             if (runProguardInDebug || isRunningOnCI) {        // make sure to run tests against minified code in CI, but local dev can be fast
                 postprocessing {

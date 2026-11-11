@@ -35,7 +35,7 @@ Incoming calls show a panel with the caller's name. Press the knob to **Answer c
 ## Install
 
 1. On your phone, download `i3-dash.apk` from the [`i3dash-latest` release](https://github.com/uknsaunders/AAIdrive/releases/tag/i3dash-latest).
-2. Allow installs from your browser when Android asks, then open the file and tap Install. Uninstall the original AAIdrive first, because they share an app ID.
+2. Allow installs from your browser when Android asks, then open the file and tap Install. i3 Dash has its own app ID, so it installs next to the original AAIdrive instead of replacing it. Only run one of them at a time, because both try to connect to the car. If you installed an earlier i3 Dash build (before 12 November 2026), uninstall it once the new one works. It was a different app, so settings and saved places do not carry over, and you need to allow notification access and calls again.
 3. Open the app and work through the welcome screens.
 4. Allow notification access so it can read what is playing and show calls. If the switch is greyed out, go to Settings → Apps → i3 Dash → ⋮ → **Allow restricted settings**, then try again.
 
