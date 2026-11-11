@@ -40,11 +40,7 @@ Incoming calls show a panel with the caller's name. Answering is still done from
 
 ## Connect
 
-```mermaid
-flowchart LR
-  P["Phone<br>i3 Dash + BMW Connected"] -- USB cable --> C["Car<br>iDrive screen"]
-  P -. mobile data .-> N["Maps, search,<br>weather, speed limits"]
-```
+![Phone to car connection](docs/images/i3dash/connect-flow.png)
 
 1. Plug the phone into the car's USB port.
 2. Open the app. The card at the top shows three ticks: phone linked, car link ready, connected.
@@ -61,12 +57,7 @@ For music, start a song on the phone. If the radio keeps playing, press MEDIA on
 
 ## Send a place from your phone
 
-```mermaid
-flowchart LR
-  A["Google Maps, a text,<br>a website, or typed in"] --> B["Share → i3 Dash"]
-  B --> C["Pick the result → Navigate"]
-  C --> D["Car map shows<br>and speaks the route"]
-```
+![Sending a place to the car](docs/images/i3dash/send-flow.png)
 
 Share a place from Google Maps or any app and choose **i3 Dash**, or open the app and tap **Send to car**. You can type a place, a postcode, a `///three.word.address`, or paste a link. If the car is not showing i3 Dash yet, the destination waits and starts when it appears. Tap **Save** to keep places like Home and Work, which also show up when you search from the car.
 
