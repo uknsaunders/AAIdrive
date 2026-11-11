@@ -17,11 +17,12 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | **Car** | Battery, speed, range, journey figures, tyre rings that colour only when a tyre is low, and the map. |
 | **Music** | Now playing with artwork from Spotify, Amazon Music, Apple Music or BBC Sounds. |
 | **Battery** | Charge, range and the nearest charger. |
+| **Alerts** | Your recent phone notifications, newest first, with a count on the tab. |
 | **Journey** | Miles, cost and efficiency for today, 7 days and 30 days, a 14 day chart and recent trips. |
 | **Map** | Dark 3D map, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
 | **i** | Connection details and the raw data the car sends. |
 
-Incoming calls show a panel with the caller's name. Answering is still done from the car.
+Incoming calls show a panel with the caller's name. Press the knob to **Answer call** or **Hang up**. To ring someone, choose **Search** and type a name, or "call" and a name, then pick the "Call …" row. Allow calls once with the **Calls and contacts** button in the phone app.
 
 ![Journey page](docs/images/i3dash/journey.jpg)
 
@@ -76,11 +77,14 @@ The home screen has a connection card at the top and a list of large buttons: Se
 - Journey cost is the battery energy used plus 10% for charging losses, at your price per kWh. The default is 28p, and you can change it on the Send to car screen.
 - Speed limits and chargers come from OpenStreetMap, so some roads have no limit listed.
 - Not yet confirmed on a real car: opening search from the knob press, tyre pressure values (see the Tyres line on the **i** page), and the label under the car's menu icon.
-- Calls are display only.
 
 ## Building
 
 GitHub Actions builds the app on every push to `main` (`.github/workflows/i3dash.yml`) and publishes `i3-dash.apk` to the `i3dash-latest` release. It is signed with a personal debug key, `i3dash-debug.keystore`, so updates install over each other.
+
+## Changes
+
+See the [changelog](CHANGELOG.md).
 
 ## Credits and licence
 
