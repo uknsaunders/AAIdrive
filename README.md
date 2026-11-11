@@ -89,3 +89,5 @@ See the [changelog](CHANGELOG.md).
 ## Credits and licence
 
 Built on [AAIdrive](https://github.com/BimmerGestalt/AAIdrive) and the BimmerGestalt libraries. Maps use OpenFreeMap and OpenStreetMap data, routing uses OSRM, and weather uses Open-Meteo. MIT licensed, see [LICENSE](LICENSE).
+
+More pictures of every page: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)
