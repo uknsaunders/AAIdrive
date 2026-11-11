@@ -97,6 +97,11 @@ class SendDestinationActivity: Activity() {
 			return if (delivered) "sent" else "queued"
 		}
 
+		/** Plays a YouTube video on the car screen, only if the car is standing still. Returns sent, moving or nocar */
+		@JavascriptInterface
+		fun video(id: String, list: String): String =
+			DashController.instance?.playVideo(id, list) ?: "nocar"
+
 		@JavascriptInterface
 		fun places(): String = listJson(DashStore.places(applicationContext))
 

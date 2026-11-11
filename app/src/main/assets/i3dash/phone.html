@@ -45,7 +45,7 @@ a{color:var(--accent)}
 // in a normal browser (testing) there is no phone bridge, so fake a tiny one
 const P=window.Phone||(()=>{let places=[{name:'Home',lat:49.19,lon:-2.03}],recents=[],tariff=28;const pend={};
   return{shared:()=>'',resolve:(id,t)=>setTimeout(()=>window.onResolved(id,{error:null,items:[{name:t,detail:'Test result, Jersey',lat:49.2,lon:-2.1}]}),200),
-  go:(la,lo,n)=>{recents.unshift({name:n,lat:la,lon:lo});return 'queued'},places:()=>JSON.stringify(places),recents:()=>JSON.stringify(recents),
+  video:()=>'moving',go:(la,lo,n)=>{recents.unshift({name:n,lat:la,lon:lo});return 'queued'},places:()=>JSON.stringify(places),recents:()=>JSON.stringify(recents),
   savePlace:(n,la,lo)=>{places=places.filter(p=>p.name.toLowerCase()!==n.toLowerCase());places.unshift({name:n,lat:la,lon:lo})},
   deletePlace:n=>{places=places.filter(p=>p.name!==n)},tariff:()=>tariff,setTariff:p=>{tariff=p},status:()=>JSON.stringify({car:false,w3w:false})}})();
 const $=s=>document.querySelector(s);
@@ -69,9 +69,17 @@ function load(){
   $('#recents').innerHTML=lists.recent.length?lists.recent.map((p,i)=>card(p,'recent',i)).join(''):'<div class="empty">Places you send to the car appear here.</div>';
   $('#tariff').value=P.tariff();
 }
+// a YouTube link, from the share button or pasted: watch?v=, youtu.be/, shorts/, live/, embed/ or a playlist
+function ytParse(t){
+  const m=/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^\s]*&)?v=|shorts\/|live\/|embed\/))([\w-]{11})/.exec(t),l=/[?&]list=([\w-]+)/.exec(t);
+  return m||l?{id:m?m[1]:'',list:l?l[1]:''}:null;
+}
 function find(text){
   text=(text||$('#q').value).trim();if(!text)return;
-  $('#q').value=text;say('Looking…');$('#results').innerHTML='';
+  $('#q').value=text;
+  const yt=ytParse(text);
+  if(yt){seq++;say('');$('#results').innerHTML=`<div class="card"><div class="n">YouTube ${yt.id?'video':'playlist'}</div><div class="d">Plays on the car screen only while the car is parked. It stops if the car starts moving.</div><div class="acts"><button class="small" data-yt="${esc(yt.id)}" data-list="${esc(yt.list)}">Play on car</button></div></div>`;return}
+  say('Looking…');$('#results').innerHTML='';
   const id=++seq;P.resolve(id,text);
 }
 window.onResolved=(id,r)=>{
@@ -83,6 +91,9 @@ window.onResolved=(id,r)=>{
 };
 window.onShared=()=>{const t=P.shared();if(t){$('#q').value=t;find(t)}};
 document.addEventListener('click',e=>{
+  const y=e.target.closest('button[data-yt]');
+  if(y){const r=P.video(y.dataset.yt,y.dataset.list);pills();
+    say(r==='sent'?'Playing on the car. Turn the knob to stop.':r==='moving'?'The car is moving, so video is blocked. Park up and try again.':'i3D is not on the car screen yet. Open it on the car first.',r==='sent'?'ok':'err');return}
   const b=e.target.closest('button[data-a]');if(!b)return;
   const kind=b.dataset.k,i=+b.dataset.i,p=(lists[kind]||[])[i];if(!p)return;
   if(b.dataset.a==='go'){

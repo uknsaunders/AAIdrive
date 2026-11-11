@@ -87,6 +87,10 @@ Share a place from Google Maps or any app and choose **i3 Dash**, or open the ap
 
 <img src="docs/screenshots/phone-send.png" alt="Send to car screen" width="260">
 
+### YouTube (parked only)
+
+Share a YouTube video or playlist to i3D from the YouTube app, or paste the link into **Send to car**, and tap **Play on car**. It plays on the car screen with sound through the phone, only while the car is standing still. If the car starts moving it stops and the dashboard comes back, and turning the knob stops it too. If the car gives no speed reading, video will not start. It has not been tried in a car yet, and YouTube can refuse to play some videos in an embedded player.
+
 ### what3words
 
 what3words needs a free API key from what3words. If you build your own copy, add it as a repository secret named `W3W_API_KEY` (Settings → Secrets and variables → Actions) and run the build again. Until then the app shows "key missing" and `///words` will not resolve.

@@ -5,6 +5,7 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 ## 12 November 2026
 
+- **YouTube, parked only (new, untested in the car):** share a YouTube link to i3D or paste it into Send to car, then Play on car. It plays only while the car is stationary, stops when the car moves, and the knob stops it.
 - **Docs:** the main page now covers the i3D name, finding it under ConnectedDrive, the car menu, the music picker, calls and the current list of things still to confirm in the car.
 - **Music wheel (new, untested in the car):** press the knob and scroll to Music in the i3D menu. It lists your music and streaming apps, then that app's playlists and library. Press a playlist to play it. The Music page tells you where to find it.
 - **Screenshots:** added [pictures of every page](docs/SCREENSHOTS.md), plus mockups of the car menu and phone screens.

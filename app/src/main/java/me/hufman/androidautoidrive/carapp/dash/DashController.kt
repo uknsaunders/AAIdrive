@@ -15,6 +15,7 @@ import android.util.Base64
 import android.graphics.Color
 import android.hardware.display.VirtualDisplay
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
@@ -188,6 +189,15 @@ class DashController(val context: Context,
 	private val pushRunnable = object: Runnable {
 		override fun run() {
 			if (!pushing) return
+			if (videoOn) {
+				// YouTube is on screen: only watch for the car moving
+				if (isMoving()) {
+					speak("Video stopped, the car is moving")
+					stopVideo()
+				}
+				handler.postDelayed(this, PUSH_INTERVAL_MS)
+				return
+			}
 			val wait = quietUntil - SystemClock.uptimeMillis()
 			if (wait > 0) {
 				handler.postDelayed(this, wait)
@@ -246,6 +256,7 @@ class DashController(val context: Context,
 
 	override fun pauseMap() {
 		handler.post {
+			if (videoOn) stopVideo()
 			pushing = false
 			handler.removeCallbacks(pushRunnable)
 			handler.removeCallbacks(mediaRunnable)
@@ -261,6 +272,10 @@ class DashController(val context: Context,
 
 	private fun knob(steps: Int) {
 		mapAppMode.startInteraction()
+		if (videoOn) {
+			stopVideo()     // any knob turn leaves the video
+			return
+		}
 		quietUntil = SystemClock.uptimeMillis() + KNOB_QUIET_MS
 		handler.postAtFrontOfQueue {
 			try {
@@ -286,6 +301,35 @@ class DashController(val context: Context,
 	override fun musicReset() { try { music().reset() } catch (e: Exception) { Log.w(TAG, "Music reset failed", e) } }
 	override fun musicRows(): List<String> = try { music().rows() } catch (e: Exception) { Log.w(TAG, "Music rows failed", e); emptyList() }
 	override fun musicPick(row: Int): Boolean = try { music().pick(row) } catch (e: Exception) { Log.w(TAG, "Music pick failed", e); false }
+
+	/* YouTube, only while parked */
+	@Volatile private var videoOn = false
+
+	/** True unless the car says it is standing still. No speed reading counts as moving */
+	private fun isMoving(): Boolean {
+		val kmh = (data["speedKmh"] as? Number)?.toDouble() ?: return true
+		return kmh >= 3.0
+	}
+
+	/** Starts a YouTube video or playlist on the car screen. Returns sent, moving or nocar */
+	fun playVideo(id: String, list: String): String {
+		if (presentation == null) return "nocar"
+		if (isMoving()) return "moving"
+		handler.post {
+			videoOn = true
+			pageLoaded = false
+			presentation?.showVideo(id, list)
+		}
+		return "sent"
+	}
+
+	fun stopVideo() {
+		handler.post {
+			if (!videoOn) return@post
+			videoOn = false
+			presentation?.showDash()
+		}
+	}
 
 	@Volatile private var callState = 0
 	override fun callStatus(): Int = callState
@@ -617,6 +661,28 @@ class DashPresentation(context: Context, display: Display, private val bridge: A
                        private val onLoaded: () -> Unit = {}): Presentation(context, display) {
 	var webView: WebView? = null
 		private set
+	@Volatile private var inVideo = false
+
+	/** Swaps the dashboard for a bare YouTube player. The page has no access to the phone bridge */
+	fun showVideo(id: String, list: String) {
+		val web = webView ?: return
+		inVideo = true
+		web.removeJavascriptInterface("I3Native")
+		val query = StringBuilder("autoplay=1&playsinline=1&rel=0&controls=0&modestbranding=1")
+		if (list.isNotEmpty()) query.append("&list=").append(Uri.encode(list))
+		val src = "https://www.youtube.com/embed/" + Uri.encode(id) + "?" + query
+		val html = "<html><body style='margin:0;background:#000'><iframe src='$src' style='border:0;width:100vw;height:100vh' " +
+			"allow='autoplay; encrypted-media' referrerpolicy='strict-origin-when-cross-origin'></iframe></body></html>"
+		web.loadDataWithBaseURL("https://i3dash.app/", html, "text/html", "utf-8", null)
+	}
+
+	/** Back to the dashboard */
+	fun showDash() {
+		val web = webView ?: return
+		inVideo = false
+		web.addJavascriptInterface(bridge, "I3Native")
+		web.loadUrl("file:///android_asset/i3dash/index.html")
+	}
 
 	@SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -633,7 +699,7 @@ class DashPresentation(context: Context, display: Display, private val bridge: A
 		webView.addJavascriptInterface(bridge, "I3Native")
 		webView.webViewClient = object: WebViewClient() {
 			override fun onPageFinished(view: WebView?, url: String?) {
-				onLoaded()
+				if (!inVideo) onLoaded()
 			}
 		}
 		webView.webChromeClient = object: WebChromeClient() {
