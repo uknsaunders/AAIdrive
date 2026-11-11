@@ -226,6 +226,7 @@ class DashController(val context: Context,
 				Log.i(TAG, "Creating the dashboard on ${virtualDisplay.display}")
 				presentation = DashPresentation(context, virtualDisplay.display, Bridge()) {
 					pageLoaded = true
+					lastArtKey = null       // a fresh page has no cover art yet, so send it again
 					deliverPending()
 				}
 			}
@@ -366,14 +367,84 @@ class DashController(val context: Context,
 		media.put("dur", if (duration > 0) duration else 0)
 		data["media"] = media
 
-		// cover art, only sent when the track changes
+		// cover art: sent when the track changes, and retried each second until the app supplies a picture
 		val artKey = "${controller.packageName}|$title|${media.optString("artist")}"
 		if (artKey != lastArtKey) {
 			lastArtKey = artKey
-			val art = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
-			val url = art?.let { artToDataUrl(it) } ?: ""
-			js("window.i3art && window.i3art(${JSONObject.quote(url)})")
+			artTries = 0
+			artDone = false
+			js("window.i3art && window.i3art('')")
 		}
+		if (!artDone && artTries < 40) {
+			artTries++
+			val art = findArt(metadata, controller.packageName)
+			if (art != null) {
+				artDone = true
+				js("window.i3art && window.i3art(${JSONObject.quote(artToDataUrl(art))})")
+			} else if (artTries == 1 || artTries % 5 == 0) {
+				fetchArtOverHttp(metadata, artKey)
+			}
+		}
+	}
+
+	@Volatile private var artTries = 0
+	@Volatile private var artDone = false
+
+	/** Looks for cover art in the places apps put it: bitmaps, content links, then the media notification's picture */
+	private fun findArt(metadata: MediaMetadata, pkg: String): Bitmap? {
+		for (key in listOf(MediaMetadata.METADATA_KEY_ALBUM_ART, MediaMetadata.METADATA_KEY_ART, MediaMetadata.METADATA_KEY_DISPLAY_ICON)) {
+			val bitmap = try { metadata.getBitmap(key) } catch (e: Exception) { null }
+			if (bitmap != null) return bitmap
+		}
+		for (key in listOf(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, MediaMetadata.METADATA_KEY_ART_URI, MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI)) {
+			val uri = metadata.getString(key) ?: continue
+			if (uri.startsWith("content:") || uri.startsWith("file:")) {
+				try {
+					context.contentResolver.openInputStream(android.net.Uri.parse(uri))?.use {
+						android.graphics.BitmapFactory.decodeStream(it)?.let { bmp -> return bmp }
+					}
+				} catch (e: Exception) {
+					Log.d(TAG, "Couldn't open cover art $uri: $e")
+				}
+			}
+		}
+		// the player's own notification usually carries the album picture as its large icon
+		val notifications = try { NotificationListenerServiceImpl.runningInstance?.activeNotifications } catch (e: Exception) { null }
+		val own = notifications?.filter { it.packageName == pkg }.orEmpty()
+		for (n in own) {
+			val icon = try { n.notification.getLargeIcon() } catch (e: Exception) { null } ?: continue
+			val drawable = try { icon.loadDrawable(context) } catch (e: Exception) { null } ?: continue
+			val w = drawable.intrinsicWidth.coerceAtLeast(1)
+			val h = drawable.intrinsicHeight.coerceAtLeast(1)
+			val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+			val canvas = android.graphics.Canvas(bmp)
+			drawable.setBounds(0, 0, w, h)
+			drawable.draw(canvas)
+			return bmp
+		}
+		return null
+	}
+
+	/** Some apps only give a web link to the cover, which has to be downloaded off the main thread */
+	private fun fetchArtOverHttp(metadata: MediaMetadata, artKey: String) {
+		val url = listOf(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, MediaMetadata.METADATA_KEY_ART_URI, MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI)
+			.mapNotNull { metadata.getString(it) }.firstOrNull { it.startsWith("http") } ?: return
+		Thread {
+			try {
+				val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+				connection.connectTimeout = 5000
+				connection.readTimeout = 5000
+				val bmp = connection.inputStream.use { android.graphics.BitmapFactory.decodeStream(it) } ?: return@Thread
+				handler.post {
+					if (lastArtKey == artKey && !artDone) {
+						artDone = true
+						js("window.i3art && window.i3art(${JSONObject.quote(artToDataUrl(bmp))})")
+					}
+				}
+			} catch (e: Exception) {
+				Log.d(TAG, "Couldn't download cover art $url: $e")
+			}
+		}.start()
 	}
 
 	private fun artToDataUrl(art: Bitmap): String {
