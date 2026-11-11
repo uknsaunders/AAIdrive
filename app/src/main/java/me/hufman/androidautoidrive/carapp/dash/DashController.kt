@@ -281,6 +281,12 @@ class DashController(val context: Context,
 		js("window.i3navigate && window.i3navigate(${dest.latitude}, ${dest.longitude})")
 	}
 
+	private var music: DashMusic? = null
+	private fun music(): DashMusic = music ?: DashMusic(context).also { music = it }
+	override fun musicReset() { try { music().reset() } catch (e: Exception) { Log.w(TAG, "Music reset failed", e) } }
+	override fun musicRows(): List<String> = try { music().rows() } catch (e: Exception) { Log.w(TAG, "Music rows failed", e); emptyList() }
+	override fun musicPick(row: Int): Boolean = try { music().pick(row) } catch (e: Exception) { Log.w(TAG, "Music pick failed", e); false }
+
 	@Volatile private var callState = 0
 	override fun callStatus(): Int = callState
 
@@ -558,6 +564,8 @@ class DashController(val context: Context,
 
 	fun onDestroy() {
 		if (instance === this) instance = null
+		try { music?.close() } catch (e: Exception) { Log.w(TAG, "Music close failed", e) }
+		music = null
 		pageLoaded = false
 		pushing = false
 		handler.removeCallbacksAndMessages(null)

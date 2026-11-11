@@ -131,7 +131,22 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 			}
 		}
 
-		// the original map options (such as the widescreen toggle) mean nothing for the dashboard, so they stay hidden
+		// the spare settings list becomes the music wheel: apps first, then playlists
+		labelSettings.getModel()?.asRaDataModel()?.value = "Music"
+		labelSettings.setVisible(true)
+		menuSettings.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH.id, "55,0,*")
+		menuSettings.setVisible(true)
+		menuSettings.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback { listIndex ->
+			val played = interaction.musicPick(listIndex)
+			if (played) {
+				menuSettings.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = stateMap.id
+				interaction.musicReset()
+				redrawMusic()
+			} else {
+				redrawMusic()
+				throw RHMIActionAbort()     // stay on the menu, with the next list drawn
+			}
+		}
 	}
 
 	private fun redrawCommands() {
@@ -148,7 +163,17 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 			menuEntries.add(L.MAP_ACTION_CLEARNAV); menuCommands.add("clear")
 		}
 		menuList.getModel()?.value = rhmiMenuEntries
+		interaction.musicReset()
+		redrawMusic()
 		redrawDestinations()
+	}
+
+	private val musicEntries = ArrayList<String>()
+	private val rhmiMusicEntries = object: RHMIModel.RaListModel.RHMIListAdapter<String>(3, musicEntries) {}
+	private fun redrawMusic() {
+		musicEntries.clear()
+		musicEntries.addAll(interaction.musicRows())
+		menuSettings.getModel()?.value = rhmiMusicEntries
 	}
 
 	private fun redrawDestinations() {

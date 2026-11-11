@@ -43,6 +43,10 @@ interface MapInteractionController {
 	fun answerCall() {}
 	fun hangUpCall() {}
 	fun dial(number: String) {}
+	/** A music picker: apps first, then playlists. musicPick returns true when something started playing */
+	fun musicReset() {}
+	fun musicRows(): List<String> = emptyList()
+	fun musicPick(row: Int): Boolean = false
 }
 
 class MapInteractionControllerIntent(val context: Context): MapInteractionController {

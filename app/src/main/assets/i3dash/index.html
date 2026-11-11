@@ -278,12 +278,12 @@ function drawPanel(){
   }else if(p==='Music'){
     const m=D.media,art=artUrl||'';
     if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Allow i3 Dash notification access on your phone to show what is playing.':'Nothing playing.'}</div>
-      <div style="color:var(--muted);font-size:15px">Start Spotify, Amazon Music, Apple Music or BBC Sounds on your phone, or pick them from the car’s Media menu.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
+      <div style="color:var(--muted);font-size:15px">Press the knob, then pick an app and a playlist under Music.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
     const pct=m.dur>0?Math.min(100,m.pos/m.dur*100):0;
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
-      <div class="hint">${m.playing?`<b style="color:var(--accent)">Hear it in the car:</b> press MEDIA, then choose ${esc(m.app||'your music app')}`:'Use the steering wheel buttons to skip · turn the knob for the next page'}</div></div>`;
+      <div class="hint">${m.playing?`<b style="color:var(--accent)">Hear it in the car:</b> press MEDIA, then choose ${esc(m.app||'your music app')} · change playlist: press the knob › Music`:'Press the knob › Music to pick an app or playlist · steering wheel buttons skip'}</div></div>`;
   }else if(p==='Alerts'){
     const n=D.notes||[];
     const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):

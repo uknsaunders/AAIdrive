@@ -5,6 +5,7 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 ## 12 November 2026
 
+- **Music wheel (new, untested in the car):** press the knob and scroll to Music in the i3D menu. It lists your music and streaming apps, then that app's playlists and library. Press a playlist to play it. The Music page tells you where to find it.
 - **Screenshots:** added [pictures of every page](docs/SCREENSHOTS.md), plus mockups of the car menu and phone screens.
 - **Standalone app:** i3 Dash now has its own app ID (`me.hufman.androidautoidrive.i3dash`), so it installs next to the original AAIdrive without uninstalling it. Settings, saved places and permissions start fresh. The new app is named **i3D** on the phone, to tell it apart from the earlier build. Uninstall the earlier i3 Dash build once this one works.
 
