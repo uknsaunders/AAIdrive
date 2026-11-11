@@ -90,6 +90,12 @@ class OverviewPageFragment: Fragment() {
 			Tile(R.drawable.ic_send_feather, R.string.home_send, R.string.home_send_sub) {
 				startActivity(Intent(ctx, SendDestinationActivity::class.java))
 			},
+			Tile(R.drawable.ic_cellphone_android, R.string.home_calls, R.string.home_calls_sub) {
+				requestPermissions(arrayOf(
+					android.Manifest.permission.READ_CONTACTS,
+					android.Manifest.permission.CALL_PHONE,
+					android.Manifest.permission.ANSWER_PHONE_CALLS), 42)
+			},
 			Tile(R.drawable.ic_music_feather, R.string.menu_music, R.string.home_music_sub) { nav.navigate(R.id.nav_music) },
 			Tile(R.drawable.ic_bell_feather, R.string.menu_notifications, R.string.home_notifications_sub) { nav.navigate(R.id.nav_notifications) },
 			Tile(R.drawable.ic_navigation_feather, R.string.menu_navigation, R.string.home_navigation_sub) { nav.navigate(R.id.nav_navigation) }

@@ -281,6 +281,52 @@ class DashController(val context: Context,
 		js("window.i3navigate && window.i3navigate(${dest.latitude}, ${dest.longitude})")
 	}
 
+	@Volatile private var callState = 0
+	override fun callStatus(): Int = callState
+
+	private fun hasPermission(permission: String) =
+		context.checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+	@SuppressLint("MissingPermission")
+	override fun answerCall() {
+		try {
+			if (android.os.Build.VERSION.SDK_INT >= 26 && hasPermission(android.Manifest.permission.ANSWER_PHONE_CALLS)) {
+				context.getSystemService(android.telecom.TelecomManager::class.java)?.acceptRingingCall()
+			} else {
+				speak("Allow calls in the i3 Dash phone app first")
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't answer the call", e)
+		}
+	}
+
+	@SuppressLint("MissingPermission")
+	override fun hangUpCall() {
+		try {
+			if (android.os.Build.VERSION.SDK_INT >= 28 && hasPermission(android.Manifest.permission.ANSWER_PHONE_CALLS)) {
+				context.getSystemService(android.telecom.TelecomManager::class.java)?.endCall()
+			} else {
+				speak("Allow calls in the i3 Dash phone app first")
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't hang up", e)
+		}
+	}
+
+	@SuppressLint("MissingPermission")
+	override fun dial(number: String) {
+		try {
+			if (hasPermission(android.Manifest.permission.CALL_PHONE)) {
+				context.getSystemService(android.telecom.TelecomManager::class.java)
+					?.placeCall(android.net.Uri.fromParts("tel", number, null), Bundle())
+			} else {
+				speak("Allow calls in the i3 Dash phone app first")
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't place the call", e)
+		}
+	}
+
 	override fun recalcNavigation() {
 		js("window.i3recalc && window.i3recalc()")
 	}
@@ -304,8 +350,48 @@ class DashController(val context: Context,
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't read the call", e)
 			}
+			try {
+				readNotes()
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't read the notifications", e)
+			}
 			handler.postDelayed(this, MEDIA_INTERVAL_MS)
 		}
+	}
+
+	private val appLabels = ConcurrentHashMap<String, String>()
+
+	/** The phone's recent notifications, for the Alerts page: no calls, music players or ongoing items */
+	private fun readNotes() {
+		val service = NotificationListenerServiceImpl.runningInstance
+		val all = try { service?.activeNotifications } catch (e: Exception) { null }
+		if (all == null) {
+			data["notes"] = JSONObject.NULL
+			return
+		}
+		val skipCategories = setOf(Notification.CATEGORY_CALL, Notification.CATEGORY_TRANSPORT, Notification.CATEGORY_PROGRESS,
+			Notification.CATEGORY_SERVICE, Notification.CATEGORY_SYSTEM, Notification.CATEGORY_STATUS)
+		val list = all.filter {
+			val n = it.notification
+			!it.isOngoing && it.packageName != context.packageName &&
+				n.category !in skipCategories &&
+				(n.flags and Notification.FLAG_GROUP_SUMMARY) == 0
+		}.sortedByDescending { it.postTime }.take(8)
+		val array = org.json.JSONArray()
+		for (sbn in list) {
+			val extras = sbn.notification.extras
+			val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+			val text = (extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString() ?: ""
+			if (title.isBlank() && text.isBlank()) continue
+			val app = appLabels.getOrPut(sbn.packageName) {
+				try {
+					val pm = context.packageManager
+					pm.getApplicationLabel(pm.getApplicationInfo(sbn.packageName, 0)).toString()
+				} catch (e: Exception) { sbn.packageName }
+			}
+			array.put(JSONObject().put("app", app).put("title", title).put("text", text.take(160)).put("when", sbn.postTime))
+		}
+		data["notes"] = array
 	}
 
 	/** A phone call in progress or ringing, from the phone app's call notification */
@@ -314,6 +400,7 @@ class DashController(val context: Context,
 		val notifications = try { service?.activeNotifications } catch (e: Exception) { null }
 		val call = notifications?.firstOrNull { it.notification.category == Notification.CATEGORY_CALL }
 		if (call == null) {
+			callState = 0
 			data["call"] = JSONObject.NULL
 			return
 		}
@@ -325,6 +412,7 @@ class DashController(val context: Context,
 		info.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: "")
 		info.put("ongoing", ongoing)
 		info.put("since", call.notification.`when`)
+		callState = if (ongoing) 2 else 1
 		data["call"] = info
 	}
 

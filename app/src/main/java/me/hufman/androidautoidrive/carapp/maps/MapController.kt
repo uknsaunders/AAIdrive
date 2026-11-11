@@ -38,6 +38,11 @@ interface MapInteractionController {
 	fun navigateTo(dest: LatLong)
 	fun recalcNavigation()
 	fun stopNavigation()
+	/** Phone calls, for apps that can handle them */
+	fun callStatus(): Int = 0       // 0 none, 1 ringing, 2 in a call
+	fun answerCall() {}
+	fun hangUpCall() {}
+	fun dial(number: String) {}
 }
 
 class MapInteractionControllerIntent(val context: Context): MapInteractionController {

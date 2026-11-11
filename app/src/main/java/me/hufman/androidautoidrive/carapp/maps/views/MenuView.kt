@@ -26,6 +26,7 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 	val alwaysMenuEntries = listOf(L.MAP_ACTION_VIEWMAP, L.MAP_ACTION_SEARCH)
 	val duringNavMenuEntries = listOf(L.MAP_ACTION_RECALC_NAV, L.MAP_ACTION_CLEARNAV)
 	val menuEntries = ArrayList<String>()
+	private val menuCommands = ArrayList<String>()      // what each menu row does, in the same order
 	val rhmiMenuEntries = object: RHMIModel.RaListModel.RHMIListAdapter<String>(3, menuEntries) {}
 	val menuMap = state.componentsList.filterIsInstance<RHMIComponent.List>()[0]
 	val mapModel = menuMap.getModel()!!
@@ -80,23 +81,24 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 		menuList.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH.id, "100,0,*")
 		menuList.setVisible(true)
 		menuList.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback { listIndex ->
-			val destStateId = when (listIndex) {
-				0 -> stateMap.id    // must be index 0, because it's also index 0 in menuMap
-				1 -> stateInput.id
+			val command = menuCommands.getOrNull(listIndex)
+			val destStateId = when (command) {
+				"map" -> stateMap.id    // must be index 0, because it's also index 0 in menuMap
+				"search" -> stateInput.id
 				else -> state.id
 			}
-			Log.i(TAG, "User pressed menu item $listIndex ${menuEntries.getOrNull(listIndex)}, setting target ${menuList.getAction()?.asHMIAction()?.getTargetModel()?.id} to $destStateId")
+			Log.i(TAG, "User pressed menu item $listIndex $command, setting target ${menuList.getAction()?.asHMIAction()?.getTargetModel()?.id} to $destStateId")
 			menuList.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = destStateId
-			if (listIndex== 2) {
-				// recalculate nav
-				interaction.recalcNavigation()
-			}
-			if (listIndex == 3) {
-				// clear navigation
-				interaction.stopNavigation()
-				// the interaction is async, but we trust that it will clear the destination so we can redraw to hide the commands
-				mapAppMode.currentNavDestination = null
-				redrawCommands()
+			when (command) {
+				"recalc" -> interaction.recalcNavigation()
+				"clear" -> {
+					interaction.stopNavigation()
+					// the interaction is async, but we trust that it will clear the destination so we can redraw to hide the commands
+					mapAppMode.currentNavDestination = null
+					redrawCommands()
+				}
+				"answer" -> { interaction.answerCall(); redrawCommands() }
+				"hangup" -> { interaction.hangUpCall(); redrawCommands() }
 			}
 		}
 		// it seems that menuMap and menuList share the same HMI Action values, so use the same RA handler
@@ -132,9 +134,16 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 
 	private fun redrawCommands() {
 		menuEntries.clear()
-		menuEntries.addAll(alwaysMenuEntries)
+		menuCommands.clear()
+		menuEntries.add(L.MAP_ACTION_VIEWMAP); menuCommands.add("map")
+		menuEntries.add(L.MAP_ACTION_SEARCH); menuCommands.add("search")
+		when (interaction.callStatus()) {
+			1 -> { menuEntries.add("Answer call"); menuCommands.add("answer") }
+			2 -> { menuEntries.add("Hang up"); menuCommands.add("hangup") }
+		}
 		if (mapAppMode.currentNavDestination != null) {
-			menuEntries.addAll(duringNavMenuEntries)
+			menuEntries.add(L.MAP_ACTION_RECALC_NAV); menuCommands.add("recalc")
+			menuEntries.add(L.MAP_ACTION_CLEARNAV); menuCommands.add("clear")
 		}
 		menuList.getModel()?.value = rhmiMenuEntries
 	}

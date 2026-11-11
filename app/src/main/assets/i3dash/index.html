@@ -108,6 +108,12 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mhint b{color:var(--accent)}
 .diag{position:absolute;left:12px;bottom:62px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
 .diag:empty{display:none}
+.turn:not([hidden])~.np{top:96px;left:12px;right:auto;width:min(70%,400px)}
+.al{display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.al-row{background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px}
+.al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
@@ -223,7 +229,7 @@ window.i3feed=function(d){
 };
 
 /* ---------- pages, turned with the iDrive knob ---------- */
-const PAGES=['Car','Music','Battery','Journey','Map','Info'];let page=0;
+const PAGES=['Car','Music','Battery','Journey','Alerts','Map','Info'];let page=0;
 $('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab${p==='Info'?' ti':''}" data-i="${i}">${p==='Info'?'i':p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
@@ -278,9 +284,14 @@ function drawPanel(){
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
       <div class="hint">${m.playing?`<b style="color:var(--accent)">Hear it in the car:</b> press MEDIA, then choose ${esc(m.app||'your music app')}`:'Use the steering wheel buttons to skip · turn the knob for the next page'}</div></div>`;
+  }else if(p==='Alerts'){
+    const n=D.notes||[];
+    const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
+      `<div style="color:#c3cfdb;font-size:20px">${D.notes===null||D.notes===undefined?'Allow i3 Dash notification access on your phone to see your alerts here.':'No new alerts.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">Messages and app alerts from the phone, newest first</div></div>`;
   }else if(p==='Info'){
     const b=Math.floor(paint/4)%9,e=paint%4;
-    el.innerHTML=`<div class="frost" style="background:linear-gradient(180deg,rgba(24,33,44,.25),rgba(10,14,19,.55));justify-content:flex-end">
+    el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
       <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd><dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd></dl>
       <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
@@ -402,6 +413,7 @@ function nearestCharger(){
   return best?{c:best,d:bd}:null;
 }
 
+function tabBadge(){const t=document.querySelector('.tab[data-i="'+PAGES.indexOf('Alerts')+'"]');if(!t)return;const n=(D.notes||[]).length,txt='Alerts'+(n?' '+n:'');if(t.textContent!==txt)t.textContent=txt}
 /* ---------- phone call ---------- */
 function drawCall(){
   const c=D.call,el=$('#call');
@@ -410,7 +422,7 @@ function drawCall(){
   const label=c.ongoing?'On call · '+mmss(Math.max(0,Date.now()-c.since)):'Incoming call';
   H('#call',`<div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
     <div class="cs">${label}</div><div class="cn">${esc(c.name||'Unknown caller')}</div>
-    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Use the car’s phone controls to hang up':'Answer with the steering wheel or iDrive'}</div>`);
+    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Press the knob, then Hang up':'Press the knob, then Answer call'}</div>`);
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -437,7 +449,7 @@ function render(){
   if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
   else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
   else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
-  drawTyres();drawLimit();drawCall();
+  drawTyres();drawLimit();drawCall();tabBadge();
   T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
   H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
@@ -448,7 +460,7 @@ function render(){
   H('#jEff',sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100'));
   H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
   T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
-  if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info')drawPanel();
+  if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info'||PAGES[page]==='Alerts')drawPanel();
   drawNowPlaying();
   const mh=$('#mhint'),wantHint=!route;if(mh.hidden===wantHint)mh.hidden=!wantHint;
 }
@@ -482,6 +494,7 @@ function startMap(){
     let loaded=false;
     map.on('load',()=>{
       loaded=true;
+      try{document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');document.querySelector('.maplibregl-ctrl-attrib')?.removeAttribute('open')}catch(e){}
       map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
       map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
       map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});

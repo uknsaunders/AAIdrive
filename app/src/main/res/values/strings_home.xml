@@ -18,4 +18,6 @@
     <string name="home_step_ready">Car link ready</string>
     <string name="home_step_connected">Connected to the car</string>
     <string name="home_help">Connection help</string>
+    <string name="home_calls">Calls and contacts</string>
+    <string name="home_calls_sub">Allow answering, hanging up and dialling from the car</string>
 </resources>

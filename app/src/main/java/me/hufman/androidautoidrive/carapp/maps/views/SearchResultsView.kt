@@ -118,6 +118,10 @@ class SearchResultsView(val state: RHMIState, val mapPlaceSearch: MapPlaceSearch
 		if (result == null) {
 			throw RHMIActionAbort()
 		}
+		if (result.id.startsWith("tel:")) {
+			interaction.dial(result.id.removePrefix("tel:"))
+			return
+		}
 		searchJob?.cancel()
 		searchJob = launch {
 			val locationResult = if (result.location == null) {

@@ -31,6 +31,10 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 			val near = here?.let { Pair(it.latitude, it.longitude) }
 			val text = query.trim()
 
+			val callOnly = text.startsWith("call ", ignoreCase = true)
+			val calls = contacts(if (callOnly) text.substring(5).trim() else text)
+			if (callOnly) return@async calls
+
 			val found = mutableListOf<Resolved>()
 			found.addAll(DashStore.places(context).filter { text.isNotEmpty() && it.name.contains(text, ignoreCase = true) })
 			if (found.isEmpty()) {
@@ -40,7 +44,7 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 					found.addAll(DashDestinations.resolve(text, near).items)
 				}
 			}
-			found.map { place ->
+			calls + found.map { place ->
 				val location = LatLong(place.lat, place.lon)
 				val distance = here?.let { LatLong(it.latitude, it.longitude).distanceFrom(location).toFloat() }
 				MapResult("${place.lat},${place.lon}", place.name, place.detail, location, distance)
@@ -49,6 +53,32 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 			Log.w(TAG, "Search failed for $query", e)
 			emptyList()
 		}
+	}
+
+	/** Phone contacts whose name contains the text, shown as "Call name" rows that the car dials when chosen */
+	private fun contacts(text: String): List<MapResult> {
+		if (text.length < 2) return emptyList()
+		if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) return emptyList()
+		val results = mutableListOf<MapResult>()
+		try {
+			val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+			context.contentResolver.query(phone,
+				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
+				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?", arrayOf("%$text%"),
+				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+				val seen = HashSet<String>()
+				while (cursor.moveToNext() && results.size < 6) {
+					val name = cursor.getString(0) ?: continue
+					val number = cursor.getString(1) ?: continue
+					if (seen.add(number.filter { it.isDigit() || it == '+' })) {
+						results.add(MapResult("tel:$number", "Call $name", number))
+					}
+				}
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't look up contacts", e)
+		}
+		return results
 	}
 
 	override fun resultInformationAsync(resultId: String): Deferred<MapResult?> = scope.async {
