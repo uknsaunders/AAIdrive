@@ -23,4 +23,6 @@ data class MapResult(val id: String, val name: String,
 interface MapPlaceSearch {
 	fun searchLocationsAsync(query: String): Deferred<List<MapResult>>
 	fun resultInformationAsync(resultId: String): Deferred<MapResult?>
+	/** Extra one-press entries for the car menu, each of which is searched for when chosen */
+	fun quickEntries(): List<String> = emptyList()
 }

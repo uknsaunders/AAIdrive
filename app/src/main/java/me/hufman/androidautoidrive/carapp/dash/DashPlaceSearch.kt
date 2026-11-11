@@ -78,7 +78,32 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't look up contacts", e)
 		}
-		return results
+		val wanted = "Call $text"
+		return results.sortedBy { if (it.name.equals(wanted, ignoreCase = true)) 0 else 1 }
+	}
+
+	/** Saved places, then starred contacts as "Call name", for the one-press list in the car menu */
+	override fun quickEntries(): List<String> {
+		val entries = mutableListOf<String>()
+		try {
+			entries.addAll(DashStore.places(context).map { it.name }.take(6))
+			if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+				val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+				context.contentResolver.query(phone,
+					arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME),
+					"${android.provider.ContactsContract.CommonDataKinds.Phone.STARRED} = 1", null,
+					"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+					val seen = LinkedHashSet<String>()
+					while (cursor.moveToNext() && seen.size < 8) {
+						cursor.getString(0)?.let { seen.add(it) }
+					}
+					entries.addAll(seen.map { "Call $it" })
+				}
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't build the quick list", e)
+		}
+		return entries
 	}
 
 	override fun resultInformationAsync(resultId: String): Deferred<MapResult?> = scope.async {

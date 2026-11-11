@@ -7,6 +7,9 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 - **Standalone app:** i3 Dash now has its own app ID (`me.hufman.androidautoidrive.i3dash`), so it installs next to the original AAIdrive without uninstalling it. Settings, saved places and permissions start fresh. The new app is named **i3D** on the phone, to tell it apart from the earlier build. Uninstall the earlier i3 Dash build once this one works.
 
+- **Clearer car menu:** the entries now read "Open i3 Dash" and "Search place or contact", the unused widescreen option is gone, and a new **Places and calls** list shows your saved places and starred contacts for one-press navigating or ringing.
+- Header moved down a little so the car's own logo and status bar no longer clip the tabs and the temperature.
+
 ## 11 November 2026
 
 **Calls, alerts and tidy-ups**

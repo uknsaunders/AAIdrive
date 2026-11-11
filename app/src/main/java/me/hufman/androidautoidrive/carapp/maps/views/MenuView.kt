@@ -35,7 +35,8 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 	val labelDestinations: RHMIComponent.Label
 	val menuDestinations = state.componentsList.filterIsInstance<RHMIComponent.List>()[2]
 	val destinationEntries = StoredList(mapAppMode.appSettings, AppSettings.KEYS.MAP_QUICK_DESTINATIONS)
-	val rhmiDestinationEntries = object: RHMIModel.RaListModel.RHMIListAdapter<String>(3, destinationEntries) {}
+	private val quickEntries = ArrayList<String>()       // the stored favourites, plus saved places and starred contacts
+	val rhmiDestinationEntries = object: RHMIModel.RaListModel.RHMIListAdapter<String>(3, quickEntries) {}
 
 	val labelSettings: RHMIComponent.Label
 	val menuSettings = state.componentsList.filterIsInstance<RHMIComponent.List>()[3]
@@ -55,7 +56,6 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 	fun initWidgets(stateMap: RHMIState, stateInput: RHMIState) {
 		mapAppMode.appSettings.callback = {
 			redrawDestinations()
-			settingsView.redraw()
 		}
 		state.componentsList.forEach {
 			it.setVisible(false)
@@ -104,13 +104,19 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 		// it seems that menuMap and menuList share the same HMI Action values, so use the same RA handler
 		menuMap.getAction()?.asRAAction()?.rhmiActionCallback = menuList.getAction()?.asRAAction()?.rhmiActionCallback
 
-		labelDestinations.getModel()?.asRaDataModel()?.value = L.MAP_DESTINATIONS
+		labelDestinations.getModel()?.asRaDataModel()?.value = "Places and calls"
 		menuDestinations.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH.id, "55,0,*")
 		menuDestinations.setVisible(true)
 		menuDestinations.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback { listIndex ->
 			runBlocking {
-				val destination = destinationEntries.getOrNull(listIndex)?.let {
+				val destination = quickEntries.getOrNull(listIndex)?.let {
 					mapPlaceSearch.searchLocationsAsync(it).await().getOrNull(0)
+				}
+				if (destination != null && destination.id.startsWith("tel:")) {
+					// a contact, so ring them and go back to the dashboard
+					menuDestinations.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = stateMap.id
+					interaction.dial(destination.id.removePrefix("tel:"))
+					return@runBlocking
 				}
 				val locationResult = if (destination != null && destination.location == null) {
 					mapPlaceSearch.resultInformationAsync(destination.id).await()    // ask for LatLong, to navigate to
@@ -125,18 +131,14 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 			}
 		}
 
-		// decorate the settings
-		labelSettings.setVisible(true)
-		labelSettings.getModel()?.asRaDataModel()?.value = L.MAP_OPTIONS
-
-		settingsView.initWidgets()
+		// the original map options (such as the widescreen toggle) mean nothing for the dashboard, so they stay hidden
 	}
 
 	private fun redrawCommands() {
 		menuEntries.clear()
 		menuCommands.clear()
-		menuEntries.add(L.MAP_ACTION_VIEWMAP); menuCommands.add("map")
-		menuEntries.add(L.MAP_ACTION_SEARCH); menuCommands.add("search")
+		menuEntries.add("Open i3 Dash"); menuCommands.add("map")
+		menuEntries.add("Search place or contact"); menuCommands.add("search")
 		when (interaction.callStatus()) {
 			1 -> { menuEntries.add("Answer call"); menuCommands.add("answer") }
 			2 -> { menuEntries.add("Hang up"); menuCommands.add("hangup") }
@@ -146,9 +148,13 @@ class MenuView(val state: RHMIState, val interaction: MapInteractionController, 
 			menuEntries.add(L.MAP_ACTION_CLEARNAV); menuCommands.add("clear")
 		}
 		menuList.getModel()?.value = rhmiMenuEntries
+		redrawDestinations()
 	}
 
 	private fun redrawDestinations() {
+		quickEntries.clear()
+		quickEntries.addAll(destinationEntries)
+		quickEntries.addAll(mapPlaceSearch.quickEntries())
 		labelDestinations.setVisible(rhmiDestinationEntries.height > 0)
 		menuDestinations.getModel()?.value = rhmiDestinationEntries
 	}
