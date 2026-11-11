@@ -5,7 +5,7 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 ## 12 November 2026
 
-- **Standalone app:** i3 Dash now has its own app ID (`me.hufman.androidautoidrive.i3dash`), so it installs next to the original AAIdrive without uninstalling it. Settings, saved places and permissions start fresh. Uninstall the earlier i3 Dash build once this one works.
+- **Standalone app:** i3 Dash now has its own app ID (`me.hufman.androidautoidrive.i3dash`), so it installs next to the original AAIdrive without uninstalling it. Settings, saved places and permissions start fresh. The new app is named **i3D** on the phone, to tell it apart from the earlier build. Uninstall the earlier i3 Dash build once this one works.
 
 ## 11 November 2026
 

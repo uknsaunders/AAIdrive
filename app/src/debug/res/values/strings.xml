@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the standalone build, so it can be told apart from an older i3 Dash install -->
+    <string name="app_name">i3D</string>
+</resources>
