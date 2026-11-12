@@ -9,6 +9,7 @@ object DashStore {
 	private const val PREFS = "i3dash_store"
 	private const val MAX_PLACES = 30
 	private const val MAX_RECENTS = 8
+	private const val MAX_VIDEOS = 6
 	private const val PENDING_MAX_AGE_MS = 45 * 60 * 1000L
 	const val DEFAULT_TARIFF_PENCE = 28.0
 
@@ -87,4 +88,23 @@ object DashStore {
 	}
 
 	fun hasPending(context: Context): Boolean = prefs(context).contains("pending")
+
+	/** YouTube videos sent from the phone, newest first, so they can be started again from the car */
+	fun videos(context: Context): JSONArray = try {
+		JSONArray(prefs(context).getString("videos", "[]"))
+	} catch (e: Exception) {
+		JSONArray()
+	}
+
+	fun addVideo(context: Context, id: String, list: String, title: String) {
+		val old = videos(context)
+		val next = JSONArray()
+		next.put(JSONObject().put("id", id).put("list", list).put("title", title.trim().take(60).ifEmpty { "YouTube video" }))
+		for (i in 0 until old.length()) {
+			val item = old.optJSONObject(i) ?: continue
+			if (item.optString("id") == id && item.optString("list") == list) continue
+			if (next.length() < MAX_VIDEOS) next.put(item)
+		}
+		prefs(context).edit().putString("videos", next.toString()).apply()
+	}
 }

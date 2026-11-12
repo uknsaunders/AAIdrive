@@ -12,12 +12,19 @@
     <string name="home_addons_sub">Extra apps for the car</string>
     <string name="home_settings_sub">Language, analytics, advanced</string>
     <string name="home_support_sub">Help and about</string>
-    <string name="home_section_main">Features</string>
+    <string name="home_section_main">i3D</string>
+    <string name="home_section_setup">Finish setting up</string>
+    <string name="home_section_extras">Original AAIdrive apps</string>
+    <string name="home_extras_note">Optional. Each of these is a separate entry in the car\'s menus. i3D does not need them.</string>
+    <string name="home_car_note">Everything else happens in the car: press the knob for places, calls, music and video.</string>
+    <string name="home_setup_notifications">Music, alerts and calls on the car screen</string>
+    <string name="home_setup_notifications_sub">Tap, then switch on i3D in the list</string>
+    <string name="home_setup_done">Done</string>
     <string name="home_section_more">More</string>
     <string name="home_step_phone">Phone linked to the car</string>
     <string name="home_step_ready">Car link ready</string>
     <string name="home_step_connected">Connected to the car</string>
     <string name="home_help">Connection help</string>
     <string name="home_calls">Calls and contacts</string>
-    <string name="home_calls_sub">Allow answering, hanging up and dialling from the car</string>
+    <string name="home_calls_sub">Tap to allow answering, hanging up and dialling from the car</string>
 </resources>

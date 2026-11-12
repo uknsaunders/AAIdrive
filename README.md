@@ -22,7 +22,7 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | **Map** | Dark 3D map, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
 | **i** | Connection details and the raw data the car sends. |
 
-Incoming calls show a panel with the caller's name. Press the knob to **Answer call** or **Hang up**. To ring someone, choose **Search** and type a name, or "call" and a name, then pick the "Call …" row. Allow calls once with the **Calls and contacts** button in the phone app.
+Incoming calls show a panel with the caller's name. Press the knob to answer, decline or hang up, and to ring your starred contacts.
 
 ![Journey page](docs/screenshots/journey.png)
 
@@ -37,8 +37,9 @@ Incoming calls show a panel with the caller's name. Press the knob to **Answer c
 1. On your phone, download `i3-dash.apk` from the [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest).
 2. Allow installs from your browser when Android asks, then open the file and tap Install. The app is called **i3D** on your phone. It has its own app ID, so it installs next to the original AAIdrive instead of replacing it. Only run one of them at a time, because both try to connect to the car. If you installed an earlier i3 Dash build (before 12 November 2026), uninstall it once i3D works. It was a different app, so settings and saved places do not carry over, and you need to allow notification access and calls again.
 3. Open i3D and work through the welcome screens.
-4. Allow notification access so it can read what is playing and show alerts and calls. If the switch is greyed out, go to Settings → Apps → i3D → ⋮ → **Allow restricted settings**, then try again.
-5. Tap **Calls and contacts** on the home screen and allow the permissions, so the car can answer, hang up and dial.
+4. The home screen shows a **Finish setting up** list with two items. Tap each one until it shows a tick, then the list disappears.
+   - **Music, alerts and calls on the car screen** opens Android's notification access list. Switch on i3D. If the switch is greyed out, go to Settings → Apps → i3D → ⋮ → **Allow restricted settings**, then try again.
+   - **Calls and contacts** lets the car answer, hang up and dial.
 
 ## Connect
 
@@ -51,33 +52,30 @@ Incoming calls show a panel with the caller's name. Press the knob to **Answer c
 
 ![i3D in the car's menu](docs/screenshots/car-entry.png)
 
-*An illustration of the entry. The car draws its own menu, so yours will look a little different, and the label under the icon may not show on every car.*
+*An illustration of the entry. The car draws its own list, so yours will look a little different, and the label under the icon may not show on every car. Choosing it opens the dash directly.*
 
 If it sits on "waiting for car connection", close the BMW Connected app, restart the phone and the car, then plug in again.
 
 ## Using it in the car
 
-Turn the iDrive knob to move between pages. Press the knob to open the i3D menu.
+Everything happens inside the dash. Turn the iDrive knob to move between pages. Press the knob for the menu, turn to choose, and press to select. The menu closes by itself after 20 seconds.
 
-![The i3D menu](docs/screenshots/car-menu.png)
+![The menu](docs/screenshots/menu-main.png)
 
-The menu has:
+- **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
+- **Call**: your starred contacts, or type a name. During a call the menu starts with **Hang up**. When the phone rings it shows only **Answer call** and **Decline call**.
+- **Music**: pause, skip, or choose an app and one of its playlists. Pressing the knob on the Music page opens this directly.
+- **Video**: videos you have sent from the phone, parked only.
+- **Read alerts aloud**: speaks your latest three alerts.
 
-- **Open i3 Dash**, to go back to the dashboard.
-- **Search place or contact**, to start navigating or ring someone.
-- **Answer call** or **Hang up**, only while the phone is ringing or in a call.
-- **Places and calls**, your saved places and starred contacts. Press one to navigate or ring.
-- **Music**, to pick an app and a playlist.
+![Choosing a playlist](docs/screenshots/menu-music-playlists.png)
 
-### Music
+Two things the car decides, not the app:
 
-Start a song on the phone and it shows on the Music page. If the radio keeps playing, press MEDIA on the car to switch the source to the phone.
+- **Sound.** Music travels to the car over Bluetooth, even with the USB cable in. If you hear the radio instead, press MEDIA and choose Bluetooth audio. The car remembers it.
+- **The car's phone screen.** The car shows its own screen when a call connects. i3D brings the dash back once the call is under way, so you can hang up from the menu.
 
-To choose something from the car, press the knob, scroll to **Music** and press an app. Its library opens, with playlists, liked songs and albums. Press a playlist to play it. The first row, **Back**, goes up a level.
-
-![Music apps and playlists](docs/screenshots/car-music-playlists.png)
-
-What you see in a library depends on the app, and some apps share less than others. The music picker has not been tried in a car yet.
+What you see in a music app's library depends on the app, and some apps share less than others.
 
 ## Send a place from your phone
 
@@ -89,7 +87,7 @@ Share a place from Google Maps or any app and choose **i3 Dash**, or open the ap
 
 ### YouTube (parked only)
 
-Share a YouTube video or playlist to i3D from the YouTube app, or paste the link into **Send to car**, and tap **Play on car**. It plays on the car screen with sound through the phone, only while the car is standing still. If the car starts moving it stops and the dashboard comes back, and turning the knob stops it too. If the car gives no speed reading, video will not start. It has not been tried in a car yet, and YouTube can refuse to play some videos in an embedded player.
+Share a YouTube video or playlist to i3D from the YouTube app, or paste the link into **Send to car**, and tap **Play on car**. It plays on the car screen with sound through the phone, only while the car is standing still. Videos you send are kept in the car's menu under **Video**, so you can start them again without the phone. If the car starts moving it stops and the dashboard comes back, and turning or pressing the knob stops it too. If the car gives no speed reading, video will not start. It has not been tried in a car yet, and YouTube can refuse to play some videos in an embedded player.
 
 ### what3words
 
@@ -99,13 +97,13 @@ what3words needs a free API key from what3words. If you build your own copy, add
 
 <img src="docs/screenshots/phone-home.png" alt="The i3D home screen" width="260">
 
-The home screen has a connection card at the top and a list of large buttons: Send to car, Calls and contacts, Music, Notifications, Navigation, Calendar, Assistants, then Car information, Addons, Settings and Support. Tap one to open it and use the back arrow to return.
+The home screen has a connection card at the top, the setup list until it is finished, and **Send to car**. Car information, Settings and Support are under More. The original AAIdrive apps (Music, Notifications, Navigation, Calendar, Assistants, Addons) are at the bottom. They are optional and each is a separate entry in the car's menus.
 
 ## Things to know
 
 - Journey cost is the battery energy used plus 10% for charging losses, at your price per kWh. The default is 28p, and you can change it on the Send to car screen.
 - Speed limits and chargers come from OpenStreetMap, so some roads have no limit listed.
-- Not yet confirmed on a real car: the music picker, answering, hanging up and dialling from the menu, whether the page header now clears the car's own logo and status bar, opening search from the knob press, and the label under the car's menu icon.
+- Not yet confirmed on a real car: the in-dash menu on the knob press, the music picker, answering, hanging up and dialling, the dash coming back during a call, YouTube, whether the page header clears the car's own logo and status bar, and the label under the car's menu icon. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
 - This i3 sends no tyre pressure data, so the tyre rings stay empty (see the Tyres line on the **i** page).
 
 ## Building

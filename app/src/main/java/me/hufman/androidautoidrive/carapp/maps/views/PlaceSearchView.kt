@@ -53,7 +53,12 @@ class PlaceSearchView(state: RHMIState, val mapPlaceSearch: MapPlaceSearch, val 
 			searchResultsView?.setContents(searchResults)
 			return
 		}
-		interaction.stopNavigation()
+		if (item.id.startsWith("tel:")) {
+			// a contact: ring them and go back to the full screen view
+			inputComponent.getSuggestAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = fullImageView?.state?.id ?: 0
+			interaction.dial(item.id.removePrefix("tel:"))
+			return
+		}
 		searchJob?.cancel()
 		searchJob = launch {
 			val locationResult = if (item.location == null) {
@@ -62,6 +67,7 @@ class PlaceSearchView(state: RHMIState, val mapPlaceSearch: MapPlaceSearch, val 
 				item
 			}
 			if (locationResult?.location != null) {
+				interaction.stopNavigation()
 				interaction.navigateTo(locationResult.location)
 				inputComponent.getSuggestAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = fullImageView?.state?.id ?: 0
 			}

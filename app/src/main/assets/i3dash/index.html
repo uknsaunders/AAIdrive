@@ -114,6 +114,16 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu{position:absolute;top:0;right:0;bottom:0;width:min(100%,680px);z-index:9;background:var(--bg);border-left:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.mt{display:flex;justify-content:space-between;align-items:baseline;font:700 24px var(--f-d);padding:0 8px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.mt small{font:500 16px var(--f-b);color:var(--muted)}
+.mi{height:47px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
+.mi span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mi small{font:500 17px var(--f-b);color:var(--muted);white-space:nowrap;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+.mi b{font:700 26px var(--f-d);color:var(--muted);flex:none}
+.mi.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
+.mi.dim{color:var(--muted);font-size:20px}
+.toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
@@ -160,7 +170,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
         <div><b class="num" id="eBat" style="color:var(--good)">--</b><span class="lbl">Battery on arrival</span></div>
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
-      <div class="mhint" id="mhint">Press the knob <b>›</b> Search destination</div>
+      <div class="mhint" id="mhint">Press the knob <b>›</b> Menu</div>
+      <div class="menu" id="menu" hidden></div>
+      <div class="toast" id="toast" hidden></div>
       <div class="np" id="np" hidden></div>
       <div class="lim" id="lim" hidden></div>
       <div class="pages" id="pages"></div>
@@ -178,7 +190,7 @@ const _c=new Map();
 function T(sel,v){v=String(v);if(_c.get(sel+'t')===v)return;_c.set(sel+'t',v);$(sel).textContent=v}
 function H(sel,v){v=String(v);if(_c.get(sel+'h')===v)return;_c.set(sel+'h',v);$(sel).innerHTML=v}
 function S(el,k,v){if(el.style[k]!==v)el.style[k]=v}
-const N=window.I3Native||{speak(){},log(){},navigationEnded(){}};
+const N=window.I3Native||{speak(){},log(){},navigationEnded(){},menu(){return '{}'},navStarted(){},search(){},answer(){},hangup(){},dial(){},media(){},musicOpen(){},musicPick(){},video(){return 'nocar'}};
 const log=m=>{try{N.log(String(m))}catch(e){}};
 const store={get(k,d){try{const v=localStorage.getItem('i3.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('i3.'+k,JSON.stringify(v))}catch(e){}}};
 
@@ -233,6 +245,7 @@ const PAGES=['Car','Music','Battery','Journey','Alerts','Map','Info'];let page=0
 $('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab${p==='Info'?' ti':''}" data-i="${i}">${p==='Info'?'i':p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
+  if(menu){menu.sel=Math.max(0,Math.min(menu.items.length-1,menu.sel+(dir>0?1:-1)));drawMenu();menuAlive();return}
   if(PAGES[page]==='Info'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
   page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
 };
@@ -277,18 +290,18 @@ function drawPanel(){
       ${rows}<div class="hint">Battery energy used + 10% charging losses, at ${f(price/1.1*100,0)}p/kWh (set on the phone)</div></div>`;
   }else if(p==='Music'){
     const m=D.media,art=artUrl||'';
-    if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Allow i3 Dash notification access on your phone to show what is playing.':'Nothing playing.'}</div>
-      <div style="color:var(--muted);font-size:15px">Press the knob, then pick an app and a playlist under Music.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
+    if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Open the i3D app on your phone and finish the setup list to show what is playing.':'Nothing playing.'}</div>
+      <div style="color:var(--muted);font-size:17px">Press the knob to choose an app and a playlist.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
     const pct=m.dur>0?Math.min(100,m.pos/m.dur*100):0;
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
-      <div class="hint">${m.playing?`<b style="color:var(--accent)">Hear it in the car:</b> press MEDIA, then choose ${esc(m.app||'your music app')} · change playlist: press the knob › Music`:'Press the knob › Music to pick an app or playlist · steering wheel buttons skip'}</div></div>`;
+      <div class="hint"><b style="color:var(--accent)">Press the knob</b> to pause, skip or choose a playlist${m.playing?' · no sound? set the car to Bluetooth audio once with MEDIA':''}</div></div>`;
   }else if(p==='Alerts'){
     const n=D.notes||[];
     const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
-      `<div style="color:#c3cfdb;font-size:20px">${D.notes===null||D.notes===undefined?'Allow i3 Dash notification access on your phone to see your alerts here.':'No new alerts.'}</div>`;
-    el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">Messages and app alerts from the phone, newest first</div></div>`;
+      `<div style="color:#c3cfdb;font-size:20px">${D.notes===null||D.notes===undefined?'Open the i3D app on your phone and finish the setup list to see your alerts here.':'No new alerts.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">Newest first · press the knob to have them read aloud</div></div>`;
   }else if(p==='Info'){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
@@ -422,7 +435,7 @@ function drawCall(){
   const label=c.ongoing?'On call · '+mmss(Math.max(0,Date.now()-c.since)):'Incoming call';
   H('#call',`<div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
     <div class="cs">${label}</div><div class="cn">${esc(c.name||'Unknown caller')}</div>
-    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Press the knob, then Hang up':'Press the knob, then Answer call'}</div>`);
+    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Press the knob to hang up':'Press the knob to answer or decline'}</div>`);
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -435,8 +448,88 @@ function drawNowPlaying(){
   const el=$('#np');if(el.hidden===show)el.hidden=!show;
   if(!show)return;
   const fresh=nowPlaying&&Date.now()-npSince<30000;
-  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">Hear it: press MEDIA › ${esc(m.app||'it')}</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
+  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">No sound? MEDIA › Bluetooth audio</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
 }
+/* ---------- the menu: press the knob, turn to choose, press to select ---------- */
+const MENU_ROWS=7,MENU_IDLE_MS=20000;
+let menu=null,menuTimer=0,toastTimer=0;
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{e.hidden=true},3500)}
+function menuData(){let d={};try{d=JSON.parse(N.menu())||{}}catch(e){}return {places:d.places||[],recents:d.recents||[],contacts:d.contacts||[],videos:d.videos||[],canSeeContacts:!!d.canSeeContacts}}
+function openMenu(title,items,sel,wait){$('#toast').hidden=true;menu={title,items,sel:Math.min(sel||0,items.length-1),wait:!!wait};drawMenu();menuAlive()}
+function closeMenu(){menu=null;clearTimeout(menuTimer);drawMenu()}
+function menuAlive(){clearTimeout(menuTimer);menuTimer=setTimeout(closeMenu,MENU_IDLE_MS)}
+function drawMenu(){
+  const el=$('#menu');
+  if(!menu){if(!el.hidden)el.hidden=true;return}
+  if(el.hidden)el.hidden=false;
+  const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));
+  const rows=menu.items.slice(first,first+MENU_ROWS).map((it,i)=>`<div class="mi${first+i===menu.sel?' on':''}${it.dim?' dim':''}"><span>${esc(it.label)}</span>${it.more?'<b>›</b>':it.note?`<small>${esc(it.note)}</small>`:''}</div>`).join('');
+  H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>${n>MENU_ROWS?(menu.sel+1)+' of '+n:'turn to choose · press to select'}</small></div>${rows}`);
+}
+const backTo=fn=>({label:'‹ Back',act:fn});
+const waiting=title=>openMenu(title,[{label:'Loading…',dim:1}],0,true);
+function stopNav(){window.i3stopNav();N.navigationEnded()}
+function goTo(p){closeMenu();window.i3navigate(p.lat,p.lon,p.name);N.navStarted(p.lat,p.lon,p.name||'')}
+function readAlerts(){const n=(D.notes||[]).slice(0,3);N.speak(n.length?n.map(x=>[x.app,x.title,x.text].filter(Boolean).join('. ')).join('. Next. '):'No new alerts')}
+function rootMenu(){
+  const it=[],c=D.call;
+  if(c&&!c.ongoing){   // ringing: nothing else to scroll past
+    openMenu('Incoming call',[{label:'Answer call',note:c.name||'',act(){N.answer();closeMenu()}},{label:'Decline call',act(){N.hangup();closeMenu()}},{label:'Close menu',act:closeMenu}]);return}
+  if(c)it.push({label:'Hang up',note:c.name||'',act(){N.hangup();closeMenu()}});
+  if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}});
+  it.push({label:'Navigate',more:1,act:navMenu},{label:'Call',more:1,act:callMenu},{label:'Music',more:1,act:musicMenu});
+  if(menuData().videos.length)it.push({label:'Video',more:1,act:videoMenu});
+  if((D.notes||[]).length)it.push({label:'Read alerts aloud',note:String(D.notes.length),act(){readAlerts();closeMenu()}});
+  it.push({label:'Close menu',act:closeMenu});
+  openMenu('Menu',it);
+}
+function navMenu(){
+  const d=menuData(),it=[backTo(rootMenu)];
+  d.places.forEach(p=>it.push({label:p.name,note:'saved',act(){goTo(p)}}));
+  const ch=nearestCharger();
+  if(ch)it.push({label:'Nearest charger',note:fmtD(ch.d*1.25),act(){goTo({lat:ch.c.lat,lon:ch.c.lon,name:ch.c.name||'Charger'})}});
+  const saved=new Set(d.places.map(p=>String(p.name).toLowerCase()));
+  d.recents.filter(p=>!saved.has(String(p.name).toLowerCase())).forEach(p=>it.push({label:p.name,note:'recent',act(){goTo(p)}}));
+  it.push({label:'Type a place…',note:'letter wheel',act(){closeMenu();N.search()}});
+  if(route)it.push({label:'Recalculate route',act(){window.i3recalc();closeMenu()}},{label:'Stop navigation',act(){stopNav();closeMenu()}});
+  openMenu('Navigate',it,1);
+}
+function callMenu(){
+  const d=menuData(),it=[backTo(rootMenu)];
+  d.contacts.forEach(c=>it.push({label:c.name,act(){N.dial(c.number);closeMenu();toast('Calling '+c.name)}}));
+  if(!d.contacts.length)it.push({label:d.canSeeContacts?'Star contacts on your phone to list them here':'Finish the setup list in the i3D phone app',dim:1});
+  it.push({label:'Type a name…',note:'letter wheel',act(){closeMenu();N.search()}});
+  openMenu('Call',it,1);
+}
+function musicMenu(){
+  const m=D.media,it=[backTo(rootMenu)];
+  if(m&&m.title)it.push({label:m.playing?'Pause':'Play',note:m.title,act(){N.media('toggle');closeMenu()}},
+    {label:'Next track',act(){N.media('next');menuAlive()}},{label:'Previous track',act(){N.media('prev');menuAlive()}});
+  it.push({label:'Choose app or playlist',more:1,act(){waiting('Music apps');N.musicOpen()}});
+  openMenu('Music',it,1);
+}
+// the phone answers musicOpen and musicPick here: the next list, or that something started playing
+window.i3music=function(r){
+  if(r.played){if(menu&&menu.wait)closeMenu();toast('Playing');return}
+  if(!menu||!menu.wait)return;      // the driver moved on while it was loading
+  const it=[];
+  if(r.top)it.push(backTo(musicMenu));
+  (r.rows||[]).forEach((label,i)=>it.push({label,act(){waiting(r.top?String(label).replace(/ \(playing\)$/,''):menu.title);N.musicPick(i)}}));
+  openMenu(r.top?'Music apps':menu.title,it,it.length>1?1:0);
+};
+function videoMenu(){
+  const it=[backTo(rootMenu)];
+  menuData().videos.forEach(v=>it.push({label:v.title||'YouTube video',act(){
+    const r=N.video(v.id||'',v.list||'');closeMenu();
+    if(r==='moving')toast('Video only plays while parked');else if(r!=='sent')toast('Could not start the video')}}));
+  openMenu('Video · parked only',it,1);
+}
+window.i3press=function(){
+  if(menu){menuAlive();const it=menu.items[menu.sel];if(it&&it.act&&!it.dim)it.act();return}
+  const p=PAGES[page];
+  if(D.call)rootMenu();else if(p==='Music')musicMenu();else if(p==='Map')navMenu();else rootMenu();
+};
+window.i3hidden=function(){closeMenu()};
 setWxIcon();
 showPage();
 

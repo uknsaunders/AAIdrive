@@ -5,6 +5,13 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 ## 12 November 2026
 
+- **One place for everything (new, untested in the car):** the knob press now opens a menu inside the dash, where it used to jump to the car's own menu. Navigate, Call, Music, Video and Read alerts aloud are all there, and the knob scrolls and selects. Pressing on the Music page goes straight to music, and on the Map page straight to places.
+- **Straight in:** choosing i3D in the car opens the dash directly, with no menu screen first. The car entry is now named i3D.
+- **Calls:** a ringing call shows only Answer and Decline. When the car switches to its own phone screen as a call connects, i3D brings the dash back once.
+- **Music controls:** pause, next and previous from the menu.
+- **Video from the car:** videos sent from the phone are remembered and can be started from the menu while parked.
+- **Phone app:** one "Finish setting up" list with ticks replaces hunting for permissions. The original AAIdrive apps moved to the bottom as optional.
+- **Fixed:** choosing a contact from the search suggestions did nothing and cancelled the route. It now rings them.
 - **YouTube, parked only (new, untested in the car):** share a YouTube link to i3D or paste it into Send to car, then Play on car. It plays only while the car is stationary, stops when the car moves, and the knob stops it.
 - **Docs:** the main page now covers the i3D name, finding it under ConnectedDrive, the car menu, the music picker, calls and the current list of things still to confirm in the car.
 - **Music wheel (new, untested in the car):** press the knob and scroll to Music in the i3D menu. It lists your music and streaming apps, then that app's playlists and library. Press a playlist to play it. The Music page tells you where to find it.

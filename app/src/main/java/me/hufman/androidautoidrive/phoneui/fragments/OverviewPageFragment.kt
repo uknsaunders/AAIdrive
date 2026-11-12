@@ -28,7 +28,31 @@ import me.hufman.androidautoidrive.phoneui.viewmodels.activityViewModels
 class OverviewPageFragment: Fragment() {
 	private val viewModel by activityViewModels<ConnectionStatusModel> { ConnectionStatusModel.Factory(requireContext().applicationContext) }
 
-	private class Tile(val icon: Int, val title: Int, val sub: Int, val action: () -> Unit)
+	private class Tile(val icon: Int, val title: Int, val sub: Int, val mark: String = "›", val action: () -> Unit)
+
+	override fun onResume() {
+		super.onResume()
+		// permissions may have changed while the phone's settings were open, so redraw the setup list
+		view?.findViewById<LinearLayout>(R.id.tiles)?.let { buildTiles(it) }
+	}
+
+	@Deprecated("Deprecated in Java")
+	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+		view?.findViewById<LinearLayout>(R.id.tiles)?.let { buildTiles(it) }
+	}
+
+	private val callPermissions = arrayOf(
+		android.Manifest.permission.READ_CONTACTS,
+		android.Manifest.permission.CALL_PHONE,
+		android.Manifest.permission.ANSWER_PHONE_CALLS)
+
+	private fun hasNotificationAccess(ctx: Context) =
+		androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(ctx).contains(ctx.packageName)
+
+	private fun hasCallAccess(ctx: Context) = callPermissions.all {
+		ContextCompat.checkSelfPermission(ctx, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+	}
 
 	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 		return inflater.inflate(R.layout.fragment_home, container, false)
@@ -76,7 +100,6 @@ class OverviewPageFragment: Fragment() {
 		viewModel.isBclReady.observe(viewLifecycleOwner, Observer { ready = it == true; refreshSteps() })
 		viewModel.isBclConnected.observe(viewLifecycleOwner, Observer { connected = it == true; refreshSteps() })
 
-		buildTiles(view.findViewById(R.id.tiles))
 	}
 
 	private fun buildTiles(container: LinearLayout) {
@@ -86,37 +109,73 @@ class OverviewPageFragment: Fragment() {
 		val mapVisible = themeAttrs.getInt(0, 0) == View.VISIBLE
 		themeAttrs.recycle()
 
-		val main = mutableListOf(
+		container.removeAllViews()
+
+		// one list for everything the phone has to allow, shown until it is all done
+		val notificationsOk = hasNotificationAccess(ctx)
+		val callsOk = hasCallAccess(ctx)
+		if (!notificationsOk || !callsOk) {
+			container.addView(sectionLabel(ctx, R.string.home_section_setup))
+			container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather, R.string.home_setup_notifications,
+				if (notificationsOk) R.string.home_setup_done else R.string.home_setup_notifications_sub,
+				if (notificationsOk) "✓" else "›") {
+				if (!notificationsOk) {
+					try {
+						startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+					} catch (e: Exception) {
+						nav.navigate(R.id.nav_notifications)
+					}
+				}
+			}))
+			container.addView(tileView(ctx, Tile(R.drawable.ic_cellphone_android, R.string.home_calls,
+				if (callsOk) R.string.home_setup_done else R.string.home_calls_sub,
+				if (callsOk) "✓" else "›") {
+				if (!callsOk) requestPermissions(callPermissions, 42)
+			}))
+		}
+
+		val main = listOf(
 			Tile(R.drawable.ic_send_feather, R.string.home_send, R.string.home_send_sub) {
 				startActivity(Intent(ctx, SendDestinationActivity::class.java))
-			},
-			Tile(R.drawable.ic_cellphone_android, R.string.home_calls, R.string.home_calls_sub) {
-				requestPermissions(arrayOf(
-					android.Manifest.permission.READ_CONTACTS,
-					android.Manifest.permission.CALL_PHONE,
-					android.Manifest.permission.ANSWER_PHONE_CALLS), 42)
-			},
+			}
+		)
+
+		// the original AAIdrive apps still work, but each is a separate entry in the car's menus
+		val extras = mutableListOf(
 			Tile(R.drawable.ic_music_feather, R.string.menu_music, R.string.home_music_sub) { nav.navigate(R.id.nav_music) },
 			Tile(R.drawable.ic_bell_feather, R.string.menu_notifications, R.string.home_notifications_sub) { nav.navigate(R.id.nav_notifications) },
 			Tile(R.drawable.ic_navigation_feather, R.string.menu_navigation, R.string.home_navigation_sub) { nav.navigate(R.id.nav_navigation) }
 		)
 		if (mapVisible) {
-			main.add(Tile(R.drawable.ic_map_feather, R.string.menu_maps, R.string.home_maps_sub) { nav.navigate(R.id.nav_maps) })
+			extras.add(Tile(R.drawable.ic_map_feather, R.string.menu_maps, R.string.home_maps_sub) { nav.navigate(R.id.nav_maps) })
 		}
-		main.add(Tile(R.drawable.ic_calendar_feather, R.string.menu_calendar, R.string.home_calendar_sub) { nav.navigate(R.id.nav_calendar) })
-		main.add(Tile(R.drawable.ic_mic_feather, R.string.menu_assistants, R.string.home_assistants_sub) { nav.navigate(R.id.nav_assistants) })
+		extras.add(Tile(R.drawable.ic_calendar_feather, R.string.menu_calendar, R.string.home_calendar_sub) { nav.navigate(R.id.nav_calendar) })
+		extras.add(Tile(R.drawable.ic_mic_feather, R.string.menu_assistants, R.string.home_assistants_sub) { nav.navigate(R.id.nav_assistants) })
+		extras.add(Tile(R.drawable.ic_outline_extension_24, R.string.menu_addons, R.string.home_addons_sub) { nav.navigate(R.id.nav_addons) })
 
 		val more = listOf(
 			Tile(R.drawable.ic_baseline_directions_car_24, R.string.menu_carinfo, R.string.home_carinfo_sub) { nav.navigate(R.id.nav_carinfo) },
-			Tile(R.drawable.ic_outline_extension_24, R.string.menu_addons, R.string.home_addons_sub) { nav.navigate(R.id.nav_addons) },
 			Tile(R.drawable.ic_settings_feather, R.string.menu_settings, R.string.home_settings_sub) { nav.navigate(R.id.nav_settings) },
 			Tile(R.drawable.ic_heart_feather, R.string.menu_support, R.string.home_support_sub) { nav.navigate(R.id.nav_support) }
 		)
 
 		container.addView(sectionLabel(ctx, R.string.home_section_main))
 		main.forEach { container.addView(tileView(ctx, it)) }
+		container.addView(noteLabel(ctx, R.string.home_car_note))
 		container.addView(sectionLabel(ctx, R.string.home_section_more))
 		more.forEach { container.addView(tileView(ctx, it)) }
+		container.addView(sectionLabel(ctx, R.string.home_section_extras))
+		container.addView(noteLabel(ctx, R.string.home_extras_note))
+		extras.forEach { container.addView(tileView(ctx, it)) }
+	}
+
+	private fun noteLabel(ctx: Context, text: Int) = TextView(ctx).apply {
+		setText(text)
+		setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+		setTextColor(themeColors(ctx, android.R.attr.textColorSecondary))
+		layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+			topMargin = dp(8); marginStart = dp(4); marginEnd = dp(4)
+		}
 	}
 
 	private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
@@ -177,7 +236,7 @@ class OverviewPageFragment: Fragment() {
 			setTextColor(themeColors(ctx, android.R.attr.textColorSecondary))
 		})
 		val chevron = TextView(ctx).apply {
-			text = "›"
+			text = tile.mark
 			setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
 			setTextColor(themeColors(ctx, android.R.attr.textColorSecondary))
 		}

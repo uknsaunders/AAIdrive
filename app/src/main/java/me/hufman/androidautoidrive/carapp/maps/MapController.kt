@@ -38,6 +38,9 @@ interface MapInteractionController {
 	fun navigateTo(dest: LatLong)
 	fun recalcNavigation()
 	fun stopNavigation()
+	/** The knob press: an app that returns true from handlesClick gets click() and the car stays on its screen */
+	fun handlesClick(): Boolean = false
+	fun click() {}
 	/** Phone calls, for apps that can handle them */
 	fun callStatus(): Int = 0       // 0 none, 1 ringing, 2 in a call
 	fun answerCall() {}

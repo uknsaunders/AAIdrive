@@ -72,9 +72,13 @@ class DashAppService: CarAppService() {
 				dashController,     // knob turns go straight to the page, not through an Android broadcast
 				DashPlaceSearch(carLocationProvider, applicationContext),
 				screenCapture,
-				" ", "i3 Dash",       // blank caption: the car draws it as a title line, and the menu entry keeps the name
+				" ", "i3D",       // blank caption: the car draws it as a title line, and the menu entry keeps the name
 				resources.openRawResource(me.hufman.androidautoidrive.R.raw.i3dash_entry).use { it.readBytes() })
 		this.mapApp = mapApp
+		dashController.carUi = object: DashCarUi {
+			override fun openSearch() = mapApp.openSearch()
+			override fun openDash() = mapApp.openFullScreen()
+		}
 		mapApp.onCreate(handler)
 	}
 

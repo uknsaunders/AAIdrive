@@ -52,6 +52,12 @@ import org.json.JSONObject
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
+/** The two car screens the dashboard can ask for. Both talk to the car, so never call them on the main thread */
+interface DashCarUi {
+	fun openSearch()
+	fun openDash()
+}
+
 /**
  * Drives the i3 Dash web page shown on the hidden virtual display:
  *  - pushes live car data (battery, range, speed, temperatures, GPS) into the page
@@ -69,6 +75,10 @@ class DashController(val context: Context,
 		/** after a knob turn, hold back data updates so the new page reaches the car first */
 		const val KNOB_QUIET_MS = 1200L
 		const val MEDIA_INTERVAL_MS = 1000L
+		/** how long after the car leaves the dashboard a call still counts as the reason it left */
+		const val CALL_RETURN_WINDOW_MS = 8000L
+		const val CALL_WATCH_INTERVAL_MS = 1500L
+		const val CALL_WATCH_MAX_MS = 90000L
 
 		/** The running dashboard, so the phone screen can hand it destinations */
 		@Volatile var instance: DashController? = null
@@ -85,6 +95,11 @@ class DashController(val context: Context,
 	private var ttsReady = false
 	@Volatile private var quietUntil = 0L
 	private var lastArtKey: String? = null
+	/** set by the car app once it is running */
+	@Volatile var carUi: DashCarUi? = null
+	/** slow jobs (music browsing, car screen switches) run here, one at a time, off the main thread */
+	private val worker = java.util.concurrent.Executors.newSingleThreadExecutor()
+	@Volatile private var mediaController: MediaController? = null
 
 	init {
 		instance = this
@@ -232,6 +247,7 @@ class DashController(val context: Context,
 	override fun showMap() {
 		handler.post {
 			handler.removeCallbacks(shutdownRunnable)
+			handler.removeCallbacks(callWatch)
 			if (presentation == null) {
 				Log.i(TAG, "Creating the dashboard on ${virtualDisplay.display}")
 				presentation = DashPresentation(context, virtualDisplay.display, Bridge()) {
@@ -257,6 +273,10 @@ class DashController(val context: Context,
 	override fun pauseMap() {
 		handler.post {
 			if (videoOn) stopVideo()
+			js("window.i3hidden && window.i3hidden()")
+			pausedAt = SystemClock.uptimeMillis()
+			handler.removeCallbacks(callWatch)
+			handler.postDelayed(callWatch, 700)
 			pushing = false
 			handler.removeCallbacks(pushRunnable)
 			handler.removeCallbacks(mediaRunnable)
@@ -283,6 +303,56 @@ class DashController(val context: Context,
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't turn the page", e)
 			}
+		}
+	}
+
+	/** The knob press opens the dashboard's own menu, so the car never leaves the dashboard */
+	override fun handlesClick(): Boolean = pageLoaded || videoOn
+
+	override fun click() {
+		mapAppMode.startInteraction()
+		if (videoOn) {
+			stopVideo()
+			return
+		}
+		quietUntil = SystemClock.uptimeMillis() + KNOB_QUIET_MS
+		handler.postAtFrontOfQueue {
+			try {
+				presentation?.webView?.evaluateJavascript("window.i3press && window.i3press()", null)
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't open the menu", e)
+			}
+		}
+	}
+
+	/**
+	 * The car shows its own phone screen when a call starts, which pushes the dashboard off.
+	 * If a call is under way just after the dashboard was hidden, bring the dashboard back once,
+	 * so the call can be handled from here. It never does this for a call that is still ringing.
+	 */
+	@Volatile private var pausedAt = 0L
+	private var returnedForCall = false
+	private var sawCallAfterPause = false
+	private val callWatch = object: Runnable {
+		override fun run() {
+			if (pushing) return     // the dashboard is back on screen
+			val sincePause = SystemClock.uptimeMillis() - pausedAt
+			try { readCall() } catch (e: Exception) { Log.w(TAG, "Couldn't read the call", e) }
+			if (callState == 0) {
+				returnedForCall = false
+				if (sawCallAfterPause || sincePause > CALL_RETURN_WINDOW_MS) { sawCallAfterPause = false; return }
+			} else {
+				if (sincePause <= CALL_RETURN_WINDOW_MS) sawCallAfterPause = true
+				if (!sawCallAfterPause) return      // the call started long after the driver left the dashboard
+				if (callState == 2 && !returnedForCall) {
+					returnedForCall = true
+					sawCallAfterPause = false
+					Log.i(TAG, "A call took the screen, bringing the dashboard back")
+					worker.execute { carUi?.openDash() }
+					return
+				}
+			}
+			if (sincePause < CALL_WATCH_MAX_MS) handler.postDelayed(this, CALL_WATCH_INTERVAL_MS)
 		}
 	}
 
@@ -313,7 +383,7 @@ class DashController(val context: Context,
 
 	/** Starts a YouTube video or playlist on the car screen. Returns sent, moving or nocar */
 	fun playVideo(id: String, list: String): String {
-		if (presentation == null) return "nocar"
+		if (presentation == null || !pushing) return "nocar"
 		if (isMoving()) return "moving"
 		handler.post {
 			videoOn = true
@@ -343,7 +413,7 @@ class DashController(val context: Context,
 			if (android.os.Build.VERSION.SDK_INT >= 26 && hasPermission(android.Manifest.permission.ANSWER_PHONE_CALLS)) {
 				context.getSystemService(android.telecom.TelecomManager::class.java)?.acceptRingingCall()
 			} else {
-				speak("Allow calls in the i3 Dash phone app first")
+				speak("Allow calls in the i3D app on your phone first")
 			}
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't answer the call", e)
@@ -356,7 +426,7 @@ class DashController(val context: Context,
 			if (android.os.Build.VERSION.SDK_INT >= 28 && hasPermission(android.Manifest.permission.ANSWER_PHONE_CALLS)) {
 				context.getSystemService(android.telecom.TelecomManager::class.java)?.endCall()
 			} else {
-				speak("Allow calls in the i3 Dash phone app first")
+				speak("Allow calls in the i3D app on your phone first")
 			}
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't hang up", e)
@@ -370,7 +440,7 @@ class DashController(val context: Context,
 				context.getSystemService(android.telecom.TelecomManager::class.java)
 					?.placeCall(android.net.Uri.fromParts("tel", number, null), Bundle())
 			} else {
-				speak("Allow calls in the i3 Dash phone app first")
+				speak("Allow calls in the i3D app on your phone first")
 			}
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't place the call", e)
@@ -451,6 +521,7 @@ class DashController(val context: Context,
 		val call = notifications?.firstOrNull { it.notification.category == Notification.CATEGORY_CALL }
 		if (call == null) {
 			callState = 0
+			returnedForCall = false
 			data["call"] = JSONObject.NULL
 			return
 		}
@@ -478,6 +549,7 @@ class DashController(val context: Context,
 		data["mediaPermission"] = true
 		val playing = controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
 		val controller = playing ?: controllers.firstOrNull { it.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) != null }
+		mediaController = controller
 		val metadata = controller?.metadata
 		val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
 		if (controller == null || metadata == null || title == null) {
@@ -613,6 +685,8 @@ class DashController(val context: Context,
 		pageLoaded = false
 		pushing = false
 		handler.removeCallbacksAndMessages(null)
+		worker.shutdownNow()
+		carUi = null
 		scope.cancel()
 		handler.post {
 			presentation?.dismiss()
@@ -651,6 +725,120 @@ class DashController(val context: Context,
 		fun log(message: String) {
 			Log.i(TAG, "page: $message")
 		}
+
+		/* ---- the dashboard's own menu ---- */
+
+		/** Saved places, recent destinations, starred contacts and remembered videos, as JSON */
+		@JavascriptInterface
+		fun menu(): String {
+			val json = JSONObject()
+			try {
+				fun places(list: List<Resolved>) = org.json.JSONArray().also { array ->
+					list.forEach { array.put(JSONObject().put("name", it.name).put("lat", it.lat).put("lon", it.lon)) }
+				}
+				json.put("places", places(DashStore.places(context).take(8)))
+				json.put("recents", places(DashStore.recents(context).take(5)))
+				json.put("contacts", starredContacts())
+				json.put("canSeeContacts", hasPermission(android.Manifest.permission.READ_CONTACTS))
+				json.put("videos", DashStore.videos(context))
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't build the menu", e)
+			}
+			return json.toString()
+		}
+
+		@JavascriptInterface
+		fun navStarted(lat: Double, lon: Double, name: String) {
+			mapAppMode.currentNavDestination = LatLong(lat, lon)
+			if (name.isNotBlank()) DashStore.addRecent(context, name, lat, lon)
+		}
+
+		/** The car's letter wheel, the only way to type. Choosing a result comes straight back to the dashboard */
+		@JavascriptInterface
+		fun search() {
+			worker.execute { carUi?.openSearch() }
+		}
+
+		@JavascriptInterface
+		fun answer() = answerCall()
+
+		@JavascriptInterface
+		fun hangup() = hangUpCall()
+
+		@JavascriptInterface
+		fun dial(number: String) = this@DashController.dial(number)
+
+		/** toggle, next or prev on whatever is playing */
+		@JavascriptInterface
+		fun media(command: String) {
+			try {
+				val controls = mediaController?.transportControls ?: return
+				when (command) {
+					"toggle" -> if (mediaController?.playbackState?.state == PlaybackState.STATE_PLAYING) controls.pause() else controls.play()
+					"next" -> controls.skipToNext()
+					"prev" -> controls.skipToPrevious()
+				}
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't send $command to the music app", e)
+			}
+		}
+
+		/** Lists the music apps. The answer arrives later as window.i3music({rows, top, played}) */
+		@JavascriptInterface
+		fun musicOpen() {
+			worker.execute {
+				try { music().reset() } catch (e: Exception) { Log.w(TAG, "Music reset failed", e) }
+				sendMusic(false)
+			}
+		}
+
+		/** Opens an app or folder, or plays a playlist or track. The answer arrives as window.i3music(...) */
+		@JavascriptInterface
+		fun musicPick(row: Int) {
+			worker.execute {
+				val played = try { music().pick(row) } catch (e: Exception) { Log.w(TAG, "Music pick failed", e); false }
+				sendMusic(played)
+			}
+		}
+
+		private fun sendMusic(played: Boolean) {
+			val json = JSONObject()
+			try {
+				json.put("rows", org.json.JSONArray(music().rows()))
+				json.put("top", music().atTop())
+			} catch (e: Exception) {
+				json.put("rows", org.json.JSONArray())
+				json.put("top", true)
+			}
+			json.put("played", played)
+			js("window.i3music && window.i3music($json)")
+		}
+
+		/** Plays a remembered YouTube video. Returns sent, moving or nocar */
+		@JavascriptInterface
+		fun video(id: String, list: String): String = playVideo(id, list)
+	}
+
+	private fun starredContacts(): org.json.JSONArray {
+		val array = org.json.JSONArray()
+		if (!hasPermission(android.Manifest.permission.READ_CONTACTS)) return array
+		try {
+			val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+			context.contentResolver.query(phone,
+				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
+				"${android.provider.ContactsContract.CommonDataKinds.Phone.STARRED} = 1", null,
+				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+				val seen = HashSet<String>()
+				while (cursor.moveToNext() && array.length() < 10) {
+					val name = cursor.getString(0) ?: continue
+					val number = cursor.getString(1) ?: continue
+					if (seen.add(name)) array.put(JSONObject().put("name", name).put("number", number))
+				}
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't read the starred contacts", e)
+		}
+		return array
 	}
 }
 

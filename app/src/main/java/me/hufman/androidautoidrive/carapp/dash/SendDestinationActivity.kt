@@ -50,7 +50,12 @@ class SendDestinationActivity: Activity() {
 	private fun textFrom(intent: Intent?): String {
 		intent ?: return ""
 		return when (intent.action) {
-			Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+			Intent.ACTION_SEND -> {
+				// YouTube shares only the link as text, with the video's name in the subject
+				val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+				val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: ""
+				if (subject.isNotBlank() && text.contains("youtu") && !text.contains(subject)) "$subject $text" else text
+			}
 			Intent.ACTION_VIEW -> intent.dataString ?: ""
 			else -> ""
 		}
@@ -99,8 +104,10 @@ class SendDestinationActivity: Activity() {
 
 		/** Plays a YouTube video on the car screen, only if the car is standing still. Returns sent, moving or nocar */
 		@JavascriptInterface
-		fun video(id: String, list: String): String =
-			DashController.instance?.playVideo(id, list) ?: "nocar"
+		fun video(id: String, list: String, title: String): String {
+			DashStore.addVideo(applicationContext, id, list, title)     // remembered, so the car's menu can start it later
+			return DashController.instance?.playVideo(id, list) ?: "nocar"
+		}
 
 		@JavascriptInterface
 		fun places(): String = listJson(DashStore.places(applicationContext))

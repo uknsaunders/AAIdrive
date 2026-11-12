@@ -14,6 +14,8 @@ interface FullImageInteraction {
 	fun navigateDown()
 	fun click()
 	fun getClickState(): RHMIState
+	/** True when the app deals with the knob press itself, so the car stays on the full screen view */
+	fun handlesClick(): Boolean = false
 }
 
 /**
@@ -89,6 +91,11 @@ class FullImageView(val state: RHMIState, val title: String, val config: FullIma
 		}
 		inputList.getAction()?.asRAAction()?.rhmiActionCallback = object: RHMIActionButtonCallback {
 			override fun onAction(invokedBy: Int?) {
+				if (invokedBy != 2 && interaction.handlesClick()) {
+					// the app shows its own menu on top of the picture, so don't leave this screen
+					interaction.click()
+					return
+				}
 				// get the state to click to
 				val target = if (invokedBy == 2) {   // bookmark event
 					state.id

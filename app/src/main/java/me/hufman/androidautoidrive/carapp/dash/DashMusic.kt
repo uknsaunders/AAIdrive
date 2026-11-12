@@ -60,6 +60,9 @@ class DashMusic(val context: Context) {
 		}
 	}
 
+	/** True while the list shows the apps, false inside an app */
+	fun atTop(): Boolean = current == null
+
 	fun rows(): List<String> {
 		if (current == null) {
 			return if (apps.isEmpty()) listOf("No music apps found") else apps.map { if (it.playing) "${it.name} (playing)" else it.name }

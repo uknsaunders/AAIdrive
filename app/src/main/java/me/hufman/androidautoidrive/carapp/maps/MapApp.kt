@@ -84,10 +84,12 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 				interaction.zoomOut(1)
 			}
 			override fun click() {
+				interaction.click()
 			}
 			override fun getClickState(): RHMIState {
 				return menuView.state
 			}
+			override fun handlesClick(): Boolean = interaction.handlesClick()
 		}, frameUpdater)
 
 		stateInput = carApp.states.values.filterIsInstance<RHMIState.PlainState>().first { state ->
@@ -98,8 +100,10 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 
 		// connect buttons together
 		carApp.components.values.filterIsInstance<RHMIComponent.EntryButton>().forEach{
-			it.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = menuView.state.id
-			Log.i(TAG, "Registering entry button ${it.id} model ${it.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.id} to point to main state ${menuView.state.id}")
+			// an app with its own menu opens straight onto its full screen view, others open their car menu first
+			val entryState = if (amName != null) fullImageView.state.id else menuView.state.id
+			it.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = entryState
+			Log.i(TAG, "Registering entry button ${it.id} model ${it.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.id} to point to state $entryState")
 		}
 
 		// set up the components
@@ -140,6 +144,18 @@ class MapApp(iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: Sec
 			carConnection.am_registerApp(handle, "androidautoidrive.i3dash", amInfo)
 		}
 	}
+
+	private fun focusState(stateId: Int) {
+		try {
+			carApp.events.values.filterIsInstance<RHMIEvent.FocusEvent>().first().triggerEvent(mapOf(0 to stateId))
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't switch the car to state $stateId", e)
+		}
+	}
+	/** Shows the car's letter wheel for typing a place or a name. Not for the main thread */
+	fun openSearch() = focusState(stateInput.id)
+	/** Brings the full screen view to the front. Not for the main thread */
+	fun openFullScreen() = focusState(fullImageView.state.id)
 
 	fun onCreate(handler: Handler) {
 		Log.i(TAG, "Setting up map transfer")

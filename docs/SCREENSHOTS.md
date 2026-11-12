@@ -5,7 +5,7 @@ These are renders of the real car page (`index.html`) at the car's 1440×540 siz
 Two things to know:
 
 - The map behind the pages is **drawn for the mockup** (the render sandbox has no internet). In the car it is the live 3D map, loaded through the phone.
-- The **car menu** and **phone home screen** are illustrative mockups. The car draws its own menu, and the phone screen is drawn to match the layout, so real fonts and spacing will differ slightly.
+- The **entry screen** and **phone home screen** are illustrative mockups. The car draws its own list, and the phone screen is drawn to match the layout, so real fonts and spacing will differ slightly.
 
 ## On the car screen
 
@@ -39,30 +39,44 @@ Next turn, now-playing strip and the arrival bar.
 ![Navigating](screenshots/car-nav.png)
 
 ### Incoming call
-Press the knob, then Answer call.
+Press the knob to answer or decline.
 ![Call ringing](screenshots/call-ringing.png)
 
 ### Call in progress
-Press the knob, then Hang up.
+Press the knob to hang up.
 ![Call active](screenshots/call-active.png)
 
-## Car menus (mockups)
+## The menu
 
-### Finding it
-i3D in the car's ConnectedDrive list, with its icon.
-![Entry screen](screenshots/car-entry.png)
+Press the knob anywhere in the dash and the menu slides over the map. Turn to choose, press to select. These are renders of the real menu.
 
-### The i3D menu
-Open the dash, search a place or contact, answer or hang up during a call, a Places and calls list, and Music.
-![Car menu](screenshots/car-menu.png)
+### Main menu
+![Main menu](screenshots/menu-main.png)
+
+### Navigate
+Saved places, the nearest charger, recent places, and typing on the car's letter wheel.
+![Navigate](screenshots/menu-navigate.png)
+
+### Call
+Your starred contacts, or type a name.
+![Call](screenshots/menu-call-list.png)
+
+### Music
+Pressing the knob on the Music page opens this directly.
+![Music](screenshots/menu-music.png)
 
 ### Music: pick an app
-Press the knob on Music, then turn it through your streaming apps. The one playing is at the top.
-![Music apps](screenshots/car-music-apps.png)
+![Music apps](screenshots/menu-music-apps.png)
 
 ### Music: pick a playlist
-Press an app and its own library opens (playlists, liked songs, albums). Press a playlist to play it. Back is the first row.
-![Music playlists](screenshots/car-music-playlists.png)
+![Playlists](screenshots/menu-music-playlists.png)
+
+### Incoming call
+![Incoming call](screenshots/menu-call.png)
+
+## Finding it in the car (mockup)
+i3D in the car's ConnectedDrive list. Choosing it opens the dash directly.
+![Entry screen](screenshots/car-entry.png)
 
 ## On the phone (mockups)
 
