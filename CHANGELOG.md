@@ -5,7 +5,7 @@ Newest first. The app is built automatically and published as `i3-dash.apk` on t
 
 ## 12 November 2026
 
-- **Map stays live with the menu open:** it moves to the bottom left quarter (the left half on the Map page) and keeps showing your position, next turn, arrival time and speed limit.
+- **Map stays live with the menu open:** the menu takes the top right and the map shrinks to the bottom right quarter beneath it, still showing your position, next turn, arrival time and speed limit. On the Map page the map keeps the whole screen.
 - **One place for everything (new, untested in the car):** the knob press now opens a menu inside the dash, where it used to jump to the car's own menu. Navigate, Call, Music, Video and Read alerts aloud are all there, and the knob scrolls and selects. Pressing on the Music page goes straight to music, and on the Map page straight to places.
 - **Straight in:** choosing i3D in the car opens the dash directly, with no menu screen first. The car entry is now named i3D.
 - **Calls:** a ringing call shows only Answer and Decline. When the car switches to its own phone screen as a call connects, i3D brings the dash back once.

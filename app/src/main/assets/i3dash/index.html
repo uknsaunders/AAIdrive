@@ -114,22 +114,20 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.menu{position:absolute;top:0;right:0;bottom:0;width:50%;z-index:9;background:var(--bg);border-left:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
-.mt{display:flex;justify-content:space-between;align-items:baseline;font:700 24px var(--f-d);padding:0 8px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.menu{position:absolute;top:0;right:0;height:57%;width:50%;z-index:9;border-bottom:2px solid var(--accent);background:var(--bg);border-left:1px solid var(--line);padding:6px 12px;display:flex;flex-direction:column;gap:4px}
+.mt{display:flex;justify-content:space-between;align-items:baseline;font:700 22px var(--f-d);padding:0 8px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mt small{font:500 16px var(--f-b);color:var(--muted)}
-.mi{height:47px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
+.mi{height:43px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
 .mi span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mi small{font:500 17px var(--f-b);color:var(--muted);white-space:nowrap;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}
 .mi b{font:700 26px var(--f-d);color:var(--muted);flex:none}
 .mi.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
-/* while the menu is open the map stays live: bottom left quarter, or the left half on the Map page */
-.body.menuopen .nav{position:absolute;left:0;bottom:0;width:50%;height:50%;z-index:9;border-top:2px solid var(--accent);border-right:1px solid var(--line)}
-.body.wide.menuopen .nav{top:0;height:auto;border-top:0}
+/* while the menu is open the map stays live underneath it, in the bottom right quarter.
+   On the Map page the map keeps the whole screen and the menu sits over its top right corner */
+.body.menuopen:not(.wide) .nav{align-self:end;height:43%}
 .body.menuopen .np,.body.menuopen .mhint,.body.menuopen .pages,.body.menuopen .diag{display:none}
-.body.menuopen:not(.wide) .call{bottom:50%;padding:10px 26px;gap:6px}
-.body.menuopen:not(.wide) .call .ci{display:none}
 .body.menuopen:not(.wide) .turn{left:8px;top:8px;padding:5px 10px;max-width:78%}
 .body.menuopen:not(.wide) .turn svg{width:34px;height:34px}.body.menuopen:not(.wide) .turn .d{font-size:28px}.body.menuopen:not(.wide) .turn .i{font-size:18px}
 .body.menuopen:not(.wide) .eta{left:8px;bottom:8px;padding:4px 10px;gap:14px}.body.menuopen:not(.wide) .eta b{font-size:24px}.body.menuopen:not(.wide) .eta .lbl{font-size:12px}
@@ -461,7 +459,7 @@ function drawNowPlaying(){
   H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">No sound? MEDIA › Bluetooth audio</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
 }
 /* ---------- the menu: press the knob, turn to choose, press to select ---------- */
-const MENU_ROWS=7,MENU_IDLE_MS=20000;
+const MENU_ROWS=4,MENU_IDLE_MS=20000;
 let menu=null,menuTimer=0,toastTimer=0;
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{e.hidden=true},3500)}
 function menuData(){let d={};try{d=JSON.parse(N.menu())||{}}catch(e){}return {places:d.places||[],recents:d.recents||[],contacts:d.contacts||[],videos:d.videos||[],canSeeContacts:!!d.canSeeContacts}}

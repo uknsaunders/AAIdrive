@@ -60,7 +60,7 @@ If it sits on "waiting for car connection", close the BMW Connected app, restart
 
 Everything happens inside the dash. Turn the iDrive knob to move between pages. Press the knob for the menu, turn to choose, and press to select. The menu closes by itself after 20 seconds.
 
-The map stays live while the menu is open. It moves to the bottom left with your next turn, arrival time and the speed limit, and goes back when the menu closes.
+The menu opens at the top right and shows four rows at a time. The map stays live underneath it, in the bottom right, with your next turn, arrival time and the speed limit. It goes back to full size when the menu closes.
 
 ![The menu while navigating](docs/screenshots/menu-nav.png)
 
