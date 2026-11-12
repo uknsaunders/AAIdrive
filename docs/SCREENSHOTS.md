@@ -48,7 +48,14 @@ Press the knob to hang up.
 
 ## The menu
 
-Press the knob anywhere in the dash and the menu slides over the map. Turn to choose, press to select. These are renders of the real menu.
+Press the knob anywhere in the dash and the menu opens on the right. The map stays live in the bottom left, with your next turn, arrival time and the speed limit. Turn to choose, press to select. These are renders of the real menu.
+
+### While navigating
+![Menu while navigating](screenshots/menu-nav.png)
+
+### On the Map page
+The map keeps the left half.
+![Menu on the Map page](screenshots/menu-map.png)
 
 ### Main menu
 ![Main menu](screenshots/menu-main.png)

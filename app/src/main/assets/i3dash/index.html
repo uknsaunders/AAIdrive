@@ -40,7 +40,7 @@ header{display:flex;align-items:flex-end;gap:14px;padding:0 6px 5px;border-botto
 .wxi svg{width:32px;height:32px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
 .ti{width:38px;padding:0!important;justify-content:center;font:700 22px var(--f-d)!important}
 .clock{font:600 20px var(--f-d)}
-.body{display:grid;grid-template-columns:50% 1fr;min-height:0}
+.body{position:relative;display:grid;grid-template-columns:50% 1fr;min-height:0}
 .body.wide{grid-template-columns:0 1fr}
 aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);overflow:hidden;min-width:0}
 .top{display:flex;justify-content:space-between;align-items:flex-end}
@@ -114,7 +114,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.menu{position:absolute;top:0;right:0;bottom:0;width:min(100%,680px);z-index:9;background:var(--bg);border-left:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.menu{position:absolute;top:0;right:0;bottom:0;width:50%;z-index:9;background:var(--bg);border-left:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
 .mt{display:flex;justify-content:space-between;align-items:baseline;font:700 24px var(--f-d);padding:0 8px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mt small{font:500 16px var(--f-b);color:var(--muted)}
 .mi{height:47px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
@@ -124,6 +124,16 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mi.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
+/* while the menu is open the map stays live: bottom left quarter, or the left half on the Map page */
+.body.menuopen .nav{position:absolute;left:0;bottom:0;width:50%;height:50%;z-index:9;border-top:2px solid var(--accent);border-right:1px solid var(--line)}
+.body.wide.menuopen .nav{top:0;height:auto;border-top:0}
+.body.menuopen .np,.body.menuopen .mhint,.body.menuopen .pages,.body.menuopen .diag{display:none}
+.body.menuopen:not(.wide) .call{bottom:50%;padding:10px 26px;gap:6px}
+.body.menuopen:not(.wide) .call .ci{display:none}
+.body.menuopen:not(.wide) .turn{left:8px;top:8px;padding:5px 10px;max-width:78%}
+.body.menuopen:not(.wide) .turn svg{width:34px;height:34px}.body.menuopen:not(.wide) .turn .d{font-size:28px}.body.menuopen:not(.wide) .turn .i{font-size:18px}
+.body.menuopen:not(.wide) .eta{left:8px;bottom:8px;padding:4px 10px;gap:14px}.body.menuopen:not(.wide) .eta b{font-size:24px}.body.menuopen:not(.wide) .eta .lbl{font-size:12px}
+.body.menuopen:not(.wide) .lim{right:10px;bottom:10px;transform:scale(.72);transform-origin:bottom right}
 .leaflet-container{background:#141b23}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
@@ -171,13 +181,13 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
       <div class="mhint" id="mhint">Press the knob <b>›</b> Menu</div>
-      <div class="menu" id="menu" hidden></div>
-      <div class="toast" id="toast" hidden></div>
       <div class="np" id="np" hidden></div>
       <div class="lim" id="lim" hidden></div>
       <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
     </section>
+    <div class="menu" id="menu" hidden></div>
+    <div class="toast" id="toast" hidden></div>
   </div>
 </div>
 
@@ -459,7 +469,11 @@ function openMenu(title,items,sel,wait){$('#toast').hidden=true;menu={title,item
 function closeMenu(){menu=null;clearTimeout(menuTimer);drawMenu()}
 function menuAlive(){clearTimeout(menuTimer);menuTimer=setTimeout(closeMenu,MENU_IDLE_MS)}
 function drawMenu(){
-  const el=$('#menu');
+  const el=$('#menu'),body=$('#body');
+  if(body.classList.contains('menuopen')!==!!menu){   // the map moves aside or back, so it has to be measured again
+    body.classList.toggle('menuopen',!!menu);
+    try{map&&map.resize();flat&&flat.invalidateSize();placeCamera()}catch(e){}
+  }
   if(!menu){if(!el.hidden)el.hidden=true;return}
   if(el.hidden)el.hidden=false;
   const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));

@@ -60,7 +60,9 @@ If it sits on "waiting for car connection", close the BMW Connected app, restart
 
 Everything happens inside the dash. Turn the iDrive knob to move between pages. Press the knob for the menu, turn to choose, and press to select. The menu closes by itself after 20 seconds.
 
-![The menu](docs/screenshots/menu-main.png)
+The map stays live while the menu is open. It moves to the bottom left with your next turn, arrival time and the speed limit, and goes back when the menu closes.
+
+![The menu while navigating](docs/screenshots/menu-nav.png)
 
 - **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
 - **Call**: your starred contacts, or type a name. During a call the menu starts with **Hang up**. When the phone rings it shows only **Answer call** and **Decline call**.
