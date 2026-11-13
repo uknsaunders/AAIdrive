@@ -31,13 +31,13 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 header{display:flex;align-items:flex-end;gap:14px;padding:0 6px 5px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:8px;font:700 18px var(--f-d)}
 .brand i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
-.tabs{display:flex;gap:6px}
-.tab{height:38px;padding:0 16px;border-radius:19px;border:1px solid var(--line);background:var(--panel2);font:600 19px var(--f-b);display:flex;align-items:center;color:var(--muted)}
-.tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tabs{display:flex;align-items:baseline;gap:16px;padding-bottom:4px;min-width:0}
+.tabs b{font:700 27px var(--f-d);white-space:nowrap}
+.tabs span{font:500 20px var(--f-b);color:var(--muted);white-space:nowrap}
+.tabs span i{font-style:normal;color:var(--accent);font-weight:600}
 .sp{flex:1}
 .wxb{display:flex;align-items:center;gap:6px;margin-left:12px;font:600 28px var(--f-d)}
 .wxi svg{width:32px;height:32px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
-.ti{width:38px;padding:0!important;justify-content:center;font:700 22px var(--f-d)!important}
 .clock{font:600 20px var(--f-d)}
 .body{position:relative;display:grid;grid-template-columns:50% 1fr;min-height:0}
 .body.wide{grid-template-columns:0 1fr}
@@ -83,7 +83,9 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .hint{margin-top:auto;color:var(--muted);font-size:17px}
 .nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
 #map{position:absolute;inset:0}
-.turn{position:absolute;left:12px;top:12px;max-width:62%;display:flex;gap:12px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px}
+/* the next turn and the now-playing strip share the top of the map without touching */
+.turn:not([hidden])~.np{width:min(40%,420px)}
+.turn{position:absolute;left:12px;top:12px;max-width:54%;display:flex;gap:12px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px}
 .turn svg{width:44px;height:44px;flex:none;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .turn .d{font:700 36px var(--f-d);line-height:1}
 .turn .i{font:600 21px var(--f-b)}
@@ -93,22 +95,12 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
 .puck svg{width:15px;height:15px;fill:#fff}
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:18px;text-align:center;max-width:70%}
-.pages{position:absolute;right:16px;bottom:14px;display:flex;gap:5px;z-index:6}
-.pages i{width:7px;height:7px;border-radius:50%;background:#3a4656}.pages i.on{background:var(--accent)}
-.lim{position:absolute;right:18px;bottom:44px;width:84px;height:84px;border-radius:50%;background:#fff;border:8px solid #d62c2c;display:grid;place-items:center;z-index:6;box-shadow:0 2px 12px rgba(0,0,0,.5)}
-.lim b{font:700 38px var(--f-d);color:#111;line-height:1}
-.lim.over{border-color:#ff9f1a;box-shadow:0 0 18px #ff9f1a}.lim.bad{box-shadow:0 0 24px #ff2d2d}
 .call{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:22px 26px;background:rgba(10,14,19,.74);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:12px}
 .call .cn{font:700 46px var(--f-d);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .call .cs{font:500 22px var(--f-b);color:#c3cfdb}
+.call .cd{font:700 40px var(--f-d);color:var(--good);line-height:1}
 .call .ci{width:58px;height:58px;border-radius:50%;background:var(--good);display:grid;place-items:center}
 .call .ci svg{width:32px;height:32px;fill:#fff}
-.mhint{position:absolute;left:12px;bottom:12px;color:var(--ink);font:600 21px var(--f-b);background:rgba(10,14,19,.78);border:1px solid var(--line);border-radius:10px;padding:6px 14px;z-index:6}
-.mhint b{color:var(--accent)}
-.diag{position:absolute;left:12px;bottom:62px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
-.diag:empty{display:none}
-.turn:not([hidden])~.np{top:96px;left:12px;right:auto;width:min(70%,400px)}
-.al{display:flex;flex-direction:column;gap:7px;overflow:hidden}
 .al-row{background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px}
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,10 +174,8 @@ body.daymap .maplibregl-ctrl-attrib{background:rgba(255,255,255,.7)!important;co
         <div><b class="num" id="eBat" style="color:var(--good)">--</b><span class="lbl">Battery on arrival</span></div>
       </div>
       <div class="mapmsg" id="mapmsg" hidden></div>
-      <div class="mhint" id="mhint">Press the knob <b>›</b> Menu</div>
       <div class="np" id="np" hidden></div>
       <div class="lim" id="lim" hidden></div>
-      <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
     </section>
     <div class="home" id="home" hidden></div>
@@ -255,24 +245,25 @@ window.i3feed=function(d){
 
 /* ---------- pages, turned with the iDrive knob ---------- */
 const PAGES=['Car','Music','Call','Battery','Journey','Alerts','Map','Info'];let page=0,home=true,homeSel=0;
-$('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab${p==='Info'?' ti':''}" data-i="${i}">${p==='Info'?'i':p}</span>`).join('');
-$('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
   if(menu){menu.sel=Math.max(0,Math.min(menu.items.length-1,menu.sel+(dir>0?1:-1)));drawMenu();menuAlive();return}
   if(home){homeSel=Math.max(0,Math.min(CARDS.length-1,homeSel+(dir>0?1:-1)));drawHome();return}
-  if(PAGES[page]==='Info'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
-  page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
+  if(PAGES[page]==='Info'&&!D.call){paint=(paint+(dir>0?1:35))%36;store.set('paint',paint);paintCar();drawPanel();return}
+  if(hasOptions())sectionMenu();      // a turn brings up the same list as a press
 };
 window.i3shown=function(){if(PAGES[page]==='Info'){page=0;showPage()}};
 function showPage(){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
-  document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
+  drawTitle();
   // the Map page uses the whole width, except while the menu has the left half
   const wasWide=$('#body').classList.contains('wide'),isWide=PAGES[page]==='Map'&&!menu;
   $('#body').classList.toggle('wide',isWide);
   if(wasWide!==isWide){try{map&&map.resize();flat&&flat.invalidateSize();placeCamera()}catch(e){}}
   drawPanel();drawNowPlaying();drawHome();
 }
+// the line at the top of every section: its name, and what the knob does there
+const TITLES={Info:'Car colour and info',Alerts:'Phone alerts',Journey:'Journeys and costs',Battery:'Battery'};
+function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Car'||p==='Info'||(p==='Alerts'&&(D.notes||[]).length>0)}
+function drawTitle(){const p=PAGES[page];H('#tabs',`<b>${TITLES[p]||p}</b><span><i>Press the knob</i> for ${hasOptions()?'options and Home':'the Home screen'}</span>`)}
 function drawPanel(){
   const p=PAGES[page],el={set innerHTML(v){H('#panel',v)}};
   if(p==='Battery'){
@@ -284,7 +275,7 @@ function drawPanel(){
       <dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>
       <dt>Nearest charger (approx.)</dt><dd>${(()=>{const n=nearestCharger();return n?esc(fmtD(n.d*1.25))+' · '+esc(n.c.name.slice(0,18)):'--'})()}</dd>
       <dt>Odometer</dt><dd>${D.odoKm!=null?Math.round(dist(D.odoKm)).toLocaleString()+' '+du():'--'}</dd></dl>
-      <div class="hint">Turn the iDrive knob for the next page</div></div>`;
+      </div>`;
   }else if(p==='Journey'){
     const all=trips.slice();if(J&&J.km>0.3)all.unshift({start:J.start,km:J.km,kwh:J.kwh,now:true});
     const now=Date.now(),day=864e5,midnight=new Date().setHours(0,0,0,0);
@@ -306,15 +297,15 @@ function drawPanel(){
   }else if(p==='Music'){
     const m=D.media,art=artUrl||'';
     if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Open the i3D app on your phone and finish the setup list to show what is playing.':'Nothing playing.'}</div>
-      <div style="color:var(--muted);font-size:17px">Press the knob to choose an app and a playlist.</div><div class="hint">Turn the iDrive knob for the next page</div></div>`;return}
+      <div style="color:var(--muted);font-size:17px">Press the knob to choose an app and a playlist.</div></div>`;return}
     const pct=m.dur>0?Math.min(100,m.pos/m.dur*100):0;
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
       <div class="hint"><b style="color:var(--accent)">Press the knob</b> to pause, skip or choose a playlist</div></div>`;
   }else if(p==='Call'){
-    const d=menuData(),people=d.contacts.concat(d.recentCalls.filter(r=>!d.contacts.some(c=>sameNumber(c.number,r.number)))).slice(0,5);
-    const rows=people.length?people.map(x=>`<div class="al-row"><div class="al-t">${esc(x.name)}</div></div>`).join(''):
+    const d=menuData(),people=d.contacts.concat(d.recentCalls.filter(r=>!knows(d.contacts,r.number)).map(r=>Object.assign({note:'recent'},r))).slice(0,5);
+    const rows=people.length?people.map(x=>`<div class="al-row" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><div class="al-t">${esc(x.name)}</div><div class="al-app">${(x.numbers||[]).length>1?x.numbers.length+' numbers':esc(x.note||'')}</div></div>`).join(''):
       `<div style="color:#c3cfdb;font-size:20px">${d.canSeeContacts?'No favourites or recent calls yet. Press the knob for all contacts.':'Open the i3D app on your phone and finish the setup list to call from here.'}</div>`;
     el.innerHTML=`<div class="frost"><h2>Call</h2><div class="al">${rows}</div><div class="hint"><b style="color:var(--accent)">Press the knob</b> to choose who to call</div></div>`;
   }else if(p==='Alerts'){
@@ -327,7 +318,7 @@ function drawPanel(){
     el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
       <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd><dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd></dl>
-      <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn right to change colour · turn left to go back</div></div>`;
+      <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn the knob to change colour · press for Home</div></div>`;
   }else el.innerHTML='';
 }
 const WX_SVG={
@@ -446,18 +437,20 @@ function nearestCharger(){
   return best?{c:best,d:bd}:null;
 }
 
-function tabBadge(){const t=document.querySelector('.tab[data-i="'+PAGES.indexOf('Alerts')+'"]');if(!t)return;const n=(D.notes||[]).length,txt='Alerts'+(n?' '+n:'');if(t.textContent!==txt)t.textContent=txt}
 /* ---------- phone call ---------- */
 let hadCall=false;
 function drawCall(){
   const c=D.call,el=$('#call');
-  if(!!c!==hadCall){hadCall=!!c;if(c&&home){home=false;page=0;showPage()}}
+  if(!!c!==hadCall){hadCall=!!c;
+    // a new call takes over: the Call section shows who it is, how long, and how to end it
+    if(c){closeMenu();home=false;page=PAGES.indexOf('Call');showPage()}else if(menu&&menu.call)closeMenu()}
   if(!c){if(!el.hidden)el.hidden=true;return}
   if(el.hidden)el.hidden=false;
-  const label=c.ongoing?'On call · '+mmss(Math.max(0,Date.now()-c.since)):'Incoming call';
-  H('#call',`<div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
-    <div class="cs">${label}</div><div class="cn">${esc(c.name||'Unknown caller')}</div>
-    <div class="cs" style="font-size:19px;color:var(--muted)">${c.ongoing?'Press the knob to hang up':'Press the knob to answer or decline'}</div>`);
+  const who=c.name||c.number||(c.ongoing?'Phone call':'Unknown caller'),num=c.number&&c.number!==who?c.number:'';
+  H('#call',`<div style="display:flex;align-items:center;gap:16px"><div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
+    <div><div class="cs">${c.ongoing?'On a call':'Incoming call'}</div>${c.ongoing?`<div class="cd num">${mmss(Math.max(0,Date.now()-c.since))}</div>`:''}</div></div>
+    <div class="cn">${esc(who)}</div>${num?`<div class="cs">${esc(num)}</div>`:''}
+    <div class="cs" style="font-size:20px"><b style="color:var(--accent)">Press the knob</b> ${c.ongoing?'to hang up':'to answer or decline'}</div>`);
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -485,6 +478,8 @@ function menuData(fresh){
   menuCacheAt=Date.now();return menuCache;
 }
 const sameNumber=(a,b)=>String(a).replace(/\D/g,'').slice(-9)===String(b).replace(/\D/g,'').slice(-9);
+// whether one of these contacts has this number, under any of their numbers
+const knows=(list,number)=>list.some(c=>(c.numbers&&c.numbers.length?c.numbers:[c]).some(x=>sameNumber(x.number,number)));
 function openMenu(title,items,sel,wait){$('#toast').hidden=true;menu={title,items,sel:Math.min(sel||0,items.length-1),wait:!!wait};drawMenu();menuAlive()}
 function closeMenu(){menu=null;clearTimeout(menuTimer);drawMenu()}
 function menuAlive(){clearTimeout(menuTimer);menuTimer=setTimeout(closeMenu,MENU_IDLE_MS)}
@@ -500,27 +495,40 @@ function drawMenu(){
   H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>${n>MENU_ROWS?(menu.sel+1)+' of '+n:'turn to choose · press to select'}</small></div>${rows}`);
 }
 const backTo=(fn,label)=>({label:label||'‹ Back',act:fn});
-const toMenu=()=>backTo(rootMenu,'‹ Menu');
+// every list starts the same way: the call, if there is one, then the way back to the Home screen
+function start(){
+  const it=[],c=D.call;
+  if(c&&c.ongoing)it.push({label:'Hang up',note:c.name||'',act(){N.hangup();closeMenu()}});
+  else if(c)it.push({label:'Answer call',note:c.name||'',act(){N.answer();closeMenu()}},{label:'Decline call',act(){N.hangup();closeMenu()}});
+  it.push({label:'‹ Home screen',act:goHome});
+  return it;
+}
 const waiting=title=>openMenu(title,[{label:'Loading…',dim:1}],0,true);
 function stopNav(){window.i3stopNav();N.navigationEnded()}
 function goTo(p){closeMenu();window.i3navigate(p.lat,p.lon,p.name);N.navStarted(p.lat,p.lon,p.name||'')}
 function readAlerts(){const n=(D.notes||[]).slice(0,3);N.speak(n.length?n.map(x=>[x.app,x.title,x.text].filter(Boolean).join('. ')).join('. Next. '):'No new alerts')}
 function goHome(){closeMenu();home=true;showPage()}
 function goPage(name){closeMenu();home=false;page=PAGES.indexOf(name);showPage()}
-function rootMenu(){
-  const it=[],c=D.call;
-  if(c&&!c.ongoing){   // ringing: nothing else to scroll past
-    openMenu('Incoming call',[{label:'Answer call',note:c.name||'',act(){N.answer();closeMenu()}},{label:'Decline call',act(){N.hangup();closeMenu()}},{label:'Close menu',act:closeMenu}]);return}
-  if(c)it.push({label:'Hang up',note:c.name||'',act(){N.hangup();closeMenu()}});
+// what a press (or a turn) does in a section: its own list, or straight back to Home where there is nothing to choose
+function sectionMenu(){
+  const p=PAGES[page];
+  if(D.call&&(p==='Call'||!D.call.ongoing)){const it=start();it.push({label:'Close menu',act:closeMenu});openMenu(D.call.ongoing?'Phone call':'Incoming call',it,0);menu.call=true;return}
+  if(p==='Music')musicMenu();else if(p==='Map')navMenu();else if(p==='Call')callMenu();
+  else if(p==='Alerts'&&(D.notes||[]).length)alertsMenu();
+  else if(p==='Car'||p==='Info')carMenu();
+  else if(D.call){const it=start();it.push({label:'Close menu',act:closeMenu});openMenu(TITLES[p]||p,it,it.length-2)}
+  else goHome();
+}
+function carMenu(){
+  const it=start(),back=it.length-1;
   if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}});
-  it.push({label:'Home screen',act:goHome},{label:'Navigate',more:1,act:navMenu},{label:'Call',more:1,act:callMenu},{label:'Music',more:1,act:musicMenu});
-  if(menuData(true).videos.length)it.push({label:'Video',more:1,act:videoMenu});
-  if((D.notes||[]).length)it.push({label:'Read alerts aloud',note:String(D.notes.length),act(){readAlerts();closeMenu()}});
-  it.push({label:'Car colour and info',act(){goPage('Info')}},{label:'Close menu',act:closeMenu});
-  openMenu('Menu',it);
+  it.push(PAGES[page]==='Info'?{label:'Car screen',act(){goPage('Car')}}:{label:'Car colour and info',act(){goPage('Info')}});
+  if(menuData(true).videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
+  it.push({label:'Close menu',act:closeMenu});
+  openMenu('Car',it,back);
 }
 function navMenu(){
-  const d=menuData(true),it=[toMenu()];
+  const d=menuData(true),it=start(),first=it.length;
   if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}},{label:'Recalculate route',act(){window.i3recalc();closeMenu()}});
   d.places.forEach(p=>it.push({label:p.name,note:'saved',act(){goTo(p)}}));
   const ch=nearestCharger();
@@ -529,32 +537,39 @@ function navMenu(){
   d.recents.filter(p=>!saved.has(String(p.name).toLowerCase())).forEach(p=>it.push({label:p.name,note:'recent',act(){goTo(p)}}));
   it.push({label:'Type a place…',note:'letter wheel',act(){closeMenu();N.search()}});
   if(!d.places.length)it.push({label:'Save Home and Work in the i3D phone app',dim:1});
-  openMenu('Navigate',it,1);
+  openMenu('Navigate',it,first);
 }
-function ring(c){closeMenu();if(!menuData().canCall){toast('Allow calls in the i3D phone app first');return}N.dial(c.number);toast('Calling '+c.name)}
+// calls a person. Someone with more than one number gets a list to pick from first
+function ring(c,number){
+  if(!menuData().canCall){closeMenu();toast('Allow calls in the i3D phone app first');return}
+  const nums=c.numbers||[];
+  if(!number&&nums.length>1){
+    openMenu('Call '+c.name,[backTo(callMenu)].concat(nums.map(x=>({label:x.label||'Number',note:x.number,act(){ring(c,x.number)}}))),1);return}
+  closeMenu();N.dial(number||c.number,c.name||'');toast('Calling '+c.name);
+}
+const numNote=(c,note)=>(c.numbers||[]).length>1?c.numbers.length+' numbers':note;
 function callMenu(){
-  const d=menuData(true),it=[toMenu()];
-  if(D.call)it.push({label:D.call.ongoing?'Hang up':'Decline call',note:D.call.name||'',act(){N.hangup();closeMenu()}});
-  d.contacts.forEach(c=>it.push({label:c.name,note:'favourite',act(){ring(c)}}));
-  d.recentCalls.filter(r=>!d.contacts.some(c=>sameNumber(c.number,r.number))).forEach(c=>it.push({label:c.name,note:'recent',act(){ring(c)}}));
+  const d=menuData(true),it=start(),first=D.call?0:it.length;
+  d.contacts.forEach(c=>it.push({label:c.name,note:numNote(c,'favourite'),more:0,act(){ring(c)}}));
+  d.recentCalls.filter(r=>!knows(d.contacts,r.number)).forEach(c=>it.push({label:c.name,note:'recent',act(){ring(c)}}));
   if(d.everyone.length)it.push({label:'All contacts',more:1,act:everyoneMenu});
   if(!d.canSeeContacts)it.push({label:'Finish the setup list in the i3D phone app',dim:1});
   else if(!d.everyone.length)it.push({label:'No contacts with phone numbers found',dim:1});
   it.push({label:'Type a name…',note:'letter wheel',act(){closeMenu();N.search()}});
-  openMenu('Call',it,1);
+  openMenu('Call',it,first);
 }
 function everyoneMenu(){
   const it=[backTo(callMenu)];
-  menuData().everyone.forEach(c=>it.push({label:c.name,act(){ring(c)}}));
+  menuData().everyone.forEach(c=>it.push({label:c.name,note:numNote(c,''),act(){ring(c)}}));
   openMenu('All contacts',it,1);
 }
 function musicMenu(){
-  const m=D.media,it=[toMenu()];
+  const m=D.media,it=start(),first=it.length;
   if(m&&m.title)it.push({label:m.playing?'Pause':'Play',note:m.title,act(){N.media('toggle');closeMenu()}},
     {label:'Next track',act(){N.media('next');menuAlive()}},{label:'Previous track',act(){N.media('prev');menuAlive()}});
   it.push({label:'Choose app or playlist',more:1,act(){waiting('Music apps');N.musicOpen()}});
   if(menuData().videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
-  openMenu('Music',it,1);
+  openMenu('Music',it,first);
 }
 // the phone answers musicOpen and musicPick here: the next list, or that something started playing
 window.i3music=function(r){
@@ -566,7 +581,7 @@ window.i3music=function(r){
   openMenu(r.top?'Music apps':menu.title,it,it.length>1?1:0);
 };
 function videoMenu(){
-  const it=[toMenu()];
+  const it=[backTo(PAGES[page]==='Music'?musicMenu:carMenu)];
   menuData().videos.forEach(v=>it.push({label:v.title||'YouTube video',act(){
     const r=N.video(v.id||'',v.list||'');closeMenu();
     if(r==='moving')toast('Video only plays while parked');else if(r!=='sent')toast('Could not start the video')}}));
@@ -575,10 +590,9 @@ function videoMenu(){
 window.i3press=function(){
   if(menu){menuAlive();const it=menu.items[menu.sel];if(it&&it.act&&!it.dim)it.act();return}
   if(home){openCard(CARDS[homeSel]);return}
-  const p=PAGES[page];
-  if(D.call)rootMenu();else if(p==='Music')musicMenu();else if(p==='Map')navMenu();else if(p==='Call')callMenu();else if(p==='Alerts'&&(D.notes||[]).length)alertsMenu();else rootMenu();
+  sectionMenu();
 };
-function alertsMenu(){openMenu('Alerts',[toMenu(),{label:'Read alerts aloud',note:String((D.notes||[]).length),act(){readAlerts();closeMenu()}},{label:'Close menu',act:closeMenu}],1)}
+function alertsMenu(){const it=start(),first=it.length;it.push({label:'Read alerts aloud',note:String((D.notes||[]).length),act(){readAlerts();closeMenu()}},{label:'Close menu',act:closeMenu});openMenu('Phone alerts',it,first)}
 
 /* ---------- home screen ---------- */
 const ICON={
@@ -607,13 +621,14 @@ function drawHome(){
   const el=$('#home');
   if(el.hidden===home)el.hidden=!home;
   const tabs=$('#tabs'),ht=$('#hometitle');if(tabs.hidden!==home){tabs.hidden=home;ht.hidden=!home}
+  if(!home)drawTitle();
   if(!home)return;
   const n=(D.notes||[]).length;
   H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${k==='Alerts'&&n?`<span class="cb">${n}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
 }
 function openCard(k){
   home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k);showPage();
-  if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
+  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
 }
 window.i3hidden=function(){closeMenu()};
 setWxIcon();
@@ -627,7 +642,7 @@ function render(){
   if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
   else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
   else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
-  drawTyres();drawLimit();drawCall();tabBadge();
+  drawTyres();drawLimit();drawCall();if(!home)drawTitle();
   T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
   H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
@@ -641,7 +656,6 @@ function render(){
   if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info'||PAGES[page]==='Alerts')drawPanel();
   drawHome();
   drawNowPlaying();
-  const mh=$('#mhint'),wantHint=!route;if(mh.hidden===wantHint)mh.hidden=!wantHint;
 }
 
 

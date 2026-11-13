@@ -16,6 +16,7 @@ import android.graphics.Color
 import android.hardware.display.VirtualDisplay
 import android.location.Location
 import android.net.Uri
+import android.provider.ContactsContract.CommonDataKinds.Phone as PhoneColumns
 import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
@@ -79,6 +80,8 @@ class DashController(val context: Context,
 		const val CALL_RETURN_WINDOW_MS = 8000L
 		const val CALL_WATCH_INTERVAL_MS = 1500L
 		const val CALL_WATCH_MAX_MS = 90000L
+		/** how long a call placed from the dashboard is shown before the phone itself reports it */
+		const val DIAL_GRACE_MS = 6000L
 
 		/** The running dashboard, so the phone screen can hand it destinations */
 		@Volatile var instance: DashController? = null
@@ -436,6 +439,7 @@ class DashController(val context: Context,
 		try {
 			if (android.os.Build.VERSION.SDK_INT >= 28 && hasPermission(android.Manifest.permission.ANSWER_PHONE_CALLS)) {
 				context.getSystemService(android.telecom.TelecomManager::class.java)?.endCall()
+				dialedAt = 0L
 			} else {
 				speak("Allow calls in the i3D app on your phone first")
 			}
@@ -444,17 +448,77 @@ class DashController(val context: Context,
 		}
 	}
 
+	/**
+	 * The call the driver started from the dashboard. The phone's call notification is the best source
+	 * for who is on the line, but it needs notification access, so the dashboard remembers its own calls too.
+	 */
+	@Volatile private var dialedName = ""
+	@Volatile private var dialedNumber = ""
+	@Volatile private var dialedAt = 0L          // wall clock, 0 when there is no such call
+	@Volatile private var dialedSeen = false     // the phone has reported this call as under way
+	private var callSeenAt = 0L                  // when a call without a notification was first noticed
+
+	override fun dial(number: String) = placeCall(number, "")
+
 	@SuppressLint("MissingPermission")
-	override fun dial(number: String) {
+	fun placeCall(number: String, name: String) {
 		try {
 			if (hasPermission(android.Manifest.permission.CALL_PHONE)) {
 				context.getSystemService(android.telecom.TelecomManager::class.java)
 					?.placeCall(android.net.Uri.fromParts("tel", number, null), Bundle())
+				dialedName = name.ifBlank { nameFor(number) }
+				dialedNumber = number
+				dialedSeen = false
+				dialedAt = System.currentTimeMillis()
 			} else {
 				speak("Allow calls in the i3D app on your phone first")
 			}
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't place the call", e)
+		}
+	}
+
+	/** The contact's name for a number, or nothing if it isn't in the phone's contacts */
+	private fun nameFor(number: String): String {
+		if (!hasPermission(android.Manifest.permission.READ_CONTACTS)) return ""
+		return try {
+			val uri = Uri.withAppendedPath(android.provider.ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+			context.contentResolver.query(uri, arrayOf(android.provider.ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)?.use { cursor ->
+				if (cursor.moveToFirst()) cursor.getString(0) else null
+			} ?: ""
+		} catch (e: Exception) {
+			""
+		}
+	}
+
+	/**
+	 * Whether the phone itself is in a call: 0 no, 1 ringing, 2 under way.
+	 * Works without notification access: from the phone state if that is allowed, else from the audio mode.
+	 */
+	@SuppressLint("MissingPermission")
+	private fun phoneCallState(): Int {
+		if (hasPermission(android.Manifest.permission.READ_PHONE_STATE)) {
+			try {
+				val telephony = context.getSystemService(android.telephony.TelephonyManager::class.java)
+				@Suppress("DEPRECATION")
+				val state = if (android.os.Build.VERSION.SDK_INT >= 31) telephony?.callStateForSubscription else telephony?.callState
+				when (state) {
+					android.telephony.TelephonyManager.CALL_STATE_RINGING -> return 1
+					android.telephony.TelephonyManager.CALL_STATE_OFFHOOK -> return 2
+					android.telephony.TelephonyManager.CALL_STATE_IDLE -> return 0
+				}
+			} catch (e: Exception) {
+				Log.w(TAG, "Couldn't read the phone state", e)
+			}
+		}
+		return try {
+			when (context.getSystemService(android.media.AudioManager::class.java)?.mode) {
+				android.media.AudioManager.MODE_RINGTONE -> 1
+				android.media.AudioManager.MODE_IN_CALL -> 2
+				else -> 0
+			}
+		} catch (e: Exception) {
+			0
 		}
 	}
 
@@ -525,25 +589,49 @@ class DashController(val context: Context,
 		data["notes"] = array
 	}
 
-	/** A phone call in progress or ringing, from the phone app's call notification */
+	/**
+	 * A phone call in progress or ringing. The phone app's call notification gives the name and the start time;
+	 * without it the phone state and the call the dashboard placed itself still show that a call is on.
+	 */
 	private fun readCall() {
 		val service = NotificationListenerServiceImpl.runningInstance
 		val notifications = try { service?.activeNotifications } catch (e: Exception) { null }
 		val call = notifications?.firstOrNull { it.notification.category == Notification.CATEGORY_CALL }
-		if (call == null) {
+		val phone = phoneCallState()
+		val now = System.currentTimeMillis()
+		if (call != null || phone != 0) dialedSeen = dialedAt != 0L
+		// a call placed from here takes a moment before the phone reports it
+		val dialling = dialedAt != 0L && !dialedSeen && now - dialedAt < DIAL_GRACE_MS
+		if (call == null && phone == 0 && !dialling) {
 			callState = 0
 			returnedForCall = false
+			dialedAt = 0L
+			callSeenAt = 0L
 			data["call"] = JSONObject.NULL
 			return
 		}
-		val extras = call.notification.extras
-		val callType = extras.getInt("android.callType", 0)    // 1 incoming, 2 ongoing (Android 12+)
-		val ongoing = callType == 2 || (callType == 0 && extras.getBoolean("android.showChronometer", false))
+		val mine = dialedAt != 0L
+		if (callSeenAt == 0L) callSeenAt = if (mine) dialedAt else now
 		val info = JSONObject()
-		info.put("name", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "")
-		info.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: "")
+		var name = ""
+		var text = ""
+		var ongoing = mine || phone == 2
+		var since = callSeenAt
+		if (call != null) {
+			val extras = call.notification.extras
+			val callType = extras.getInt("android.callType", 0)    // 1 incoming, 2 ongoing (Android 12+)
+			ongoing = ongoing || callType == 2 || (callType == 0 && extras.getBoolean("android.showChronometer", false))
+			name = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+			text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+			if (ongoing && call.notification.`when` > 0) since = call.notification.`when`
+		}
+		if (mine && name.isBlank()) name = dialedName.ifBlank { dialedNumber }
+		info.put("name", name)
+		info.put("text", text)
+		info.put("number", if (mine) dialedNumber else "")
+		info.put("outgoing", mine)
 		info.put("ongoing", ongoing)
-		info.put("since", call.notification.`when`)
+		info.put("since", since)
 		callState = if (ongoing) 2 else 1
 		data["call"] = info
 	}
@@ -783,7 +871,7 @@ class DashController(val context: Context,
 		fun hangup() = hangUpCall()
 
 		@JavascriptInterface
-		fun dial(number: String) = this@DashController.dial(number)
+		fun dial(number: String, name: String) = placeCall(number, name)
 
 		/** toggle, next or prev on whatever is playing */
 		@JavascriptInterface
@@ -859,22 +947,36 @@ class DashController(val context: Context,
 		return array
 	}
 
-	/** Phone contacts that have a number, by name. starred picks only the favourites */
+	/**
+	 * Phone contacts that have a number, by name, each with all of its numbers and what they are
+	 * (Mobile, Work...), so the driver can pick one. starred picks only the favourites
+	 */
 	private fun contacts(starred: Boolean, limit: Int): org.json.JSONArray {
 		val array = org.json.JSONArray()
 		if (!hasPermission(android.Manifest.permission.READ_CONTACTS)) return array
 		try {
 			val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
 			context.contentResolver.query(phone,
-				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
-				if (starred) "${android.provider.ContactsContract.CommonDataKinds.Phone.STARRED} = 1" else null, null,
-				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} COLLATE NOCASE ASC")?.use { cursor ->
+				arrayOf(PhoneColumns.DISPLAY_NAME, PhoneColumns.NUMBER, PhoneColumns.TYPE, PhoneColumns.LABEL),
+				if (starred) "${PhoneColumns.STARRED} = 1" else null, null,
+				"${PhoneColumns.DISPLAY_NAME} COLLATE NOCASE ASC, ${PhoneColumns.IS_SUPER_PRIMARY} DESC")?.use { cursor ->
+				val people = LinkedHashMap<String, JSONObject>()
 				val seen = HashSet<String>()
-				while (cursor.moveToNext() && array.length() < limit) {
-					val name = cursor.getString(0) ?: continue
-					val number = cursor.getString(1) ?: continue
-					if (seen.add(name)) array.put(JSONObject().put("name", name).put("number", number))
+				while (cursor.moveToNext()) {
+					val name = cursor.getString(0)?.takeIf { it.isNotBlank() } ?: continue
+					val number = cursor.getString(1)?.takeIf { it.isNotBlank() } ?: continue
+					val key = name.lowercase()
+					val person = people[key] ?: run {
+						if (people.size >= limit) return@run null
+						JSONObject().put("name", name).put("number", number).put("numbers", org.json.JSONArray()).also { people[key] = it }
+					} ?: continue
+					if (!seen.add(key + "|" + number.filter { it.isDigit() }.takeLast(9))) continue      // the same number saved twice
+					val label = try {
+						PhoneColumns.getTypeLabel(context.resources, cursor.getInt(2), cursor.getString(3))?.toString() ?: ""
+					} catch (e: Exception) { "" }
+					person.getJSONArray("numbers").put(JSONObject().put("number", number).put("label", label))
 				}
+				people.values.forEach { array.put(it) }
 			}
 		} catch (e: Exception) {
 			Log.w(TAG, "Couldn't read the contacts", e)

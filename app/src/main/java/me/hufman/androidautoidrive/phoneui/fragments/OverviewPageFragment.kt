@@ -46,7 +46,8 @@ class OverviewPageFragment: Fragment() {
 		android.Manifest.permission.READ_CONTACTS,
 		android.Manifest.permission.CALL_PHONE,
 		android.Manifest.permission.ANSWER_PHONE_CALLS,
-		android.Manifest.permission.READ_CALL_LOG)
+		android.Manifest.permission.READ_CALL_LOG,
+		android.Manifest.permission.READ_PHONE_STATE)
 
 	private fun hasNotificationAccess(ctx: Context) =
 		androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(ctx).contains(ctx.packageName)

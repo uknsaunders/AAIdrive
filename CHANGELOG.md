@@ -3,6 +3,17 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 13 November 2026, evening
+
+After the drive with the home screen.
+
+- **Sections without buttons:** the row of buttons at the top of each section has gone. Each section shows its name, and a press of the knob gives its list, which always starts with "‹ Home screen". Battery and Journey have nothing to choose, so one press goes straight home. Turning the knob no longer moves between sections.
+- **Fixed: no call details during a call.** The call panel relied on the phone's call notification, which needs notification access. The dash now also remembers the call it placed and reads the phone's own call state, so a call shows with the name, number and running time, and Hang up, even without that access. A new call moves the dash to the Call section.
+- **Hang up:** during a call, a press of the knob offers Hang up first, in every section.
+- **More than one number:** a contact with several numbers now asks which one to dial (Mobile, Work and so on). The letter wheel search shows the kind of number too.
+- **Fixed:** the next-turn banner and the now-playing strip could overlap at the top of the map.
+- The Calls permission now also asks for the phone state, which is how the dash knows a call is under way.
+
 ## 13 November 2026
 
 After the first drive with the in-dash menu.

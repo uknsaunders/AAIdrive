@@ -1,6 +1,6 @@
 # i3D screenshots
 
-These are renders of the real car page (`index.html`) at the car's 1440×540 size, fed with **sample data** (43% battery, 22 mph, a Spotify track, two notifications). They are not photos from a car.
+These are renders of the real car page (`index.html`) at the car's 1440×540 size, fed with **sample data** (43% battery, 22 mph, a Spotify track, sample contacts and alerts). They are not photos from a car.
 
 Two things to know:
 
@@ -11,76 +11,71 @@ Two things to know:
 What you see when i3D opens. Turn the knob to choose a card, press to open it.
 ![Home screen](screenshots/home.png)
 
-## The menu
-Press the knob inside any section. The menu takes the left half and the map stays on the right.
-
-### While navigating
-![Menu while navigating](screenshots/menu-nav.png)
-
-### Main menu
-Home screen is the first row.
-![Main menu](screenshots/menu-main.png)
+## Lists
+Press the knob inside a section for its list. It takes the left half and the map stays on the right. Every list starts with "‹ Home screen".
 
 ### Navigate
-![Navigate](screenshots/menu-navigate.png)
+![Navigate list](screenshots/menu-nav.png)
 
 ### Call
 Favourites, recent calls, all contacts, or type a name.
-![Call](screenshots/menu-call-list.png)
+![Call list](screenshots/menu-call-list.png)
+
+### Choosing a number
+Shown when a contact has more than one.
+![Number list](screenshots/menu-call-numbers.png)
 
 ### Music
-![Music](screenshots/menu-music.png)
+![Music list](screenshots/menu-music.png)
 
-### Music: pick a playlist
-![Playlists](screenshots/menu-music-playlists.png)
+### Car
+![Car list](screenshots/menu-car.png)
 
-### Incoming call
-![Incoming call](screenshots/menu-call.png)
-
-### On the Map page
-The map gives up its left half only while the menu is open.
-![Menu on the Map page](screenshots/menu-map.png)
+### During a call
+Hang up is first.
+![Call options](screenshots/menu-call.png)
 
 ## Sections
+Each shows its name at the top and what the knob does there.
+
+### Car
+![Car section](screenshots/car.png)
 
 ### Car, by day
-![Car page](screenshots/car.png)
-
-### Car, at night
-![Car page at night](screenshots/car-night.png)
+![Car section by day](screenshots/car-day.png)
 
 ### Navigating
-Next turn, now-playing strip, arrival bar and speed limit.
+Next turn, now-playing strip and arrival bar.
 ![Navigating](screenshots/car-nav.png)
 
 ### Music
-![Music page](screenshots/music.png)
+![Music section](screenshots/music.png)
 
 ### Call
-![Call page](screenshots/call-page.png)
+![Call section](screenshots/call-page.png)
 
-### Battery
-![Battery page](screenshots/battery.png)
-
-### Journey
-![Journey page](screenshots/journey.png)
-
-### Alerts
-![Alerts page](screenshots/alerts.png)
-
-### Map
-![Map page](screenshots/map.png)
-
-### Car colour
-![Colour page](screenshots/colour.png)
+### Call in progress
+Name, number and running time. Press the knob to hang up.
+![Call in progress](screenshots/call-active.png)
 
 ### Incoming call
 Press the knob to answer or decline.
-![Call ringing](screenshots/call-ringing.png)
+![Incoming call](screenshots/call-ringing.png)
 
-### Call in progress
-Press the knob to hang up.
-![Call active](screenshots/call-active.png)
+### Battery
+![Battery section](screenshots/battery.png)
+
+### Journey
+![Journey section](screenshots/journey.png)
+
+### Alerts
+![Alerts section](screenshots/alerts.png)
+
+### Map
+![Map section](screenshots/map.png)
+
+### Car colour
+![Colour section](screenshots/colour.png)
 
 ## Finding it in the car (mockup)
 i3D in the car's ConnectedDrive list. Choosing it opens the dash directly.

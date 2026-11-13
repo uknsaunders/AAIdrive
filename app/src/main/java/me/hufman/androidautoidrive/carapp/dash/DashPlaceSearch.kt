@@ -63,7 +63,8 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 		try {
 			val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
 			context.contentResolver.query(phone,
-				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
+				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
+					android.provider.ContactsContract.CommonDataKinds.Phone.TYPE, android.provider.ContactsContract.CommonDataKinds.Phone.LABEL),
 				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?", arrayOf("%$text%"),
 				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC")?.use { cursor ->
 				val seen = HashSet<String>()
@@ -71,7 +72,11 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 					val name = cursor.getString(0) ?: continue
 					val number = cursor.getString(1) ?: continue
 					if (seen.add(number.filter { it.isDigit() || it == '+' })) {
-						results.add(MapResult("tel:$number", "Call $name", number))
+						// say which number this is (Mobile, Work...), for people with more than one
+						val kind = try {
+							android.provider.ContactsContract.CommonDataKinds.Phone.getTypeLabel(context.resources, cursor.getInt(2), cursor.getString(3))?.toString() ?: ""
+						} catch (e: Exception) { "" }
+						results.add(MapResult("tel:$number", "Call $name", if (kind.isBlank()) number else "$kind · $number"))
 					}
 				}
 			}

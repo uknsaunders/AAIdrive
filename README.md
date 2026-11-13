@@ -23,7 +23,7 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | **Map** | 3D map that is light by day and dark at night, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
 | **i** | Connection details and the raw data the car sends. |
 
-Incoming calls show a panel with the caller's name. Press the knob to answer, decline or hang up, and to ring your starred contacts.
+Calls show a panel with the name, number and time. Press the knob to answer, decline or hang up.
 
 ![Journey page](docs/screenshots/journey.png)
 
@@ -63,27 +63,29 @@ i3D opens on a home screen with a card for each part: Navigate, Call, Music, Map
 
 ![Home screen](docs/screenshots/home.png)
 
-Inside a section, turn the knob to move to the next one. Press the knob for the menu. It opens on the left half and the map stays on the right at full size. Turn to choose, press to select. It closes by itself after 20 seconds.
+Each section shows its name at the top, with no row of buttons. Press the knob for that section's list. It opens on the left half and the map stays on the right at full size. Turn to choose, press to select. It closes by itself after 20 seconds.
 
-![The menu while navigating](docs/screenshots/menu-nav.png)
+![The Navigate list beside the map](docs/screenshots/menu-nav.png)
 
-- **Home screen** is the first row of the menu, so two presses always take you back to the cards. Every list starts with **‹ Menu**.
-- **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
-- **Call**: favourites, recent calls, **All contacts**, or type a name. During a call the menu starts with **Hang up**. When the phone rings it shows only **Answer call** and **Decline call**.
-- **Music**: pause, skip, or choose an app and one of its playlists.
-- **Video**: videos you have sent from the phone, parked only.
-- **Read alerts aloud**: speaks your latest three alerts.
+- **‹ Home screen** starts every list, so you can always get back to the cards. Battery and Journey have nothing to choose, so one press there goes straight home.
+- **Navigate** and **Map**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
+- **Call**: favourites, recent calls, **All contacts**, or type a name. If someone has more than one number, you pick which (Mobile, Work and so on) before it dials.
+- **Music**: pause, skip, or choose an app and one of its playlists. Videos you sent from the phone are here too, parked only.
+- **Alerts**: **Read alerts aloud** speaks your latest three.
+- **Car**: car colour and info.
 
-Pressing the knob on the Music, Call and Map pages opens that section's own list directly.
+![Choosing which number to call](docs/screenshots/menu-call-numbers.png)
 
-![Calling from the menu](docs/screenshots/menu-call-list.png)
+During a call the dash moves to the Call section and shows who it is, the number, and how long the call has run. Press the knob to hang up. When the phone rings, the same press offers **Answer call** and **Decline call**. While a call is on, every list starts with **Hang up**.
+
+![A call in progress](docs/screenshots/call-active.png)
 
 The map is light in daylight and dark at night. It switches by itself from where the sun is.
 
 Three things the car decides, not the app:
 
 - **Sound.** Music travels to the car over Bluetooth, even with the USB cable in. If you hear the radio instead, press MEDIA and choose Bluetooth audio. The car remembers it.
-- **The car's phone screen.** The car shows its own screen when a call connects. i3D brings the dash back once the call is under way, so you can hang up from the menu.
+- **The car's phone screen.** The car shows its own screen when a call connects. i3D brings the dash back once the call is under way, showing the call with **Hang up** one press away.
 - **The globe at the top left.** The car draws its own ConnectedDrive icon and status bar over every app, and an app cannot remove them. The dash keeps its own content clear of them.
 
 What you see in a music app's library depends on the app, and some apps share less than others.
@@ -115,7 +117,7 @@ The home screen has a connection card at the top, the setup list until it is fin
 - Journey cost is the battery energy used plus 10% for charging losses, at your price per kWh. The default is 28p, and you can change it on the Send to car screen.
 - Speed limits and chargers come from OpenStreetMap, so some roads have no limit listed.
 - Confirmed in the car on 13 November 2026: the dash opens from ConnectedDrive, the knob turns pages and opens the menu, and the page sits clear of the car's status bar.
-- Not yet confirmed on a real car: the home screen and left-side menu, the daylight map, the fuller Call list, the music picker, answering and hanging up, the dash coming back during a call, and YouTube. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
+- Not yet confirmed on a real car: the sections without buttons, call details and hanging up, choosing between a contact's numbers, the daylight map, the fuller Call list, the music picker, answering and hanging up, the dash coming back during a call, and YouTube. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
 - This i3 sends no tyre pressure data, so the tyre rings stay empty (see the Tyres line on the **i** page).
 
 ## Building
