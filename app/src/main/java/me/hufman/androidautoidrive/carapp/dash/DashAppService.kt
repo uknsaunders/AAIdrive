@@ -83,16 +83,22 @@ class DashAppService: CarAppService() {
 	}
 
 	override fun onCarStop() {
-		try {
-			mapAppMode?.currentNavDestination = null
-			screenCapture?.onDestroy()
-			interactionListener?.onDestroy()
-			dashController?.onDestroy()
-			virtualDisplay?.release()
-			mapApp?.onDestroy()
-			mapApp?.disconnect()
-		} catch (e: Exception) {
-			Log.w(TAG, "Problem while shutting down i3 Dash", e)
+		// each step on its own, so one failure can't stop the rest or take the app down
+		fun step(what: String, action: () -> Unit) {
+			try { action() } catch (e: Exception) { Log.w(TAG, "Problem while shutting down i3D ($what)", e) }
+		}
+		val display = virtualDisplay
+		step("navigation") { mapAppMode?.currentNavDestination = null }
+		step("screen capture") { screenCapture?.onDestroy() }
+		step("listener") { interactionListener?.onDestroy() }
+		step("car app") { mapApp?.onDestroy() }
+		step("car connection") { mapApp?.disconnect() }
+		// the page is taken off the hidden display first, and only then is the display let go
+		val controller = dashController
+		if (controller != null) {
+			step("page") { controller.onDestroy { step("display") { display?.release() } } }
+		} else {
+			step("display") { display?.release() }
 		}
 		screenCapture = null
 		interactionListener = null

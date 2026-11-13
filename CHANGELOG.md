@@ -3,6 +3,19 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 13 November 2026
+
+After the first drive with the in-dash menu.
+
+- **Fixed: no map in daylight.** The map only had a dark style, which can't be seen on the car's screen in sunshine. It now has a light daytime map and switches to dark at night by itself, from where the sun is.
+- **Home screen:** i3D opens on a full screen of cards (Navigate, Call, Music, Map, Car, Battery, Journey, Alerts) with live details on each. Turn to choose, press to open.
+- **Menu on the left:** the knob-press menu now takes the left half, seven rows tall, and the map stays on the right at full size. "Home screen" is the first row and every list starts with "‹ Menu", so there is always a way back.
+- **Call:** a Call section and card. The list shows favourites, recent calls and all contacts, where it used to show only starred contacts (and nothing if you had none).
+- **Easier font:** the dash now uses Inter throughout. Aptos belongs to Microsoft and can't be shipped in the app, and Inter is the closest free match.
+- **Slicker permissions:** the phone's setup list now walks through Android's "Restricted setting" block in three numbered taps, each opening the right screen.
+- **Crash on car stop:** the shutdown order is safer, and every step is guarded. If the app ever stops unexpectedly, the phone's home screen offers a "Send the report" button next time, so the real cause can be found.
+- **The globe logo:** it is the car's own ConnectedDrive icon, drawn over every app. An app cannot remove it.
+
 ## 12 November 2026
 
 - **Map stays live with the menu open:** the menu takes the top right and the map shrinks to the bottom right quarter beneath it, still showing your position, next turn, arrival time and speed limit. On the Map page the map keeps the whole screen.

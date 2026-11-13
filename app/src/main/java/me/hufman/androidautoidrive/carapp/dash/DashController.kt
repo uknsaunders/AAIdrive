@@ -101,6 +101,17 @@ class DashController(val context: Context,
 	private val worker = java.util.concurrent.Executors.newSingleThreadExecutor()
 	@Volatile private var mediaController: MediaController? = null
 
+	/** Runs a slow job in the background. Quietly does nothing once the car app is shutting down */
+	private fun background(job: () -> Unit) {
+		try {
+			worker.execute {
+				try { job() } catch (e: Exception) { Log.w(TAG, "Background job failed", e) }
+			}
+		} catch (e: java.util.concurrent.RejectedExecutionException) {
+			Log.i(TAG, "Skipping a background job, the car app is closing")
+		}
+	}
+
 	init {
 		instance = this
 		carLocationProvider.callback = { location -> onLocation(location) }
@@ -348,7 +359,7 @@ class DashController(val context: Context,
 					returnedForCall = true
 					sawCallAfterPause = false
 					Log.i(TAG, "A call took the screen, bringing the dashboard back")
-					worker.execute { carUi?.openDash() }
+					background { carUi?.openDash() }
 					return
 				}
 			}
@@ -678,21 +689,24 @@ class DashController(val context: Context,
 		return true
 	}
 
-	fun onDestroy() {
+	/** Shuts everything down. afterwards runs on the main thread once the page has been taken off its display */
+	fun onDestroy(afterwards: () -> Unit = {}) {
 		if (instance === this) instance = null
-		try { music?.close() } catch (e: Exception) { Log.w(TAG, "Music close failed", e) }
-		music = null
 		pageLoaded = false
 		pushing = false
-		handler.removeCallbacksAndMessages(null)
-		worker.shutdownNow()
+		videoOn = false
 		carUi = null
-		scope.cancel()
+		try { handler.removeCallbacksAndMessages(null) } catch (e: Exception) { Log.w(TAG, "Couldn't clear the queue", e) }
+		try { worker.shutdownNow() } catch (e: Exception) { Log.w(TAG, "Couldn't stop the background jobs", e) }
+		try { music?.close() } catch (e: Exception) { Log.w(TAG, "Music close failed", e) }
+		music = null
+		try { scope.cancel() } catch (e: Exception) { Log.w(TAG, "Couldn't cancel the page jobs", e) }
 		handler.post {
-			presentation?.dismiss()
+			try { presentation?.dismiss() } catch (e: Exception) { Log.w(TAG, "Couldn't close the page", e) }
 			presentation = null
-			tts?.shutdown()
+			try { tts?.shutdown() } catch (e: Exception) { Log.w(TAG, "Couldn't stop the voice", e) }
 			tts = null
+			try { afterwards() } catch (e: Exception) { Log.w(TAG, "Problem after closing the page", e) }
 		}
 	}
 
@@ -738,8 +752,11 @@ class DashController(val context: Context,
 				}
 				json.put("places", places(DashStore.places(context).take(8)))
 				json.put("recents", places(DashStore.recents(context).take(5)))
-				json.put("contacts", starredContacts())
+				json.put("contacts", contacts(true, 12))
+				json.put("everyone", contacts(false, 250))
+				json.put("recentCalls", recentCalls())
 				json.put("canSeeContacts", hasPermission(android.Manifest.permission.READ_CONTACTS))
+				json.put("canCall", hasPermission(android.Manifest.permission.CALL_PHONE))
 				json.put("videos", DashStore.videos(context))
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't build the menu", e)
@@ -756,7 +773,7 @@ class DashController(val context: Context,
 		/** The car's letter wheel, the only way to type. Choosing a result comes straight back to the dashboard */
 		@JavascriptInterface
 		fun search() {
-			worker.execute { carUi?.openSearch() }
+			background { carUi?.openSearch() }
 		}
 
 		@JavascriptInterface
@@ -786,7 +803,7 @@ class DashController(val context: Context,
 		/** Lists the music apps. The answer arrives later as window.i3music({rows, top, played}) */
 		@JavascriptInterface
 		fun musicOpen() {
-			worker.execute {
+			background {
 				try { music().reset() } catch (e: Exception) { Log.w(TAG, "Music reset failed", e) }
 				sendMusic(false)
 			}
@@ -795,7 +812,7 @@ class DashController(val context: Context,
 		/** Opens an app or folder, or plays a playlist or track. The answer arrives as window.i3music(...) */
 		@JavascriptInterface
 		fun musicPick(row: Int) {
-			worker.execute {
+			background {
 				val played = try { music().pick(row) } catch (e: Exception) { Log.w(TAG, "Music pick failed", e); false }
 				sendMusic(played)
 			}
@@ -819,24 +836,48 @@ class DashController(val context: Context,
 		fun video(id: String, list: String): String = playVideo(id, list)
 	}
 
-	private fun starredContacts(): org.json.JSONArray {
+	/** The last people spoken to, newest first, from the phone's call list */
+	private fun recentCalls(): org.json.JSONArray {
+		val array = org.json.JSONArray()
+		if (!hasPermission(android.Manifest.permission.READ_CALL_LOG)) return array
+		try {
+			val calls = android.provider.CallLog.Calls.CONTENT_URI
+			context.contentResolver.query(calls,
+				arrayOf(android.provider.CallLog.Calls.CACHED_NAME, android.provider.CallLog.Calls.NUMBER),
+				null, null, "${android.provider.CallLog.Calls.DATE} DESC")?.use { cursor ->
+				val seen = HashSet<String>()
+				var looked = 0
+				while (cursor.moveToNext() && array.length() < 8 && looked++ < 60) {
+					val number = cursor.getString(1)?.takeIf { it.isNotBlank() } ?: continue
+					val name = cursor.getString(0)?.takeIf { it.isNotBlank() } ?: number
+					if (seen.add(number.filter { it.isDigit() }.takeLast(9))) array.put(JSONObject().put("name", name).put("number", number))
+				}
+			}
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't read the recent calls", e)
+		}
+		return array
+	}
+
+	/** Phone contacts that have a number, by name. starred picks only the favourites */
+	private fun contacts(starred: Boolean, limit: Int): org.json.JSONArray {
 		val array = org.json.JSONArray()
 		if (!hasPermission(android.Manifest.permission.READ_CONTACTS)) return array
 		try {
 			val phone = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
 			context.contentResolver.query(phone,
 				arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
-				"${android.provider.ContactsContract.CommonDataKinds.Phone.STARRED} = 1", null,
-				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+				if (starred) "${android.provider.ContactsContract.CommonDataKinds.Phone.STARRED} = 1" else null, null,
+				"${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} COLLATE NOCASE ASC")?.use { cursor ->
 				val seen = HashSet<String>()
-				while (cursor.moveToNext() && array.length() < 10) {
+				while (cursor.moveToNext() && array.length() < limit) {
 					val name = cursor.getString(0) ?: continue
 					val number = cursor.getString(1) ?: continue
 					if (seen.add(name)) array.put(JSONObject().put("name", name).put("number", number))
 				}
 			}
 		} catch (e: Exception) {
-			Log.w(TAG, "Couldn't read the starred contacts", e)
+			Log.w(TAG, "Couldn't read the contacts", e)
 		}
 		return array
 	}

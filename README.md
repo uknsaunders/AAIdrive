@@ -19,7 +19,8 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | **Battery** | Charge, range and the nearest charger. |
 | **Alerts** | Your recent phone notifications, newest first, with a count on the tab. |
 | **Journey** | Miles, cost and efficiency for today, 7 days and 30 days, a 14 day chart and recent trips. |
-| **Map** | Dark 3D map, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
+| **Call** | Favourites, recent calls and all your contacts, dialled from the knob. |
+| **Map** | 3D map that is light by day and dark at night, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
 | **i** | Connection details and the raw data the car sends. |
 
 Incoming calls show a panel with the caller's name. Press the knob to answer, decline or hang up, and to ring your starred contacts.
@@ -37,9 +38,9 @@ Incoming calls show a panel with the caller's name. Press the knob to answer, de
 1. On your phone, download `i3-dash.apk` from the [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest).
 2. Allow installs from your browser when Android asks, then open the file and tap Install. The app is called **i3D** on your phone. It has its own app ID, so it installs next to the original AAIdrive instead of replacing it. Only run one of them at a time, because both try to connect to the car. If you installed an earlier i3 Dash build (before 12 November 2026), uninstall it once i3D works. It was a different app, so settings and saved places do not carry over, and you need to allow notification access and calls again.
 3. Open i3D and work through the welcome screens.
-4. The home screen shows a **Finish setting up** list with two items. Tap each one until it shows a tick, then the list disappears.
-   - **Music, alerts and calls on the car screen** opens Android's notification access list. Switch on i3D. If the switch is greyed out, go to Settings → Apps → i3D → ⋮ → **Allow restricted settings**, then try again.
-   - **Calls and contacts** lets the car answer, hang up and dial.
+4. The home screen shows a **Finish setting up** list. Work down it until it disappears.
+   - **Music, alerts and calls on the car screen.** Android blocks this switch for apps from outside the Play Store, so the list gives three numbered buttons to tap in order: try the switch, unlock it (three dots at the top right, then **Allow restricted settings**), then switch it on. Each one takes you to the right screen and you come back with the back button.
+   - **Calls and contacts** lets the car answer, hang up and dial, and list your favourites and recent calls.
 
 ## Connect
 
@@ -58,24 +59,32 @@ If it sits on "waiting for car connection", close the BMW Connected app, restart
 
 ## Using it in the car
 
-Everything happens inside the dash. Turn the iDrive knob to move between pages. Press the knob for the menu, turn to choose, and press to select. The menu closes by itself after 20 seconds.
+i3D opens on a home screen with a card for each part: Navigate, Call, Music, Map, Car, Battery, Journey and Alerts. Turn the iDrive knob to choose a card and press to open it.
 
-The menu opens at the top right and shows four rows at a time. The map stays live underneath it, in the bottom right, with your next turn, arrival time and the speed limit. It goes back to full size when the menu closes.
+![Home screen](docs/screenshots/home.png)
+
+Inside a section, turn the knob to move to the next one. Press the knob for the menu. It opens on the left half and the map stays on the right at full size. Turn to choose, press to select. It closes by itself after 20 seconds.
 
 ![The menu while navigating](docs/screenshots/menu-nav.png)
 
+- **Home screen** is the first row of the menu, so two presses always take you back to the cards. Every list starts with **‹ Menu**.
 - **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
-- **Call**: your starred contacts, or type a name. During a call the menu starts with **Hang up**. When the phone rings it shows only **Answer call** and **Decline call**.
-- **Music**: pause, skip, or choose an app and one of its playlists. Pressing the knob on the Music page opens this directly.
+- **Call**: favourites, recent calls, **All contacts**, or type a name. During a call the menu starts with **Hang up**. When the phone rings it shows only **Answer call** and **Decline call**.
+- **Music**: pause, skip, or choose an app and one of its playlists.
 - **Video**: videos you have sent from the phone, parked only.
 - **Read alerts aloud**: speaks your latest three alerts.
 
-![Choosing a playlist](docs/screenshots/menu-music-playlists.png)
+Pressing the knob on the Music, Call and Map pages opens that section's own list directly.
 
-Two things the car decides, not the app:
+![Calling from the menu](docs/screenshots/menu-call-list.png)
+
+The map is light in daylight and dark at night. It switches by itself from where the sun is.
+
+Three things the car decides, not the app:
 
 - **Sound.** Music travels to the car over Bluetooth, even with the USB cable in. If you hear the radio instead, press MEDIA and choose Bluetooth audio. The car remembers it.
 - **The car's phone screen.** The car shows its own screen when a call connects. i3D brings the dash back once the call is under way, so you can hang up from the menu.
+- **The globe at the top left.** The car draws its own ConnectedDrive icon and status bar over every app, and an app cannot remove them. The dash keeps its own content clear of them.
 
 What you see in a music app's library depends on the app, and some apps share less than others.
 
@@ -99,13 +108,14 @@ what3words needs a free API key from what3words. If you build your own copy, add
 
 <img src="docs/screenshots/phone-home.png" alt="The i3D home screen" width="260">
 
-The home screen has a connection card at the top, the setup list until it is finished, and **Send to car**. Car information, Settings and Support are under More. The original AAIdrive apps (Music, Notifications, Navigation, Calendar, Assistants, Addons) are at the bottom. They are optional and each is a separate entry in the car's menus.
+The home screen has a connection card at the top, the setup list until it is finished, and **Send to car**. If the app ever stops unexpectedly, a **Send the report** button appears here next time you open it, so the cause can be found. Car information, Settings and Support are under More. The original AAIdrive apps (Music, Notifications, Navigation, Calendar, Assistants, Addons) are at the bottom. They are optional and each is a separate entry in the car's menus.
 
 ## Things to know
 
 - Journey cost is the battery energy used plus 10% for charging losses, at your price per kWh. The default is 28p, and you can change it on the Send to car screen.
 - Speed limits and chargers come from OpenStreetMap, so some roads have no limit listed.
-- Not yet confirmed on a real car: the in-dash menu on the knob press, the music picker, answering, hanging up and dialling, the dash coming back during a call, YouTube, whether the page header clears the car's own logo and status bar, and the label under the car's menu icon. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
+- Confirmed in the car on 13 November 2026: the dash opens from ConnectedDrive, the knob turns pages and opens the menu, and the page sits clear of the car's status bar.
+- Not yet confirmed on a real car: the home screen and left-side menu, the daylight map, the fuller Call list, the music picker, answering and hanging up, the dash coming back during a call, and YouTube. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
 - This i3 sends no tyre pressure data, so the tyre rings stay empty (see the Tyres line on the **i** page).
 
 ## Building

@@ -10,18 +10,17 @@
 /* i3 Dash for the iDrive screen: drawn on the phone, sent to the car as pictures.
    Wide layout: top strip, car + stats on the left third, sat nav on the right two-thirds.
    No touch: the iDrive knob turns between pages. */
-@font-face{font-family:"Saira Semi Condensed";src:url(fonts/SairaSemiCondensed-SemiBold.ttf);font-weight:500 600}
-@font-face{font-family:"Saira Semi Condensed";src:url(fonts/SairaSemiCondensed-Bold.ttf);font-weight:700}
-@font-face{font-family:"Barlow";src:url(fonts/Barlow-Regular.ttf);font-weight:400}
-@font-face{font-family:"Barlow";src:url(fonts/Barlow-Medium.ttf);font-weight:500}
-@font-face{font-family:"Barlow";src:url(fonts/Barlow-SemiBold.ttf);font-weight:600 700}
+@font-face{font-family:"Inter";src:url(fonts/Inter-Regular.otf);font-weight:400}
+@font-face{font-family:"Inter";src:url(fonts/Inter-Medium.otf);font-weight:500}
+@font-face{font-family:"Inter";src:url(fonts/Inter-SemiBold.otf);font-weight:600}
+@font-face{font-family:"Inter";src:url(fonts/Inter-Bold.otf);font-weight:700}
 /* the iDrive draws its own status bar across the top and its sidebar arc down the left,
    so everything is kept inside these margins */
 :root{--safe-top:46px;--safe-left:40px;--safe-right:84px;--safe-bottom:6px}
 :root{
   --bg:#0a0e13; --panel:#111821; --panel2:#18212c; --line:#243243; --ink:#e7edf4; --muted:#8597ab;
   --accent:#4c93ff; --accent-ink:#06101f; --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
-  --f-d:"Saira Semi Condensed","Arial Narrow",sans-serif; --f-b:"Barlow",system-ui,sans-serif;
+  --f-d:"Inter",system-ui,sans-serif; --f-b:"Inter",system-ui,sans-serif;
 }
 [hidden]{display:none!important}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-b);overflow:hidden}
@@ -104,7 +103,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .call .cs{font:500 22px var(--f-b);color:#c3cfdb}
 .call .ci{width:58px;height:58px;border-radius:50%;background:var(--good);display:grid;place-items:center}
 .call .ci svg{width:32px;height:32px;fill:#fff}
-.mhint{position:absolute;left:12px;bottom:12px;font:600 21px var(--f-b);background:rgba(10,14,19,.78);border:1px solid var(--line);border-radius:10px;padding:6px 14px;z-index:6}
+.mhint{position:absolute;left:12px;bottom:12px;color:var(--ink);font:600 21px var(--f-b);background:rgba(10,14,19,.78);border:1px solid var(--line);border-radius:10px;padding:6px 14px;z-index:6}
 .mhint b{color:var(--accent)}
 .diag{position:absolute;left:12px;bottom:62px;font:500 16px var(--f-b);color:var(--muted);background:rgba(10,14,19,.7);border-radius:6px;padding:2px 8px;z-index:6;max-width:60%;text-align:left}
 .diag:empty{display:none}
@@ -114,25 +113,29 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.menu{position:absolute;top:0;right:0;height:57%;width:50%;z-index:9;border-bottom:2px solid var(--accent);background:var(--bg);border-left:1px solid var(--line);padding:6px 12px;display:flex;flex-direction:column;gap:4px}
-.mt{display:flex;justify-content:space-between;align-items:baseline;font:700 22px var(--f-d);padding:0 8px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.menu{position:absolute;top:0;left:0;bottom:0;width:50%;z-index:9;background:var(--bg);border-right:2px solid var(--accent);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.mt{display:flex;justify-content:space-between;align-items:baseline;font:700 23px var(--f-d);padding:0 8px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mt small{font:500 16px var(--f-b);color:var(--muted)}
-.mi{height:43px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
+.mi{height:46px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
 .mi span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mi small{font:500 17px var(--f-b);color:var(--muted);white-space:nowrap;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}
 .mi b{font:700 26px var(--f-d);color:var(--muted);flex:none}
 .mi.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
-/* while the menu is open the map stays live underneath it, in the bottom right quarter.
-   On the Map page the map keeps the whole screen and the menu sits over its top right corner */
-.body.menuopen:not(.wide) .nav{align-self:end;height:43%}
-.body.menuopen .np,.body.menuopen .mhint,.body.menuopen .pages,.body.menuopen .diag{display:none}
-.body.menuopen:not(.wide) .turn{left:8px;top:8px;padding:5px 10px;max-width:78%}
-.body.menuopen:not(.wide) .turn svg{width:34px;height:34px}.body.menuopen:not(.wide) .turn .d{font-size:28px}.body.menuopen:not(.wide) .turn .i{font-size:18px}
-.body.menuopen:not(.wide) .eta{left:8px;bottom:8px;padding:4px 10px;gap:14px}.body.menuopen:not(.wide) .eta b{font-size:24px}.body.menuopen:not(.wide) .eta .lbl{font-size:12px}
-.body.menuopen:not(.wide) .lim{right:10px;bottom:10px;transform:scale(.72);transform-origin:bottom right}
+/* the home screen: one card for each part of the app */
+.home{position:absolute;inset:0;z-index:11;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:10px;padding:10px 4px 6px}
+.card{position:relative;border-radius:16px;border:2px solid var(--line);background:var(--panel2);padding:14px 18px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.card svg{width:54px;height:54px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card .ct{font:700 31px var(--f-d);line-height:1.1}
+.card .cx{font:500 19px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.card.on{background:var(--accent);border-color:#cfe2ff;color:var(--accent-ink)}
+.card.on svg{stroke:var(--accent-ink)}.card.on .cx{color:var(--accent-ink)}
+.card .cb{position:absolute;top:14px;right:16px;font:700 20px var(--f-d);background:var(--bad);color:#fff;border-radius:14px;padding:1px 11px}
+.hometitle{font:600 21px var(--f-b);color:var(--muted);padding-bottom:6px}
 .leaflet-container{background:#141b23}
+body.daymap .leaflet-container{background:#e9e6df}
+body.daymap .maplibregl-ctrl-attrib{background:rgba(255,255,255,.7)!important;color:#333!important}body.daymap .maplibregl-ctrl-attrib a{color:#333!important}
 .maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(10,14,19,.6)!important;color:var(--muted)!important}
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
 </style>
@@ -141,6 +144,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 <div id="app">
   <header>
     <div class="tabs" id="tabs"></div>
+    <div class="hometitle" id="hometitle" hidden>Turn the knob to choose · press to open</div>
     <span class="wxb"><span class="wxi" id="wxi"></span><span class="num" id="wx">--</span></span>
   </header>
   <div class="body" id="body">
@@ -184,6 +188,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
       <div class="pages" id="pages"></div>
       <div class="diag" id="diag"></div>
     </section>
+    <div class="home" id="home" hidden></div>
     <div class="menu" id="menu" hidden></div>
     <div class="toast" id="toast" hidden></div>
   </div>
@@ -249,11 +254,12 @@ window.i3feed=function(d){
 };
 
 /* ---------- pages, turned with the iDrive knob ---------- */
-const PAGES=['Car','Music','Battery','Journey','Alerts','Map','Info'];let page=0;
+const PAGES=['Car','Music','Call','Battery','Journey','Alerts','Map','Info'];let page=0,home=true,homeSel=0;
 $('#tabs').innerHTML=PAGES.map((p,i)=>`<span class="tab${p==='Info'?' ti':''}" data-i="${i}">${p==='Info'?'i':p}</span>`).join('');
 $('#pages').innerHTML=PAGES.map(()=>'<i></i>').join('');
 window.i3knob=function(dir){
   if(menu){menu.sel=Math.max(0,Math.min(menu.items.length-1,menu.sel+(dir>0?1:-1)));drawMenu();menuAlive();return}
+  if(home){homeSel=Math.max(0,Math.min(CARDS.length-1,homeSel+(dir>0?1:-1)));drawHome();return}
   if(PAGES[page]==='Info'&&dir>0){paint=(paint+1)%36;store.set('paint',paint);paintCar();drawPanel();return}
   page=Math.max(0,Math.min(PAGES.length-1,page+(dir>0?1:-1)));showPage();
 };
@@ -261,10 +267,11 @@ window.i3shown=function(){if(PAGES[page]==='Info'){page=0;showPage()}};
 function showPage(){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===page));
   document.querySelectorAll('#pages i').forEach((t,i)=>t.classList.toggle('on',i===page));
-  const wasWide=$('#body').classList.contains('wide'),isWide=PAGES[page]==='Map';
+  // the Map page uses the whole width, except while the menu has the left half
+  const wasWide=$('#body').classList.contains('wide'),isWide=PAGES[page]==='Map'&&!menu;
   $('#body').classList.toggle('wide',isWide);
-  if(wasWide!==isWide){map&&map.resize();flat&&flat.invalidateSize()}
-  drawPanel();drawNowPlaying();
+  if(wasWide!==isWide){try{map&&map.resize();flat&&flat.invalidateSize();placeCamera()}catch(e){}}
+  drawPanel();drawNowPlaying();drawHome();
 }
 function drawPanel(){
   const p=PAGES[page],el={set innerHTML(v){H('#panel',v)}};
@@ -304,7 +311,12 @@ function drawPanel(){
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
-      <div class="hint"><b style="color:var(--accent)">Press the knob</b> to pause, skip or choose a playlist${m.playing?' · no sound? set the car to Bluetooth audio once with MEDIA':''}</div></div>`;
+      <div class="hint"><b style="color:var(--accent)">Press the knob</b> to pause, skip or choose a playlist</div></div>`;
+  }else if(p==='Call'){
+    const d=menuData(),people=d.contacts.concat(d.recentCalls.filter(r=>!d.contacts.some(c=>sameNumber(c.number,r.number)))).slice(0,5);
+    const rows=people.length?people.map(x=>`<div class="al-row"><div class="al-t">${esc(x.name)}</div></div>`).join(''):
+      `<div style="color:#c3cfdb;font-size:20px">${d.canSeeContacts?'No favourites or recent calls yet. Press the knob for all contacts.':'Open the i3D app on your phone and finish the setup list to call from here.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Call</h2><div class="al">${rows}</div><div class="hint"><b style="color:var(--accent)">Press the knob</b> to choose who to call</div></div>`;
   }else if(p==='Alerts'){
     const n=D.notes||[];
     const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
@@ -436,8 +448,10 @@ function nearestCharger(){
 
 function tabBadge(){const t=document.querySelector('.tab[data-i="'+PAGES.indexOf('Alerts')+'"]');if(!t)return;const n=(D.notes||[]).length,txt='Alerts'+(n?' '+n:'');if(t.textContent!==txt)t.textContent=txt}
 /* ---------- phone call ---------- */
+let hadCall=false;
 function drawCall(){
   const c=D.call,el=$('#call');
+  if(!!c!==hadCall){hadCall=!!c;if(c&&home){home=false;page=0;showPage()}}
   if(!c){if(!el.hidden)el.hidden=true;return}
   if(el.hidden)el.hidden=false;
   const label=c.ongoing?'On call · '+mmss(Math.max(0,Date.now()-c.since)):'Incoming call';
@@ -459,18 +473,25 @@ function drawNowPlaying(){
   H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">No sound? MEDIA › Bluetooth audio</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
 }
 /* ---------- the menu: press the knob, turn to choose, press to select ---------- */
-const MENU_ROWS=4,MENU_IDLE_MS=20000;
+const MENU_ROWS=7,MENU_IDLE_MS=20000;
 let menu=null,menuTimer=0,toastTimer=0;
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{e.hidden=true},3500)}
-function menuData(){let d={};try{d=JSON.parse(N.menu())||{}}catch(e){}return {places:d.places||[],recents:d.recents||[],contacts:d.contacts||[],videos:d.videos||[],canSeeContacts:!!d.canSeeContacts}}
+// what the phone knows: places, people and videos. Asked for at most every 15 seconds, or fresh when a menu opens
+let menuCache=null,menuCacheAt=0;
+function menuData(fresh){
+  if(!fresh&&menuCache&&Date.now()-menuCacheAt<15000)return menuCache;
+  let d={};try{d=JSON.parse(N.menu())||{}}catch(e){}
+  menuCache={places:d.places||[],recents:d.recents||[],contacts:d.contacts||[],everyone:d.everyone||[],recentCalls:d.recentCalls||[],videos:d.videos||[],canSeeContacts:!!d.canSeeContacts,canCall:d.canCall!==false};
+  menuCacheAt=Date.now();return menuCache;
+}
+const sameNumber=(a,b)=>String(a).replace(/\D/g,'').slice(-9)===String(b).replace(/\D/g,'').slice(-9);
 function openMenu(title,items,sel,wait){$('#toast').hidden=true;menu={title,items,sel:Math.min(sel||0,items.length-1),wait:!!wait};drawMenu();menuAlive()}
 function closeMenu(){menu=null;clearTimeout(menuTimer);drawMenu()}
 function menuAlive(){clearTimeout(menuTimer);menuTimer=setTimeout(closeMenu,MENU_IDLE_MS)}
 function drawMenu(){
   const el=$('#menu'),body=$('#body');
-  if(body.classList.contains('menuopen')!==!!menu){   // the map moves aside or back, so it has to be measured again
-    body.classList.toggle('menuopen',!!menu);
-    try{map&&map.resize();flat&&flat.invalidateSize();placeCamera()}catch(e){}
+  if(body.classList.contains('menuopen')!==!!menu){   // on the Map page the map gives up its left half to the menu
+    body.classList.toggle('menuopen',!!menu);showPage();
   }
   if(!menu){if(!el.hidden)el.hidden=true;return}
   if(el.hidden)el.hidden=false;
@@ -478,46 +499,61 @@ function drawMenu(){
   const rows=menu.items.slice(first,first+MENU_ROWS).map((it,i)=>`<div class="mi${first+i===menu.sel?' on':''}${it.dim?' dim':''}"><span>${esc(it.label)}</span>${it.more?'<b>›</b>':it.note?`<small>${esc(it.note)}</small>`:''}</div>`).join('');
   H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>${n>MENU_ROWS?(menu.sel+1)+' of '+n:'turn to choose · press to select'}</small></div>${rows}`);
 }
-const backTo=fn=>({label:'‹ Back',act:fn});
+const backTo=(fn,label)=>({label:label||'‹ Back',act:fn});
+const toMenu=()=>backTo(rootMenu,'‹ Menu');
 const waiting=title=>openMenu(title,[{label:'Loading…',dim:1}],0,true);
 function stopNav(){window.i3stopNav();N.navigationEnded()}
 function goTo(p){closeMenu();window.i3navigate(p.lat,p.lon,p.name);N.navStarted(p.lat,p.lon,p.name||'')}
 function readAlerts(){const n=(D.notes||[]).slice(0,3);N.speak(n.length?n.map(x=>[x.app,x.title,x.text].filter(Boolean).join('. ')).join('. Next. '):'No new alerts')}
+function goHome(){closeMenu();home=true;showPage()}
+function goPage(name){closeMenu();home=false;page=PAGES.indexOf(name);showPage()}
 function rootMenu(){
   const it=[],c=D.call;
   if(c&&!c.ongoing){   // ringing: nothing else to scroll past
     openMenu('Incoming call',[{label:'Answer call',note:c.name||'',act(){N.answer();closeMenu()}},{label:'Decline call',act(){N.hangup();closeMenu()}},{label:'Close menu',act:closeMenu}]);return}
   if(c)it.push({label:'Hang up',note:c.name||'',act(){N.hangup();closeMenu()}});
   if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}});
-  it.push({label:'Navigate',more:1,act:navMenu},{label:'Call',more:1,act:callMenu},{label:'Music',more:1,act:musicMenu});
-  if(menuData().videos.length)it.push({label:'Video',more:1,act:videoMenu});
+  it.push({label:'Home screen',act:goHome},{label:'Navigate',more:1,act:navMenu},{label:'Call',more:1,act:callMenu},{label:'Music',more:1,act:musicMenu});
+  if(menuData(true).videos.length)it.push({label:'Video',more:1,act:videoMenu});
   if((D.notes||[]).length)it.push({label:'Read alerts aloud',note:String(D.notes.length),act(){readAlerts();closeMenu()}});
-  it.push({label:'Close menu',act:closeMenu});
+  it.push({label:'Car colour and info',act(){goPage('Info')}},{label:'Close menu',act:closeMenu});
   openMenu('Menu',it);
 }
 function navMenu(){
-  const d=menuData(),it=[backTo(rootMenu)];
+  const d=menuData(true),it=[toMenu()];
+  if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}},{label:'Recalculate route',act(){window.i3recalc();closeMenu()}});
   d.places.forEach(p=>it.push({label:p.name,note:'saved',act(){goTo(p)}}));
   const ch=nearestCharger();
   if(ch)it.push({label:'Nearest charger',note:fmtD(ch.d*1.25),act(){goTo({lat:ch.c.lat,lon:ch.c.lon,name:ch.c.name||'Charger'})}});
   const saved=new Set(d.places.map(p=>String(p.name).toLowerCase()));
   d.recents.filter(p=>!saved.has(String(p.name).toLowerCase())).forEach(p=>it.push({label:p.name,note:'recent',act(){goTo(p)}}));
   it.push({label:'Type a place…',note:'letter wheel',act(){closeMenu();N.search()}});
-  if(route)it.push({label:'Recalculate route',act(){window.i3recalc();closeMenu()}},{label:'Stop navigation',act(){stopNav();closeMenu()}});
+  if(!d.places.length)it.push({label:'Save Home and Work in the i3D phone app',dim:1});
   openMenu('Navigate',it,1);
 }
+function ring(c){closeMenu();if(!menuData().canCall){toast('Allow calls in the i3D phone app first');return}N.dial(c.number);toast('Calling '+c.name)}
 function callMenu(){
-  const d=menuData(),it=[backTo(rootMenu)];
-  d.contacts.forEach(c=>it.push({label:c.name,act(){N.dial(c.number);closeMenu();toast('Calling '+c.name)}}));
-  if(!d.contacts.length)it.push({label:d.canSeeContacts?'Star contacts on your phone to list them here':'Finish the setup list in the i3D phone app',dim:1});
+  const d=menuData(true),it=[toMenu()];
+  if(D.call)it.push({label:D.call.ongoing?'Hang up':'Decline call',note:D.call.name||'',act(){N.hangup();closeMenu()}});
+  d.contacts.forEach(c=>it.push({label:c.name,note:'favourite',act(){ring(c)}}));
+  d.recentCalls.filter(r=>!d.contacts.some(c=>sameNumber(c.number,r.number))).forEach(c=>it.push({label:c.name,note:'recent',act(){ring(c)}}));
+  if(d.everyone.length)it.push({label:'All contacts',more:1,act:everyoneMenu});
+  if(!d.canSeeContacts)it.push({label:'Finish the setup list in the i3D phone app',dim:1});
+  else if(!d.everyone.length)it.push({label:'No contacts with phone numbers found',dim:1});
   it.push({label:'Type a name…',note:'letter wheel',act(){closeMenu();N.search()}});
   openMenu('Call',it,1);
 }
+function everyoneMenu(){
+  const it=[backTo(callMenu)];
+  menuData().everyone.forEach(c=>it.push({label:c.name,act(){ring(c)}}));
+  openMenu('All contacts',it,1);
+}
 function musicMenu(){
-  const m=D.media,it=[backTo(rootMenu)];
+  const m=D.media,it=[toMenu()];
   if(m&&m.title)it.push({label:m.playing?'Pause':'Play',note:m.title,act(){N.media('toggle');closeMenu()}},
     {label:'Next track',act(){N.media('next');menuAlive()}},{label:'Previous track',act(){N.media('prev');menuAlive()}});
   it.push({label:'Choose app or playlist',more:1,act(){waiting('Music apps');N.musicOpen()}});
+  if(menuData().videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
   openMenu('Music',it,1);
 }
 // the phone answers musicOpen and musicPick here: the next list, or that something started playing
@@ -530,7 +566,7 @@ window.i3music=function(r){
   openMenu(r.top?'Music apps':menu.title,it,it.length>1?1:0);
 };
 function videoMenu(){
-  const it=[backTo(rootMenu)];
+  const it=[toMenu()];
   menuData().videos.forEach(v=>it.push({label:v.title||'YouTube video',act(){
     const r=N.video(v.id||'',v.list||'');closeMenu();
     if(r==='moving')toast('Video only plays while parked');else if(r!=='sent')toast('Could not start the video')}}));
@@ -538,12 +574,49 @@ function videoMenu(){
 }
 window.i3press=function(){
   if(menu){menuAlive();const it=menu.items[menu.sel];if(it&&it.act&&!it.dim)it.act();return}
+  if(home){openCard(CARDS[homeSel]);return}
   const p=PAGES[page];
-  if(D.call)rootMenu();else if(p==='Music')musicMenu();else if(p==='Map')navMenu();else rootMenu();
+  if(D.call)rootMenu();else if(p==='Music')musicMenu();else if(p==='Map')navMenu();else if(p==='Call')callMenu();else if(p==='Alerts'&&(D.notes||[]).length)alertsMenu();else rootMenu();
 };
+function alertsMenu(){openMenu('Alerts',[toMenu(),{label:'Read alerts aloud',note:String((D.notes||[]).length),act(){readAlerts();closeMenu()}},{label:'Close menu',act:closeMenu}],1)}
+
+/* ---------- home screen ---------- */
+const ICON={
+  Navigate:'<path d="M12 2.5l7.5 18.5-7.5-4-7.5 4z"/>',
+  Call:'<path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.15.37 2.35.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/>',
+  Music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  Map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/>',
+  Car:'<path d="M5 11l1.6-4.6A2 2 0 0 1 8.5 5h7a2 2 0 0 1 1.9 1.4L19 11M3 17v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4M6 17v2M18 17v2M3 17h18"/><circle cx="7" cy="14" r=".6"/><circle cx="17" cy="14" r=".6"/>',
+  Battery:'<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 10.5v3M10.5 9.5l-2 3h3l-2 3"/>',
+  Journey:'<path d="M4 20h16M5 16l4.5-5.5 3.5 3L19 6M15 6h4v4"/>',
+  Alerts:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/>'
+};
+const CARDS=['Navigate','Call','Music','Map','Car','Battery','Journey','Alerts'];
+function cardLine(k){
+  const m=D.media,c=D.call,n=(D.notes||[]).length;
+  if(k==='Navigate')return route?'Route running · '+($('#eArr').textContent!=='--'?'arrive '+$('#eArr').textContent:'press to change'):'Places, chargers, addresses';
+  if(k==='Call')return c?(c.ongoing?'On call · ':'Ringing · ')+(c.name||'Unknown'):'Favourites, recent, contacts';
+  if(k==='Music')return m&&m.title?m.title:'Choose something to play';
+  if(k==='Map')return 'The map on the whole screen';
+  if(k==='Car')return (D.soc!=null?f(D.soc)+'% · ':'')+(D.rangeKm!=null?f(D.rangeKm)+(miles?' mi':' km'):'Range and trip');
+  if(k==='Battery')return 'Charge, health, temperature';
+  if(k==='Journey')return 'Trips and what they cost';
+  return n?n+' new':'Nothing new';
+}
+function drawHome(){
+  const el=$('#home');
+  if(el.hidden===home)el.hidden=!home;
+  const tabs=$('#tabs'),ht=$('#hometitle');if(tabs.hidden!==home){tabs.hidden=home;ht.hidden=!home}
+  if(!home)return;
+  const n=(D.notes||[]).length;
+  H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${k==='Alerts'&&n?`<span class="cb">${n}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
+}
+function openCard(k){
+  home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k);showPage();
+  if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
+}
 window.i3hidden=function(){closeMenu()};
 setWxIcon();
-showPage();
 
 /* ---------- rendering ---------- */
 function render(){
@@ -566,6 +639,7 @@ function render(){
   H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
   T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
   if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info'||PAGES[page]==='Alerts')drawPanel();
+  drawHome();
   drawNowPlaying();
   const mh=$('#mhint'),wantHint=!route;if(mh.hidden===wantHint)mh.hidden=!wantHint;
 }
@@ -577,46 +651,84 @@ const DEFAULT=[-2.035,49.195];
 function mapMsg(t){const m=$('#mapmsg');m.textContent=t;m.hidden=!t}
 function diag(t){if(_c.get('diag')===t)return;_c.set('diag',t);$('#diag').textContent=t;log('map: '+t)}
 function webglOk(){try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){return false}}
+/* The map has a light style for daylight and a dark one for night, chosen from where the sun is.
+   A dark map can't be read on the car's screen in sunshine. */
+const STYLE={day:'https://tiles.openfreemap.org/styles/liberty',night:'https://tiles.openfreemap.org/styles/dark'};
+const FLAT={day:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',night:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'};
+let dayMap=null,dayBroken=false,flatTiles=null,routeGeo=null,styleTimer=0;
+// is the sun up (or nearly) at this place and time? Standard low-precision solar position, good to a degree
+function sunUp(lat,lon,ms){
+  const r=Math.PI/180,d=ms/864e5-10957.5;
+  const g=(357.529+0.98560028*d)*r,L=(280.459+0.98564736*d+1.915*Math.sin(g)+0.020*Math.sin(2*g))*r,e=(23.439-0.00000036*d)*r;
+  const ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L)),dec=Math.asin(Math.sin(e)*Math.sin(L));
+  const ha=((18.697374558+24.06570982441908*d)*15+lon)*r-ra;
+  return Math.asin(Math.sin(lat*r)*Math.sin(dec)+Math.cos(lat*r)*Math.cos(dec)*Math.cos(ha))/r>-4;
+}
+function wantDay(){if(dayBroken)return false;const p=pos||store.get('lastPos',DEFAULT);return sunUp(p[1],p[0],Date.now())}
+function mapTheme(){
+  const day=wantDay();if(day===dayMap)return;
+  dayMap=day;document.body.classList.toggle('daymap',day);log('map theme: '+(day?'day':'night'));
+  try{
+    if(flatTiles)flatTiles.setUrl(day?FLAT.day:FLAT.night);
+    if(map){
+      map.setStyle(day?STYLE.day:STYLE.night);
+      // if the daylight style never arrives, go back to the dark one that is known to work
+      clearTimeout(styleTimer);
+      if(day)styleTimer=setTimeout(()=>{try{if(map&&!map.isStyleLoaded()){dayBroken=true;diag('Daylight map did not load, using the dark map');mapTheme()}}catch(e){}},15000);
+    }
+  }catch(e){log('map theme: '+e.message)}
+}
+// our own layers on top of whichever style is showing: the route, 3D buildings and chargers
+function addMapLayers(){
+  if(!map)return;
+  const day=!!dayMap;
+  try{
+    if(!map.getSource('route'))map.addSource('route',{type:'geojson',data:routeGeo||{type:'FeatureCollection',features:[]}});
+    if(!map.getLayer('route-casing'))map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':day?'#ffffff':'#0b3d91','line-width':13},layout:{'line-cap':'round','line-join':'round'}});
+    if(!map.getLayer('route'))map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':day?'#1668e3':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
+  }catch(e){log('route layer: '+e.message)}
+  try{if(!map.getLayer('building-3d'))map.addLayer({id:'building-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
+    paint:{'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-color':day?'#d9d4cc':'#2a3646','fill-extrusion-height':['coalesce',['get','render_height'],6],'fill-extrusion-opacity':0.85}},'route-casing')}catch(e){log('3d buildings: '+e.message)}
+  try{if(!map.getSource('chargers'))map.addSource('chargers',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    if(!map.getLayer('chargers'))map.addLayer({id:'chargers',type:'circle',source:'chargers',paint:{'circle-radius':9,'circle-color':'#19c37d','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}},'route-casing');
+    drawChargers()}catch(e){log('chargers layer: '+e.message)}
+}
 function startFlatMap(reason){
   // 2D fallback that needs no graphics acceleration: raster map pictures (CARTO, from OpenStreetMap data)
   try{
     if(map){try{map.remove()}catch(e){}map=null}
     const c=store.get('lastPos',DEFAULT);
     flat=L.map('map',{zoomControl:false,attributionControl:true,dragging:false,keyboard:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,fadeAnimation:false,zoomAnimation:false}).setView([c[1],c[0]],16);
-    const t=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(flat);
+    const t=flatTiles=L.tileLayer(dayMap?FLAT.day:FLAT.night,{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(flat);
     t.on('tileerror',()=>diag('2D map: map pictures not loading — check mobile data'));
     t.on('load',()=>{mapMsg('');diag('');log('2D map ('+reason+')')});
-    flatRoute=L.polyline([],{color:'#4c93ff',weight:7}).addTo(flat);
+    flatRoute=L.polyline([],{color:'#1668e3',weight:7}).addTo(flat);
     mapMsg('Loading map…');
   }catch(e){mapMsg('Map unavailable: '+e.message);diag('2D map failed: '+e.message)}
 }
 function startMap(){
+  dayMap=wantDay();document.body.classList.toggle('daymap',dayMap);
   if(!window.maplibregl){startFlatMap('3D library missing');return}
   if(!webglOk()){startFlatMap('no 3D graphics here');return}
   try{
-    map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/dark',center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
+    map=new maplibregl.Map({container:'map',style:dayMap?STYLE.day:STYLE.night,center:store.get('lastPos',DEFAULT),zoom:16,pitch:60,bearing:0,
       interactive:false,attributionControl:{compact:true},fadeDuration:0,preserveDrawingBuffer:true});
     let loaded=false;
+    map.on('style.load',()=>{addMapLayers();placeCamera()});
     map.on('load',()=>{
       loaded=true;
       try{document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');document.querySelector('.maplibregl-ctrl-attrib')?.removeAttribute('open')}catch(e){}
-      map.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-      map.addLayer({id:'route-casing',type:'line',source:'route',paint:{'line-color':'#0b3d91','line-width':12},layout:{'line-cap':'round','line-join':'round'}});
-      map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#4c93ff','line-width':8},layout:{'line-cap':'round','line-join':'round'}});
-      try{if(!map.getLayer('building-3d'))map.addLayer({id:'building-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
-        paint:{'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-color':'#2a3646','fill-extrusion-height':['coalesce',['get','render_height'],6],'fill-extrusion-opacity':0.85}},'route-casing')}catch(e){log('3d buildings: '+e.message)}
-      try{map.addSource('chargers',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-        map.addLayer({id:'chargers',type:'circle',source:'chargers',paint:{'circle-radius':9,'circle-color':'#19c37d','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}},'route-casing');
-        drawChargers()}catch(e){log('chargers layer: '+e.message)}
-      mapMsg('');diag('');placeCamera();
+      addMapLayers();mapMsg('');diag('');placeCamera();
     });
     map.on('error',e=>{const m=(e&&e.error&&e.error.message)||'error';diag('3D map: '+m)});
     mapMsg('Loading map…');
-    // if the style hasn't arrived in 20 seconds, fall back to the 2D map
-    setTimeout(()=>{if(!loaded)startFlatMap('3D map timed out')},20000);
+    // if the daylight style hasn't arrived in 12 seconds, try the dark one; after 25 fall back to the 2D map
+    setTimeout(()=>{if(!loaded&&dayMap){dayBroken=true;mapTheme()}},12000);
+    setTimeout(()=>{if(!loaded)startFlatMap('3D map timed out')},25000);
   }catch(e){startFlatMap('3D failed: '+e.message)}
 }
 startMap();
+setInterval(mapTheme,60000);
 setTimeout(fetchWx,4000);setInterval(fetchWx,15*60000);
 // quick internet check, shown on screen, so problems are easy to spot from the driver's seat
 fetch('https://tiles.openfreemap.org/styles/dark',{cache:'no-store'}).then(r=>log('internet ok '+r.status)).catch(e=>diag('No internet from the phone ('+e.message+')'));
@@ -650,14 +762,15 @@ async function routeTo(lat,lon){
     const steps=[];let acc=0;for(const leg of rt.legs)for(const s of leg.steps){steps.push({at:acc,s});acc+=s.distance}
     const scale=cum[cum.length-1]/(acc||1);steps.forEach(x=>x.at*=scale);
     route={coords,cum,steps,total:cum[cum.length-1],dur:rt.duration,dest:[lon,lat],idx:0,along:0,off:0};spoken={};
-    map&&map.getSource('route')&&map.getSource('route').setData({type:'Feature',geometry:rt.geometry});
+    routeGeo={type:'Feature',geometry:rt.geometry};
+    map&&map.getSource('route')&&map.getSource('route').setData(routeGeo);
     flatRoute&&flatRoute.setLatLngs(coords.map(c=>[c[1],c[0]]));
     $('#turn').hidden=false;$('#eta').hidden=false;navUpdate();
   }catch(e){log('route failed '+e.message);N.speak('Sorry, I could not find a route');}
 }
-window.i3navigate=(lat,lon,name)=>{page=0;showPage();routeTo(lat,lon);if(name)N.speak('Navigating to '+name)};
+window.i3navigate=(lat,lon,name)=>{home=false;page=0;showPage();routeTo(lat,lon);if(name)N.speak('Navigating to '+name)};
 window.i3recalc=()=>{if(route)routeTo(route.dest[1],route.dest[0])};
-window.i3stopNav=()=>{route=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});flatRoute&&flatRoute.setLatLngs([]);placeCamera()};
+window.i3stopNav=()=>{route=null;routeGeo=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});flatRoute&&flatRoute.setLatLngs([]);placeCamera()};
 function project(p){
   const R=route,c=R.coords,lat0=p[1]*Math.PI/180,kx=111320*Math.cos(lat0),ky=110540;let best={d:1e12,along:R.along,i:R.idx};
   for(let i=Math.max(0,R.idx-30);i<Math.min(c.length-1,R.idx+400);i++){
@@ -694,6 +807,7 @@ function navUpdate(){
   if(D.soc!=null){const arr=D.soc-(rem/1000/kmPerKwh())/USABLE_KWH*100;$('#eBat').textContent=f(Math.max(0,arr))+'%';$('#eBat').style.color=arr<10?'var(--bad)':arr<20?'var(--warn)':'var(--good)'}
 }
 log('i3 Dash page ready '+innerWidth+'x'+innerHeight);
+showPage();
 </script>
 </body>
 </html>

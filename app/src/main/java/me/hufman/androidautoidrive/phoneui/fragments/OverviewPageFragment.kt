@@ -45,10 +45,41 @@ class OverviewPageFragment: Fragment() {
 	private val callPermissions = arrayOf(
 		android.Manifest.permission.READ_CONTACTS,
 		android.Manifest.permission.CALL_PHONE,
-		android.Manifest.permission.ANSWER_PHONE_CALLS)
+		android.Manifest.permission.ANSWER_PHONE_CALLS,
+		android.Manifest.permission.READ_CALL_LOG)
 
 	private fun hasNotificationAccess(ctx: Context) =
 		androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(ctx).contains(ctx.packageName)
+
+	/** True while Android is blocking this app's notification access switch ("Restricted setting") */
+	private fun settingsLocked(ctx: Context): Boolean {
+		if (android.os.Build.VERSION.SDK_INT < 33) return false
+		return try {
+			val ops = ctx.getSystemService(android.app.AppOpsManager::class.java)
+			ops.unsafeCheckOpNoThrow("android:access_restricted_settings", android.os.Process.myUid(), ctx.packageName) != android.app.AppOpsManager.MODE_ALLOWED
+		} catch (e: Exception) {
+			false       // this phone doesn't have the lock
+		}
+	}
+
+	/** Opens Android's notification access switch for this app, or the list of apps on older phones */
+	private fun openNotificationAccess(ctx: Context) {
+		try {
+			if (android.os.Build.VERSION.SDK_INT >= 30) {
+				val listener = android.content.ComponentName(ctx, me.hufman.androidautoidrive.notifications.NotificationListenerServiceImpl::class.java)
+				startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+					.putExtra(android.provider.Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, listener.flattenToString()))
+				return
+			}
+		} catch (e: Exception) {
+			// fall through to the list
+		}
+		try {
+			startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+		} catch (e: Exception) {
+			findNavController().navigate(R.id.nav_notifications)
+		}
+	}
 
 	private fun hasCallAccess(ctx: Context) = callPermissions.all {
 		ContextCompat.checkSelfPermission(ctx, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -111,22 +142,56 @@ class OverviewPageFragment: Fragment() {
 
 		container.removeAllViews()
 
+		// if the app stopped unexpectedly last time, offer to send the details
+		val crashFile = java.io.File(ctx.filesDir, me.hufman.androidautoidrive.ApplicationCallbacks.CRASH_FILE)
+		if (crashFile.exists()) {
+			container.addView(sectionLabel(ctx, R.string.home_section_crash))
+			container.addView(tileView(ctx, Tile(R.drawable.ic_heart_feather, R.string.home_crash, R.string.home_crash_sub) {
+				try {
+					val report = crashFile.readText().take(12000)
+					startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
+						.putExtra(Intent.EXTRA_SUBJECT, "i3D crash report").putExtra(Intent.EXTRA_TEXT, report), getString(R.string.home_crash)))
+				} catch (e: Exception) {
+					// nothing to share with
+				}
+			}))
+			container.addView(tileView(ctx, Tile(R.drawable.ic_settings_feather, R.string.home_crash_clear, R.string.home_crash_clear_sub, "×") {
+				crashFile.delete()
+				buildTiles(container)
+			}))
+		}
+
 		// one list for everything the phone has to allow, shown until it is all done
 		val notificationsOk = hasNotificationAccess(ctx)
 		val callsOk = hasCallAccess(ctx)
 		if (!notificationsOk || !callsOk) {
 			container.addView(sectionLabel(ctx, R.string.home_section_setup))
-			container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather, R.string.home_setup_notifications,
-				if (notificationsOk) R.string.home_setup_done else R.string.home_setup_notifications_sub,
-				if (notificationsOk) "✓" else "›") {
-				if (!notificationsOk) {
-					try {
-						startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
-					} catch (e: Exception) {
-						nav.navigate(R.id.nav_notifications)
-					}
+			if (notificationsOk) {
+				container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather, R.string.home_setup_notifications, R.string.home_setup_done, "✓") {}))
+			} else {
+				// Android locks this switch for apps installed outside the Play Store, and only offers the unlock
+				// after the switch has been tried once. So: try it, unlock it, switch it on.
+				val locked = settingsLocked(ctx)
+				if (locked) container.addView(noteLabel(ctx, R.string.home_setup_locked_note))
+				container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather,
+					if (locked) R.string.home_setup_try else R.string.home_setup_notifications,
+					if (locked) R.string.home_setup_try_sub else R.string.home_setup_notifications_sub) {
+					openNotificationAccess(ctx)
+				}))
+				if (locked) {
+					container.addView(tileView(ctx, Tile(R.drawable.ic_settings_feather, R.string.home_setup_unlock, R.string.home_setup_unlock_sub) {
+						try {
+							startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+								android.net.Uri.fromParts("package", ctx.packageName, null)))
+						} catch (e: Exception) {
+							// no app details screen on this phone
+						}
+					}))
+					container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather, R.string.home_setup_switch, R.string.home_setup_switch_sub) {
+						openNotificationAccess(ctx)
+					}))
 				}
-			}))
+			}
 			container.addView(tileView(ctx, Tile(R.drawable.ic_cellphone_android, R.string.home_calls,
 				if (callsOk) R.string.home_setup_done else R.string.home_calls_sub,
 				if (callsOk) "✓" else "›") {
