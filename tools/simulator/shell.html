@@ -1,0 +1,183 @@
+<title>i3D Desk Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the car screen across the top with the knob right under it, then controls on the left and notes on the right. */
+:root{--bg:#f3f5f8;--panel:#ffffff;--ink:#131a22;--muted:#5b6876;--line:#d5dbe3;--accent:#1668e3;--accent-ink:#ffffff;--bezel:#0b0f14;--good:#0f8a57;--warn:#b45309;
+  --f:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1218;--panel:#161d26;--ink:#e8edf3;--muted:#93a1b1;--line:#2a3542;--accent:#4c93ff;--accent-ink:#06101f;--bezel:#000000;--good:#34d399;--warn:#fbbf24;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1218;--panel:#161d26;--ink:#e8edf3;--muted:#93a1b1;--line:#2a3542;--accent:#4c93ff;--accent-ink:#06101f;--bezel:#000000;--good:#34d399;--warn:#fbbf24;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f);padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:700 24px/1.2 var(--f);margin:0;text-wrap:balance}
+h2{font:600 13px/1.2 var(--f);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.lede{color:var(--muted);margin:4px 0 0;max-width:65ch}
+.bezel{background:var(--bezel);border-radius:14px;padding:10px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.screen{position:relative;width:100%;aspect-ratio:1440/540;overflow:hidden;border-radius:6px;background:#0a0e13}
+.screen iframe{position:absolute;left:0;top:0;width:1440px;height:540px;border:0;transform-origin:0 0}
+.screen .touch{position:absolute;inset:0;cursor:pointer}
+.screen .blocked{position:absolute;inset:0;display:grid;place-items:center;color:#e8edf3;padding:20px;text-align:center}
+.where{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;color:var(--muted);font-size:14px}
+.where b{color:var(--ink);font-weight:600}
+.knob{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px}
+button{font:600 15px var(--f);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.big{font-size:17px;padding:14px}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.keys{color:var(--muted);font-size:13px;margin:0}
+kbd{font:600 12px var(--f);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--panel);color:var(--ink)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.group{display:flex;flex-direction:column;gap:8px}
+.group>span{font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.slide{display:grid;grid-template-columns:5.5em minmax(0,1fr) 4.5em;gap:10px;align-items:center}
+.slide output{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+textarea{width:100%;min-height:74px;font:15px/1.4 var(--f);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.notes li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.notes .at{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--accent)}
+.notes p{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.notes button{min-height:0;padding:2px 8px;font-size:13px;align-self:start}
+.empty{color:var(--muted);margin:0}
+.log{list-style:none;margin:0;padding:0;max-height:210px;overflow:auto;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.log li{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:8px;overflow-wrap:anywhere}
+.log time{color:var(--muted);font-variant-numeric:tabular-nums}
+.small{color:var(--muted);font-size:13px;margin:0}
+#copied{color:var(--good);font-weight:600;font-size:13px}
+@media (prefers-reduced-motion:no-preference){button{transition:border-color .12s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>i3D desk simulator</h1>
+    <p class="lede">The same screen code that runs in the car, driven from here. The phone, the calls and the map are stand-ins, so use it to judge layout and knob flow.</p>
+  </header>
+
+  <div class="bezel"><div class="screen" id="screen">
+    <iframe id="car" title="The i3D car screen" tabindex="-1"></iframe>
+    <div class="touch" id="touch" title="Click to press the knob. Scroll to turn it."></div>
+    <div class="blocked" id="blocked" hidden>The car screen could not start in this viewer. Tell Claude and it will rebuild the simulator another way.</div>
+  </div></div>
+
+  <div class="where" aria-live="polite"><span>Showing <b id="wScreen">…</b></span><span id="wListWrap" hidden>List open: <b id="wList"></b></span><span id="wCallWrap" hidden>Call: <b id="wCall"></b></span></div>
+
+  <div class="knob">
+    <button class="big" id="kLeft">⟲ Turn left</button>
+    <button class="big main" id="kPress">Press the knob</button>
+    <button class="big" id="kRight">Turn right ⟳</button>
+  </div>
+  <p class="keys">Keyboard: <kbd>←</kbd> <kbd>→</kbd> turn, <kbd>Enter</kbd> or <kbd>Space</kbd> press. On the screen itself, scroll to turn and click to press.</p>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>Make things happen</h2>
+      <div class="group"><span>Phone call</span>
+        <div class="row"><button id="cRingMum">Mum rings</button><button id="cRingUnknown">Unknown number rings</button><button id="cEnd">Other person hangs up</button></div>
+        <p class="small">To make a call, use the Call card on the screen.</p></div>
+      <div class="group"><span>Music</span>
+        <div class="row"><button id="cMusic" aria-pressed="true">Something is playing</button></div></div>
+      <div class="group"><span>Alerts</span>
+        <div class="row"><button id="cAlert">New alert arrives</button><button id="cClear">Clear alerts</button></div></div>
+      <div class="group"><span>Driving</span>
+        <div class="slide"><label for="sSpeed">Speed</label><input type="range" id="sSpeed" min="0" max="70" value="0"><output id="oSpeed">0 mph</output></div>
+        <div class="slide"><label for="sSoc">Battery</label><input type="range" id="sSoc" min="3" max="100" value="78"><output id="oSoc">78%</output></div>
+        <p class="small">With a route running, any speed above zero moves the car along it, four times faster than life.</p></div>
+      <div class="group"><span>Time of day</span>
+        <div class="row"><button id="cDay" aria-pressed="true">Daylight</button><button id="cNight" aria-pressed="false">Night</button></div></div>
+      <div class="group"><span>Phone permissions</span>
+        <div class="row"><button id="cAccess" aria-pressed="true">Notification access</button><button id="cContacts" aria-pressed="true">Calls and contacts</button></div>
+        <p class="small">Switch one off to see what the car shows before the phone's setup list is finished.</p></div>
+    </section>
+
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <section class="panel">
+        <h2>Notes for changes</h2>
+        <textarea id="noteText" placeholder="What should change on this screen?" aria-label="Note about the screen showing now"></textarea>
+        <div class="row" style="align-items:center"><button class="main" id="noteAdd">Add note for this screen</button><button id="noteCopy">Copy all notes</button><span id="copied" hidden>Copied</span></div>
+        <ul class="notes" id="notes"></ul>
+        <p class="empty" id="notesEmpty">No notes yet. Each note is tagged with the screen showing when you add it. Copy them and paste them to Claude when you are ready.</p>
+        <textarea id="noteOut" hidden readonly aria-label="All notes, to copy by hand"></textarea>
+        <p class="small">Notes are kept in this browser only.</p>
+      </section>
+      <section class="panel">
+        <h2>What the app asked the phone to do</h2>
+        <ul class="log" id="log"></ul>
+        <p class="empty" id="logEmpty">Nothing yet. Dialling, hanging up, spoken prompts and routes show here.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP=%%APP%%;
+const $=s=>document.querySelector(s),frame=$('#car'),screenBox=$('#screen');
+let ready=false,state={screen:'',list:''};
+frame.srcdoc=APP;
+const send=m=>{try{frame.contentWindow.postMessage(m,'*')}catch(e){}};
+function fit(){frame.style.transform='scale('+(screenBox.clientWidth/1440)+')'}
+new ResizeObserver(fit).observe(screenBox);fit();
+setTimeout(()=>{if(!ready)$('#blocked').hidden=false},6000);
+
+window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3sim||e.source!==frame.contentWindow)return;
+  if(d.i3sim==='ready'){ready=true;$('#blocked').hidden=true}
+  else if(d.i3sim==='log')addLog(d.text);
+  else if(d.i3sim==='state'){ready=true;state=d;
+    $('#wScreen').textContent=d.screen;$('#wListWrap').hidden=!d.list;$('#wList').textContent=d.list||'';
+    $('#wCallWrap').hidden=!d.call;$('#wCall').textContent=d.call==='on'?'under way':'ringing';
+    press('#cDay',d.day);press('#cNight',!d.day);press('#cMusic',d.music)}
+});
+const press=(sel,on)=>$(sel).setAttribute('aria-pressed',on?'true':'false');
+const isOn=sel=>$(sel).getAttribute('aria-pressed')==='true';
+
+// the knob
+const knob=dir=>send({i3cmd:'knob',dir}),push=()=>send({i3cmd:'press'});
+$('#kLeft').onclick=()=>knob(-1);$('#kRight').onclick=()=>knob(1);$('#kPress').onclick=push;$('#touch').onclick=push;
+let wheelAt=0;
+$('#touch').addEventListener('wheel',e=>{e.preventDefault();const now=Date.now();if(now-wheelAt<90)return;wheelAt=now;knob(e.deltaY>0||e.deltaX>0?1:-1)},{passive:false});
+document.addEventListener('keydown',e=>{
+  const t=e.target.tagName;if(t==='TEXTAREA'||t==='INPUT'||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='ArrowLeft'){knob(-1);e.preventDefault()}else if(e.key==='ArrowRight'){knob(1);e.preventDefault()}
+  else if((e.key==='Enter'||e.key===' ')&&t!=='BUTTON'){push();e.preventDefault()}
+});
+
+// things that happen to the car and phone
+$('#cRingMum').onclick=()=>send({i3cmd:'ring',name:'Mum'});
+$('#cRingUnknown').onclick=()=>send({i3cmd:'ring',name:'01534 000444'});
+$('#cEnd').onclick=()=>send({i3cmd:'endcall'});
+$('#cMusic').onclick=()=>send({i3cmd:'music',on:!isOn('#cMusic')});
+$('#cAlert').onclick=()=>send({i3cmd:'alert'});$('#cClear').onclick=()=>send({i3cmd:'clearalerts'});
+$('#sSpeed').oninput=e=>{$('#oSpeed').textContent=e.target.value+' mph';send({i3cmd:'speed',value:+e.target.value})};
+$('#sSoc').oninput=e=>{$('#oSoc').textContent=e.target.value+'%';send({i3cmd:'soc',value:+e.target.value})};
+$('#cDay').onclick=()=>send({i3cmd:'day',on:true});$('#cNight').onclick=()=>send({i3cmd:'day',on:false});
+$('#cAccess').onclick=()=>{const on=!isOn('#cAccess');press('#cAccess',on);send({i3cmd:'access',on})};
+$('#cContacts').onclick=()=>{const on=!isOn('#cContacts');press('#cContacts',on);send({i3cmd:'contacts',on})};
+
+// the log
+function addLog(text){$('#logEmpty').hidden=true;const li=document.createElement('li'),t=document.createElement('time'),s=document.createElement('span');
+  t.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});s.textContent=text;li.append(t,s);
+  const log=$('#log');log.prepend(li);while(log.children.length>40)log.lastChild.remove()}
+
+// notes, kept in this browser
+let notes=[];try{notes=JSON.parse(localStorage.getItem('i3sim.notes')||'[]')||[]}catch(e){}
+const where=n=>n.screen+(n.list?' › '+n.list:'');
+const allNotes=()=>notes.map(n=>'['+where(n)+'] '+n.text).join('\n');
+function saveNotes(){try{localStorage.setItem('i3sim.notes',JSON.stringify(notes))}catch(e){}}
+function drawNotes(){const ul=$('#notes');ul.textContent='';$('#notesEmpty').hidden=notes.length>0;
+  notes.forEach((n,i)=>{const li=document.createElement('li'),at=document.createElement('div'),p=document.createElement('p'),b=document.createElement('button');
+    at.className='at';at.textContent=where(n);p.textContent=n.text;b.textContent='Remove';b.setAttribute('aria-label','Remove this note');
+    b.onclick=()=>{notes.splice(i,1);saveNotes();drawNotes()};li.append(at,p,b);ul.append(li)});
+  if(!$('#noteOut').hidden)$('#noteOut').value=allNotes()}
+function addNote(){const box=$('#noteText'),text=box.value.trim();if(!text)return;notes.push({screen:state.screen||'Unknown screen',list:state.list||'',text});box.value='';saveNotes();drawNotes()}
+$('#noteAdd').onclick=addNote;
+$('#noteText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){addNote();e.preventDefault()}});
+$('#noteCopy').onclick=()=>{const text=allNotes();if(!text)return;
+  const byHand=()=>{const out=$('#noteOut');out.hidden=false;out.value=text;out.focus();out.select()};
+  try{navigator.clipboard.writeText(text).then(()=>{$('#copied').hidden=false;setTimeout(()=>{$('#copied').hidden=true},2000)},byHand)}catch(e){byHand()}};
+drawNotes();
+</script>
