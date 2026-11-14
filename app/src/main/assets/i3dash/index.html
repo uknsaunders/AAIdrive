@@ -131,6 +131,11 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mi.on{background:linear-gradient(180deg,var(--accent2),var(--accent));border-color:var(--edge);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
 .cardbox{display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:8px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+.cardbox.tight .card{flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;padding:6px 14px;min-height:0}
+.cardbox.tight .card svg{width:36px;height:36px;flex:none}
+.cardbox.tight .card>div{min-width:0}
+.cardbox.tight .card .ct{font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardbox.tight .card .cx{font-size:16px;margin-top:1px}
 .card.dim{opacity:.55}
 .card.dim svg{stroke:var(--muted)}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
@@ -564,7 +569,7 @@ function drawMenu(){
     // and ignores auto-added rows - verified with a Playwright test before shipping this.
     const rowN=Math.ceil(menu.items.length/2);
     const cards=menu.items.map((it,i)=>`<div class="card${i===menu.sel?' on':''}${it.dim?' dim':''}"${it.bl?` style="grid-column:1;grid-row:${rowN}"`:''}><svg viewBox="0 0 24 24">${ICON[it.icon]||ICON.Settings}</svg><div><div class="ct">${esc(it.label)}</div>${it.note?`<div class="cx">${esc(it.note)}</div>`:''}</div></div>`).join('');
-    H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>turn to choose · press to select</small></div><div class="cardbox" style="grid-template-rows:repeat(${rowN},1fr)">${cards}</div>`);
+    H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>turn to choose · press to select</small></div><div class="cardbox${rowN>3?' tight':''}" style="grid-template-rows:repeat(${rowN},minmax(0,1fr))">${cards}</div>`);
     const selCard=$('#menu .card.on');if(selCard)selCard.scrollIntoView({block:'nearest'});
     return;
   }
@@ -828,7 +833,7 @@ function drawHome(){
 }
 function openCard(k){
   home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k==='Settings'?'Info':k);showPage();
-  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music')musicMenu();
+  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music')musicMenu();else if(k==='Settings')settingsMenu();
 }
 window.i3hidden=function(){closeMenu()};
 setWxIcon();
