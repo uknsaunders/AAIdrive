@@ -82,6 +82,13 @@ class OverviewPageFragment: Fragment() {
 		}
 	}
 
+	/** Optional extras: speaking a place, name or reply, and offering to drive to the next appointment */
+	private val voicePermissions = arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.READ_CALENDAR)
+
+	private fun hasVoiceAccess(ctx: Context) = voicePermissions.all {
+		androidx.core.content.ContextCompat.checkSelfPermission(ctx, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+	}
+
 	private fun hasCallAccess(ctx: Context) = callPermissions.all {
 		ContextCompat.checkSelfPermission(ctx, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
 	}
@@ -165,7 +172,8 @@ class OverviewPageFragment: Fragment() {
 		// one list for everything the phone has to allow, shown until it is all done
 		val notificationsOk = hasNotificationAccess(ctx)
 		val callsOk = hasCallAccess(ctx)
-		if (!notificationsOk || !callsOk) {
+		val voiceOk = hasVoiceAccess(ctx)
+		if (!notificationsOk || !callsOk || !voiceOk) {
 			container.addView(sectionLabel(ctx, R.string.home_section_setup))
 			if (notificationsOk) {
 				container.addView(tileView(ctx, Tile(R.drawable.ic_bell_feather, R.string.home_setup_notifications, R.string.home_setup_done, "✓") {}))
@@ -197,6 +205,11 @@ class OverviewPageFragment: Fragment() {
 				if (callsOk) R.string.home_setup_done else R.string.home_calls_sub,
 				if (callsOk) "✓" else "›") {
 				if (!callsOk) requestPermissions(callPermissions, 42)
+			}))
+			container.addView(tileView(ctx, Tile(R.drawable.ic_mic_feather, R.string.home_voice,
+				if (voiceOk) R.string.home_setup_done else R.string.home_voice_sub,
+				if (voiceOk) "✓" else "›") {
+				if (!voiceOk) requestPermissions(voicePermissions, 43)
 			}))
 		}
 

@@ -9,7 +9,7 @@ const APPS=['Spotify','Amazon Music','BBC Sounds','YouTube Music'],LISTS=['Liked
 const two=(a,b)=>[{number:a,label:'Mobile'},{number:b,label:'Work'}],one=a=>[{number:a,label:'Mobile'}];
 const EVERYONE=[['Andy Le Brun','07700 900111'],['Garage (Bagot Road)','01534 000111'],['Mum','07700 900456'],['Sarah','07700 900123','01534 555010'],['Tom','07700 900789','01534 555020'],['Vet','01534 000222']]
   .map(p=>({name:p[0],number:p[1],numbers:p[2]?two(p[1],p[2]):one(p[1])}));
-const sim={soc:78,rangeKm:118,speedKmh:0,music:true,playing:true,track:0,app:0,posMs:60000,notes:[],call:null,access:true,contacts:true,lat:49.1885,lon:-2.0335,heading:10,route:null,along:0,level:0};
+const sim={missed:1,soc:78,rangeKm:118,speedKmh:0,music:true,playing:true,track:0,app:0,posMs:60000,notes:[],call:null,access:true,contacts:true,lat:49.1885,lon:-2.0335,heading:10,route:null,along:0,level:0};
 window.__sim=sim;window.__simPost=post;window.__simSay=say;window.__simTracks=TRACKS;window.__simApps=APPS;
 // moves the clock to midday or late evening, and says by how much it moved
 window.__simTime=day=>{const n=new RealDate();n.setUTCHours(day?12:22,30,0,0);const was=off;off=n.getTime()-RealDate.now();return off-was};
@@ -32,7 +32,7 @@ window.fetch=async function(u){u=String(u);
   if(u.includes('overpass')){const q=decodeURIComponent(u);return ok({elements:q.includes('charging')?[{lat:sim.lat+0.012,lon:sim.lon+0.01,tags:{name:'Gorey Pier charger'}}]:[]})}
   throw new Error('not loaded in the simulator');
 };
-const people=()=>sim.contacts?{contacts:EVERYONE.filter(p=>p.name==='Sarah'||p.name==='Mum'),everyone:EVERYONE,recentCalls:[{name:'Sarah',number:'+441534555010'},{name:'Garage (Bagot Road)',number:'01534 000111'},{name:'01534 000333',number:'01534 000333'}]}:{contacts:[],everyone:[],recentCalls:[]};
+const people=()=>sim.contacts?{contacts:EVERYONE.filter(p=>p.name==='Sarah'||p.name==='Mum'),everyone:EVERYONE,recentCalls:[{name:'Tom',number:'07700 900789',missed:sim.missed>0},{name:'Sarah',number:'+441534555010'},{name:'Garage (Bagot Road)',number:'01534 000111'},{name:'01534 000333',number:'01534 000333'}]}:{contacts:[],everyone:[],recentCalls:[]};
 const musicTop=()=>window.i3music({rows:APPS.map((a,i)=>a+(i===sim.app&&sim.music?' (playing)':'')),top:true,played:false});
 window.I3Native={
   log(){},
@@ -45,7 +45,13 @@ window.I3Native={
   answer(){if(sim.call){sim.call.ongoing=true;sim.call.since=Date.now();say('Answered the call')}},
   hangup(){if(sim.call){say(sim.call.ongoing?'Hung up':'Declined the call');sim.call=null}},
   dial(number,name){sim.call={name:name||number,text:'',number:number,outgoing:true,ongoing:true,since:Date.now()};say('Dialled '+(name?name+' on ':'')+number)},
-  media(c){if(!sim.music)return;if(c==='toggle'){sim.playing=!sim.playing;say(sim.playing?'Music: play':'Music: pause')}else{sim.track=(sim.track+(c==='next'?1:TRACKS.length-1))%TRACKS.length;sim.posMs=0;say('Music: '+(c==='next'?'next':'previous')+' track')}},
+  media(c){if(!sim.music)return;if(c==='fwd'||c==='back'){sim.posMs=Math.max(0,sim.posMs+(c==='fwd'?30000:-15000));say(c==='fwd'?'Music: forward 30 seconds':'Music: back 15 seconds');return}if(c==='toggle'){sim.playing=!sim.playing;say(sim.playing?'Music: play':'Music: pause')}else{sim.track=(sim.track+(c==='next'?1:TRACKS.length-1))%TRACKS.length;sim.posMs=0;say('Music: '+(c==='next'?'next':'previous')+' track')}},
+  // voice: the simulator "hears" a set phrase after a moment
+  listen(kind){say('Listening through the phone\'s microphone ('+kind+')');const heard={place:'cheeky monkies nursery',name:'Sarah',reply:'Running ten minutes late'}[kind]||'';
+    setTimeout(()=>{say('Heard: "'+heard+'"');window.i3heard(kind,heard,null)},1500)},
+  lookup(text){say('Looked up "'+text+'"');setTimeout(()=>window.i3found({error:null,items:[{name:/cheeky/i.test(text)?'Cheeky Monkeys Nursery':text.split(',')[0],detail:'La Rue de la Croix, Grouville',lat:49.1802,lon:-2.0489},{name:'Cheeky Monkeys Day Nursery',detail:'St Saviour',lat:49.1935,lon:-2.0841}]}),700)},
+  reply(key,text){const n=sim.notes.find(x=>x.key===key);if(!n)return false;say('Replied to '+n.title+': "'+text+'"');sim.notes=sim.notes.filter(x=>x.key!==key);return true},
+  clearNote(key){sim.notes=sim.notes.filter(x=>x.key!==key);say('Cleared an alert from the phone')},
   musicOpen(){sim.level=0;setTimeout(musicTop,350)},
   musicPick(i){setTimeout(()=>{
     if(sim.level===0){sim.level=1;sim.pickApp=i;window.i3music({rows:['‹ Back'].concat(LISTS),top:false,played:false})}

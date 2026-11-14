@@ -37,6 +37,8 @@
     <string name="home_step_ready">Car link ready</string>
     <string name="home_step_connected">Connected to the car</string>
     <string name="home_help">Connection help</string>
+    <string name="home_voice">Voice and calendar</string>
+    <string name="home_voice_sub">Tap to allow speaking a place, name or reply, and driving to your next appointment</string>
     <string name="home_calls">Calls and contacts</string>
     <string name="home_calls_sub">Tap to allow answering, hanging up and dialling from the car</string>
 </resources>

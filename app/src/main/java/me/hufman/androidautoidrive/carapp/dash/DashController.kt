@@ -550,7 +550,155 @@ class DashController(val context: Context,
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't read the notifications", e)
 			}
+			// slower things: missed calls and the next appointment
+			if (slowTick++ % 20 == 0) background {
+				try { readMissed() } catch (e: Exception) { Log.w(TAG, "Couldn't count missed calls", e) }
+				try { readEvent() } catch (e: Exception) { Log.w(TAG, "Couldn't read the calendar", e) }
+			}
 			handler.postDelayed(this, MEDIA_INTERVAL_MS)
+		}
+	}
+
+	private var slowTick = 0
+
+	/** Calls missed and not yet looked at on the phone */
+	private fun readMissed() {
+		if (!hasPermission(android.Manifest.permission.READ_CALL_LOG)) return
+		val count = context.contentResolver.query(android.provider.CallLog.Calls.CONTENT_URI, arrayOf(android.provider.CallLog.Calls.NUMBER),
+			"${android.provider.CallLog.Calls.TYPE} = ${android.provider.CallLog.Calls.MISSED_TYPE} AND ${android.provider.CallLog.Calls.NEW} = 1 AND ${android.provider.CallLog.Calls.DATE} > ?",
+			arrayOf((System.currentTimeMillis() - 24 * 3600000L).toString()), null)?.use { it.count } ?: 0
+		data["missed"] = count
+	}
+
+	/** The next appointment today that has a place, so the dashboard can offer to drive there */
+	private fun readEvent() {
+		if (!hasPermission(android.Manifest.permission.READ_CALENDAR)) return
+		val now = System.currentTimeMillis()
+		val uri = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon()
+			.appendPath((now - 15 * 60000L).toString()).appendPath((now + 18 * 3600000L).toString()).build()
+		var found: JSONObject? = null
+		context.contentResolver.query(uri, arrayOf(android.provider.CalendarContract.Instances.TITLE, android.provider.CalendarContract.Instances.BEGIN,
+				android.provider.CalendarContract.Instances.EVENT_LOCATION, android.provider.CalendarContract.Instances.ALL_DAY),
+			null, null, "${android.provider.CalendarContract.Instances.BEGIN} ASC")?.use { cursor ->
+			while (found == null && cursor.moveToNext()) {
+				val where = cursor.getString(2)?.trim() ?: ""
+				if (where.isEmpty() || cursor.getInt(3) == 1) continue
+				found = JSONObject().put("title", cursor.getString(0) ?: "Appointment").put("begin", cursor.getLong(1)).put("where", where.take(120))
+			}
+		}
+		data["event"] = found ?: JSONObject.NULL
+	}
+
+	/** The notification with this key, if it is still showing on the phone */
+	private fun noteByKey(key: String): android.service.notification.StatusBarNotification? {
+		val service = NotificationListenerServiceImpl.runningInstance ?: return null
+		return try { service.activeNotifications?.firstOrNull { it.key == key } } catch (e: Exception) { null }
+	}
+
+	/** The notification's own reply box (WhatsApp, Messages and so on), if it has one */
+	private fun replyAction(sbn: android.service.notification.StatusBarNotification): Notification.Action? =
+		sbn.notification.actions?.firstOrNull { action -> action.remoteInputs?.any { it.allowFreeFormInput } == true }
+
+	/** Answers a message through its notification, the way the phone's own quick reply does */
+	private fun sendReply(key: String, text: String): Boolean {
+		return try {
+			val sbn = noteByKey(key) ?: return false
+			val action = replyAction(sbn) ?: return false
+			val inputs = action.remoteInputs ?: return false
+			val results = Bundle()
+			inputs.forEach { results.putCharSequence(it.resultKey, text) }
+			val fill = android.content.Intent()
+			android.app.RemoteInput.addResultsToIntent(inputs, fill, results)
+			action.actionIntent.send(context, 0, fill)
+			true
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't send the reply", e)
+			false
+		}
+	}
+
+	/** Takes a notification off the phone once it has been dealt with in the car */
+	private fun clearNote(key: String) {
+		try {
+			NotificationListenerServiceImpl.runningInstance?.cancelNotification(key)
+		} catch (e: Exception) {
+			Log.w(TAG, "Couldn't clear the notification", e)
+		}
+	}
+
+	private var recognizer: android.speech.SpeechRecognizer? = null
+
+	private fun heard(kind: String, text: String, problem: String?) {
+		js("window.i3heard && window.i3heard(${JSONObject.quote(kind)}, ${JSONObject.quote(text)}, ${if (problem == null) "null" else JSONObject.quote(problem)})")
+	}
+
+	/** Listens once through the phone's microphone and hands the words to the page as window.i3heard(kind, text, problem) */
+	private fun listen(kind: String) {
+		handler.post {
+			try {
+				if (!hasPermission(android.Manifest.permission.RECORD_AUDIO)) {
+					heard(kind, "", "Allow the microphone in the i3D app on your phone first")
+					return@post
+				}
+				if (!android.speech.SpeechRecognizer.isRecognitionAvailable(context)) {
+					heard(kind, "", "Voice input isn't available on this phone")
+					return@post
+				}
+				recognizer?.destroy()
+				val listener = android.speech.SpeechRecognizer.createSpeechRecognizer(context)
+				recognizer = listener
+				listener.setRecognitionListener(object: android.speech.RecognitionListener {
+					override fun onReadyForSpeech(params: Bundle?) {}
+					override fun onBeginningOfSpeech() {}
+					override fun onRmsChanged(rmsdB: Float) {}
+					override fun onBufferReceived(buffer: ByteArray?) {}
+					override fun onEndOfSpeech() {}
+					override fun onPartialResults(partialResults: Bundle?) {}
+					override fun onEvent(eventType: Int, params: Bundle?) {}
+					override fun onError(error: Int) {
+						heard(kind, "", when (error) {
+							android.speech.SpeechRecognizer.ERROR_NO_MATCH, android.speech.SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that"
+							android.speech.SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Allow the microphone in the i3D app on your phone first"
+							android.speech.SpeechRecognizer.ERROR_NETWORK, android.speech.SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Voice input needs the internet"
+							else -> "Voice input didn't work (code $error)"
+						})
+					}
+					override fun onResults(results: Bundle?) {
+						val text = results?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull() ?: ""
+						heard(kind, text, if (text.isBlank()) "Didn't catch that" else null)
+					}
+				})
+				listener.startListening(android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+					.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+					.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+					.putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS, 3))
+			} catch (e: Exception) {
+				Log.w(TAG, "Voice input failed", e)
+				heard(kind, "", "Voice input didn't work")
+			}
+		}
+	}
+
+	/** Looks a spoken or typed place up and hands the matches to the page as window.i3found({items, error}) */
+	private fun lookup(text: String) {
+		background {
+			val json = JSONObject()
+			val items = org.json.JSONArray()
+			try {
+				val here = carLocationProvider.currentLocation
+				val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(context)
+				DashDestinations.googleKey = DashStore.googleKey(context)
+				val saved = DashStore.places(context).filter { it.name.equals(text.trim(), ignoreCase = true) }
+				val result = if (saved.isNotEmpty()) ResolveResult(saved) else DashDestinations.resolve(text, near)
+				result.items.take(6).forEach {
+					items.put(JSONObject().put("name", it.name).put("detail", it.detail ?: "").put("lat", it.lat).put("lon", it.lon))
+				}
+				json.put("error", result.error ?: JSONObject.NULL)
+			} catch (e: Exception) {
+				json.put("error", "Couldn't look that up")
+			}
+			json.put("items", items)
+			js("window.i3found && window.i3found($json)")
 		}
 	}
 
@@ -584,7 +732,8 @@ class DashController(val context: Context,
 					pm.getApplicationLabel(pm.getApplicationInfo(sbn.packageName, 0)).toString()
 				} catch (e: Exception) { sbn.packageName }
 			}
-			array.put(JSONObject().put("app", app).put("title", title).put("text", text.take(160)).put("when", sbn.postTime))
+			array.put(JSONObject().put("app", app).put("title", title).put("text", text.take(160)).put("when", sbn.postTime)
+				.put("key", sbn.key).put("reply", replyAction(sbn) != null))
 		}
 		data["notes"] = array
 	}
@@ -794,6 +943,8 @@ class DashController(val context: Context,
 			presentation = null
 			try { tts?.shutdown() } catch (e: Exception) { Log.w(TAG, "Couldn't stop the voice", e) }
 			tts = null
+			try { recognizer?.destroy() } catch (e: Exception) { Log.w(TAG, "Couldn't stop listening", e) }
+			recognizer = null
 			try { afterwards() } catch (e: Exception) { Log.w(TAG, "Problem after closing the page", e) }
 		}
 	}
@@ -882,11 +1033,32 @@ class DashController(val context: Context,
 					"toggle" -> if (mediaController?.playbackState?.state == PlaybackState.STATE_PLAYING) controls.pause() else controls.play()
 					"next" -> controls.skipToNext()
 					"prev" -> controls.skipToPrevious()
+					// podcasts and audiobooks: jump on half a minute, or back a quarter
+					"fwd", "back" -> {
+						val at = mediaController?.playbackState?.position ?: return
+						controls.seekTo(maxOf(0L, at + if (command == "fwd") 30000L else -15000L))
+					}
 				}
 			} catch (e: Exception) {
 				Log.w(TAG, "Couldn't send $command to the music app", e)
 			}
 		}
+
+		/** Listens for a place, a name or a reply. The words arrive later as window.i3heard(kind, text, problem) */
+		@JavascriptInterface
+		fun listen(kind: String) = this@DashController.listen(kind)
+
+		/** Finds places for some words. The matches arrive later as window.i3found({items, error}) */
+		@JavascriptInterface
+		fun lookup(text: String) = this@DashController.lookup(text)
+
+		/** Answers a message through its notification. False if that message can't be answered this way */
+		@JavascriptInterface
+		fun reply(key: String, text: String): Boolean = sendReply(key, text)
+
+		/** Clears a notification from the phone */
+		@JavascriptInterface
+		fun clearNote(key: String) = this@DashController.clearNote(key)
 
 		/** Lists the music apps. The answer arrives later as window.i3music({rows, top, played}) */
 		@JavascriptInterface
@@ -931,14 +1103,16 @@ class DashController(val context: Context,
 		try {
 			val calls = android.provider.CallLog.Calls.CONTENT_URI
 			context.contentResolver.query(calls,
-				arrayOf(android.provider.CallLog.Calls.CACHED_NAME, android.provider.CallLog.Calls.NUMBER),
+				arrayOf(android.provider.CallLog.Calls.CACHED_NAME, android.provider.CallLog.Calls.NUMBER,
+					android.provider.CallLog.Calls.TYPE, android.provider.CallLog.Calls.NEW),
 				null, null, "${android.provider.CallLog.Calls.DATE} DESC")?.use { cursor ->
 				val seen = HashSet<String>()
 				var looked = 0
 				while (cursor.moveToNext() && array.length() < 8 && looked++ < 60) {
 					val number = cursor.getString(1)?.takeIf { it.isNotBlank() } ?: continue
 					val name = cursor.getString(0)?.takeIf { it.isNotBlank() } ?: number
-					if (seen.add(number.filter { it.isDigit() }.takeLast(9))) array.put(JSONObject().put("name", name).put("number", number))
+					val missed = cursor.getInt(2) == android.provider.CallLog.Calls.MISSED_TYPE && cursor.getInt(3) == 1
+					if (seen.add(number.filter { it.isDigit() }.takeLast(9))) array.put(JSONObject().put("name", name).put("number", number).put("missed", missed))
 				}
 			}
 		} catch (e: Exception) {

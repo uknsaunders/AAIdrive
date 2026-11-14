@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Optionally access SMS images -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <!-- But don't require telephony -->
@@ -43,6 +44,10 @@
         android:protectionLevel="dangerous"/>
 
     <queries>
+        <!-- Voice input for places, names and replies -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <!-- Search for MediaBrowserService -->
         <intent>
             <action android:name="android.media.browse.MediaBrowserService" />

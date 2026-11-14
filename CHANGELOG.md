@@ -3,6 +3,20 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026, after the Android Auto and CarPlay review
+
+First batch of changes from comparing i3D with Android Auto and Apple CarPlay. None of it has been tried in the car yet.
+
+- **While driving:** message text stays off the screen (the sender still shows, and it can be read aloud), and the All contacts list stops at 12 names.
+- **Message banner:** a new message drops in at the top for a few seconds on any screen. Press the knob to hear it, answer it or clear it.
+- **Replies:** answer a message with one of three set replies or by voice, for apps whose notifications allow a reply (WhatsApp, Messages and similar). A spoken reply is shown for you to confirm before it is sent.
+- **Voice:** "Speak a place" in Navigate and "Speak a name" in Call, using the phone's microphone and Android's speech recognition. Spoken places show a short list to choose from.
+- **Next appointment:** a calendar entry for today that has a place appears in Navigate. Choosing it looks the place up.
+- **Missed calls:** a badge on the Call card, and missed callers first in the Call list.
+- **Home screen:** while a route is running, the next turn and arrival time show above the cards.
+- **Music:** Forward 30 seconds and Back 15 seconds, for podcasts.
+- The phone's setup list has a new item, "Voice and calendar".
+
 ## 14 November 2026
 
 - **Better address finder:** place search now forgives spelling. If the exact OpenStreetMap search finds nothing, a second, looser search runs, and far-away matches are dropped when there are nearby ones.

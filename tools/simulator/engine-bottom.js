@@ -35,7 +35,8 @@ function tick(){
   window.i3feed({soc:sim.soc,rangeKm:Math.round(sim.soc*1.52),speedKmh:sim.speedKmh,units:'Miles,CELSIUS',ambientC:12,cabinC:19,torqueNm:sim.speedKmh>0?35:0,tariffP:28,odoKm:41230,
     lat:sim.lat,lon:sim.lon,heading:sim.heading,mediaPermission:sim.access,
     media:showMusic?{title:t[0],artist:t[1],album:t[2],app:APPS[sim.app],playing:sim.playing,pos:sim.posMs,dur:1800000}:null,
-    notes:sim.access?sim.notes:null,call:call});
+    notes:sim.access?sim.notes:null,call:call,missed:sim.contacts?sim.missed:0,
+    event:{title:'Dentist',where:'Gorey Dental Practice, Gorey Village, Jersey',begin:Date.now()+2*3600000}});
   const wantArt=showMusic?sim.track:-1;if(wantArt!==lastArt){lastArt=wantArt;window.i3art(showMusic?art(t[3]):'')}
   ['mapmsg','diag'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'});
   try{drawMap()}catch(e){}
@@ -51,8 +52,9 @@ window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3cmd)return;
     case 'soc':sim.soc=d.value;break;
     case 'ring':if(!sim.call){sim.call={name:d.name||'Mum',text:'Mobile',number:'',outgoing:false,ongoing:false,since:Date.now()};say('The phone rings: '+(d.name||'Mum'))}break;
     case 'endcall':if(sim.call){sim.call=null;say('The other person ended the call')}break;
-    case 'alert':{const a=ALERTS[alertNo++%ALERTS.length];sim.notes=[{app:a[0],title:a[1],text:a[2],when:Date.now()}].concat(sim.notes).slice(0,8);say('New alert from '+a[0])}break;
+    case 'alert':{const a=ALERTS[alertNo++%ALERTS.length];sim.notes=[{app:a[0],title:a[1],text:a[2],when:Date.now(),key:'n'+alertNo,reply:a[0]==='WhatsApp'||a[0]==='Messages'}].concat(sim.notes).slice(0,8);say('New alert from '+a[0])}break;
     case 'clearalerts':sim.notes=[];break;
+    case 'missed':sim.missed=d.on?sim.missed+1:0;say(d.on?'A call was missed':'Missed calls cleared');menuCache=null;break;
     case 'music':sim.music=d.on;sim.playing=d.on;say(d.on?'Something is playing':'Nothing is playing');break;
     case 'day':{const moved=window.__simTime(d.on);if(sim.call)sim.call.since+=moved;sim.notes.forEach(n=>{n.when+=moved});mapTheme()}break;
     case 'access':sim.access=d.on;say(d.on?'Notification access: allowed':'Notification access: not allowed (no music details, alerts or caller names)');break;
@@ -61,6 +63,6 @@ window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3cmd)return;
   tick();
 });
 window.__simTime(true);try{mapTheme()}catch(e){}
-sim.notes=[{app:'WhatsApp',title:'Sarah',text:'Are you home for tea?',when:Date.now()-120000}];alertNo=1;
+sim.notes=[{app:'WhatsApp',title:'Sarah',text:'Are you home for tea?',when:Date.now()-120000,key:'n0',reply:true}];alertNo=1;
 setInterval(tick,500);tick();post('ready',{});
 })();

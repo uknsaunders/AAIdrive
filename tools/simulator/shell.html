@@ -78,8 +78,8 @@ textarea{width:100%;min-height:74px;font:15px/1.4 var(--f);color:var(--ink);back
     <section class="panel">
       <h2>Make things happen</h2>
       <div class="group"><span>Phone call</span>
-        <div class="row"><button id="cRingMum">Mum rings</button><button id="cRingUnknown">Unknown number rings</button><button id="cEnd">Other person hangs up</button></div>
-        <p class="small">To make a call, use the Call card on the screen.</p></div>
+        <div class="row"><button id="cRingMum">Mum rings</button><button id="cRingUnknown">Unknown number rings</button><button id="cEnd">Other person hangs up</button><button id="cMissed">A call is missed</button></div>
+        <p class="small">To make a call, use the Call card on the screen. Voice input "hears" a set phrase: a nursery for places, Sarah for names.</p></div>
       <div class="group"><span>Music</span>
         <div class="row"><button id="cMusic" aria-pressed="true">Something is playing</button></div></div>
       <div class="group"><span>Alerts</span>
@@ -150,6 +150,7 @@ document.addEventListener('keydown',e=>{
 $('#cRingMum').onclick=()=>send({i3cmd:'ring',name:'Mum'});
 $('#cRingUnknown').onclick=()=>send({i3cmd:'ring',name:'01534 000444'});
 $('#cEnd').onclick=()=>send({i3cmd:'endcall'});
+$('#cMissed').onclick=()=>send({i3cmd:'missed',on:true});
 $('#cMusic').onclick=()=>send({i3cmd:'music',on:!isOn('#cMusic')});
 $('#cAlert').onclick=()=>send({i3cmd:'alert'});$('#cClear').onclick=()=>send({i3cmd:'clearalerts'});
 $('#sSpeed').oninput=e=>{$('#oSpeed').textContent=e.target.value+' mph';send({i3cmd:'speed',value:+e.target.value})};

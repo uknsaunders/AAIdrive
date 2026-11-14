@@ -76,6 +76,12 @@ Each section shows its name at the top, with no row of buttons. Press the knob f
 
 ![Choosing which number to call](docs/screenshots/menu-call-numbers.png)
 
+**Voice.** Navigate has **Speak a place** and Call has **Speak a name**. The phone's own microphone listens, so keep the phone within earshot. You always choose from a short list before anything happens.
+
+**Messages.** A new message shows as a banner at the top for a few seconds. Press the knob to hear it, send a set reply, reply by voice, or clear it. While the car is moving the message text is not shown, only who it is from.
+
+**Appointments.** If today's calendar has an entry with a place, it appears in Navigate.
+
 During a call the dash moves to the Call section and shows who it is, the number, and how long the call has run. Press the knob to hang up. When the phone rings, the same press offers **Answer call** and **Decline call**. While a call is on, every list starts with **Hang up**.
 
 ![A call in progress](docs/screenshots/call-active.png)
@@ -130,7 +136,7 @@ The home screen has a connection card at the top, the setup list until it is fin
 - Journey cost is the battery energy used plus 10% for charging losses, at your price per kWh. The default is 28p, and you can change it on the Send to car screen.
 - Speed limits and chargers come from OpenStreetMap, so some roads have no limit listed.
 - Confirmed in the car on 13 November 2026: the dash opens from ConnectedDrive, the knob turns pages and opens the menu, and the page sits clear of the car's status bar.
-- Not yet confirmed on a real car: the sections without buttons, call details and hanging up, choosing between a contact's numbers, the daylight map, the fuller Call list, the music picker, answering and hanging up, the dash coming back during a call, and YouTube. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
+- Not yet confirmed on a real car: voice input, message banners and replies, the calendar entry, missed calls, the sections without buttons, call details and hanging up, choosing between a contact's numbers, the daylight map, the fuller Call list, the music picker, answering and hanging up, the dash coming back during a call, and YouTube. If the dash page ever fails to load, the knob press falls back to the car's plain menu.
 - This i3 sends no tyre pressure data, so the tyre rings stay empty (see the Tyres line on the **i** page).
 
 ## Building

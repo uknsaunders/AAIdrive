@@ -124,7 +124,14 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .card.on{background:var(--accent);border-color:#cfe2ff;color:var(--accent-ink)}
 .card.on svg{stroke:var(--accent-ink)}.card.on .cx{color:var(--accent-ink)}
 .card .cb{position:absolute;top:14px;right:16px;font:700 20px var(--f-d);background:var(--bad);color:#fff;border-radius:14px;padding:1px 11px}
-.hometitle{font:600 21px var(--f-b);color:var(--muted);padding-bottom:6px}
+.hometitle{font:600 21px var(--f-b);color:var(--muted);padding-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hometitle b{color:var(--ink);font-weight:700}
+/* a new message drops in over the top of the screen for a few seconds */
+.banner{position:absolute;left:12px;top:8px;width:calc(50% - 24px);z-index:12;display:flex;align-items:center;gap:14px;background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:8px 16px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.banner .ba{font:700 24px var(--f-d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner .bx{font:500 19px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner .bk{margin-left:auto;font:600 18px var(--f-b);color:var(--accent);white-space:nowrap}
+.banner>div{min-width:0}
 .leaflet-container{background:#141b23}
 body.daymap .leaflet-container{background:#e9e6df}
 body.daymap .maplibregl-ctrl-attrib{background:rgba(255,255,255,.7)!important;color:#333!important}body.daymap .maplibregl-ctrl-attrib a{color:#333!important}
@@ -181,6 +188,7 @@ body.daymap .maplibregl-ctrl-attrib{background:rgba(255,255,255,.7)!important;co
     <div class="home" id="home" hidden></div>
     <div class="menu" id="menu" hidden></div>
     <div class="toast" id="toast" hidden></div>
+    <div class="banner" id="banner" hidden></div>
   </div>
 </div>
 
@@ -264,6 +272,9 @@ function showPage(){
 const TITLES={Info:'Car colour and info',Alerts:'Phone alerts',Journey:'Journeys and costs',Battery:'Battery'};
 function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Car'||p==='Info'||(p==='Alerts'&&(D.notes||[]).length>0)}
 function drawTitle(){const p=PAGES[page];H('#tabs',`<b>${TITLES[p]||p}</b><span><i>Press the knob</i> for ${hasOptions()?'options and Home':'the Home screen'}</span>`)}
+// the car is under way: message text stays off the screen and long lists get shorter
+const moving=()=>(D.speedKmh||0)>3;
+const MOVING_ROWS=12;
 function drawPanel(){
   const p=PAGES[page],el={set innerHTML(v){H('#panel',v)}};
   if(p==='Battery'){
@@ -310,9 +321,9 @@ function drawPanel(){
     el.innerHTML=`<div class="frost"><h2>Call</h2><div class="al">${rows}</div><div class="hint"><b style="color:var(--accent)">Press the knob</b> to choose who to call</div></div>`;
   }else if(p==='Alerts'){
     const n=D.notes||[];
-    const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
+    const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text&&!moving()?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
       `<div style="color:#c3cfdb;font-size:20px">${D.notes===null||D.notes===undefined?'Open the i3D app on your phone and finish the setup list to see your alerts here.':'No new alerts.'}</div>`;
-    el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">Newest first · press the knob to have them read aloud</div></div>`;
+    el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">${moving()?'Message text is hidden while driving · press the knob to hear it':'Newest first · press the knob to hear or answer them'}</div></div>`;
   }else if(p==='Info'){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
@@ -506,6 +517,7 @@ function start(){
 const waiting=title=>openMenu(title,[{label:'Loading…',dim:1}],0,true);
 function stopNav(){window.i3stopNav();N.navigationEnded()}
 function goTo(p){closeMenu();window.i3navigate(p.lat,p.lon,p.name);N.navStarted(p.lat,p.lon,p.name||'')}
+const said=x=>[x.app,x.title,x.text].filter(Boolean).join('. ');
 function readAlerts(){const n=(D.notes||[]).slice(0,3);N.speak(n.length?n.map(x=>[x.app,x.title,x.text].filter(Boolean).join('. ')).join('. Next. '):'No new alerts')}
 function goHome(){closeMenu();home=true;showPage()}
 function goPage(name){closeMenu();home=false;page=PAGES.indexOf(name);showPage()}
@@ -531,6 +543,9 @@ function navMenu(){
   const d=menuData(true),it=start(),first=it.length;
   if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}},{label:'Recalculate route',act(){window.i3recalc();closeMenu()}});
   d.places.forEach(p=>it.push({label:p.name,note:'saved',act(){goTo(p)}}));
+  it.push({label:'Speak a place',note:'voice',act(){hear('place')}});
+  const ev=D.event;
+  if(ev&&ev.where)it.push({label:ev.title,note:new Date(ev.begin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),act(){waiting('Finding '+ev.where.split(',')[0]);N.lookup(ev.where)}});
   const ch=nearestCharger();
   if(ch)it.push({label:'Nearest charger',note:fmtD(ch.d*1.25),act(){goTo({lat:ch.c.lat,lon:ch.c.lon,name:ch.c.name||'Charger'})}});
   const saved=new Set(d.places.map(p=>String(p.name).toLowerCase()));
@@ -549,10 +564,12 @@ function ring(c,number){
 }
 const numNote=(c,note)=>(c.numbers||[]).length>1?c.numbers.length+' numbers':note;
 function callMenu(){
-  const d=menuData(true),it=start(),first=D.call?0:it.length;
+  const d=menuData(true),it=start(),head=it.length,first=D.call?0:head;
   d.contacts.forEach(c=>it.push({label:c.name,note:numNote(c,'favourite'),more:0,act(){ring(c)}}));
-  d.recentCalls.filter(r=>!knows(d.contacts,r.number)).forEach(c=>it.push({label:c.name,note:'recent',act(){ring(c)}}));
-  if(d.everyone.length)it.push({label:'All contacts',more:1,act:everyoneMenu});
+  const missed=d.recentCalls.filter(r=>r.missed);
+  missed.forEach(c=>it.splice(head+missed.indexOf(c),0,{label:c.name,note:'missed call',act(){ring(c)}}));
+  d.recentCalls.filter(r=>!r.missed&&!knows(d.contacts,r.number)).forEach(c=>it.push({label:c.name,note:'recent',act(){ring(c)}}));
+  if(d.everyone.length)it.push({label:'Speak a name',note:'voice',act(){hear('name')}},{label:'All contacts',more:1,act:everyoneMenu});
   if(!d.canSeeContacts)it.push({label:'Finish the setup list in the i3D phone app',dim:1});
   else if(!d.everyone.length)it.push({label:'No contacts with phone numbers found',dim:1});
   it.push({label:'Type a name…',note:'letter wheel',act(){closeMenu();N.search()}});
@@ -560,13 +577,17 @@ function callMenu(){
 }
 function everyoneMenu(){
   const it=[backTo(callMenu)];
-  menuData().everyone.forEach(c=>it.push({label:c.name,note:numNote(c,''),act(){ring(c)}}));
+  const all=menuData().everyone,cut=moving()&&all.length>MOVING_ROWS;
+  if(cut)it.push({label:'Speak a name',note:'voice',act(){hear('name')}});
+  (cut?all.slice(0,MOVING_ROWS):all).forEach(c=>it.push({label:c.name,note:numNote(c,''),act(){ring(c)}}));
+  if(cut)it.push({label:'The full list shows when parked',dim:1});
   openMenu('All contacts',it,1);
 }
 function musicMenu(){
   const m=D.media,it=start(),first=it.length;
   if(m&&m.title)it.push({label:m.playing?'Pause':'Play',note:m.title,act(){N.media('toggle');closeMenu()}},
-    {label:'Next track',act(){N.media('next');menuAlive()}},{label:'Previous track',act(){N.media('prev');menuAlive()}});
+    {label:'Next track',act(){N.media('next');menuAlive()}},{label:'Previous track',act(){N.media('prev');menuAlive()}},
+    {label:'Forward 30 seconds',act(){N.media('fwd');menuAlive()}},{label:'Back 15 seconds',act(){N.media('back');menuAlive()}});
   it.push({label:'Choose app or playlist',more:1,act(){waiting('Music apps');N.musicOpen()}});
   if(menuData().videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
   openMenu('Music',it,first);
@@ -589,10 +610,69 @@ function videoMenu(){
 }
 window.i3press=function(){
   if(menu){menuAlive();const it=menu.items[menu.sel];if(it&&it.act&&!it.dim)it.act();return}
+  if(banner){const x=banner.x;banner=null;drawBanner();noteMenu(x);return}       // a message has just arrived: deal with it
   if(home){openCard(CARDS[homeSel]);return}
   sectionMenu();
 };
-function alertsMenu(){const it=start(),first=it.length;it.push({label:'Read alerts aloud',note:String((D.notes||[]).length),act(){readAlerts();closeMenu()}},{label:'Close menu',act:closeMenu});openMenu('Phone alerts',it,first)}
+function alertsMenu(){
+  const it=start(),first=it.length,n=D.notes||[];
+  it.push({label:'Read the latest aloud',note:String(n.length),act(){readAlerts();closeMenu()}});
+  n.slice(0,6).forEach(x=>it.push({label:x.title||x.app,note:x.app,more:0,act(){noteMenu(x)}}));
+  it.push({label:'Close menu',act:closeMenu});openMenu('Phone alerts',it,first);
+}
+// one message: hear it, answer it, or clear it from the phone
+const QUICK=['Driving, will call you later','On my way','OK, thanks'];
+function noteMenu(x){
+  const it=[backTo(alertsMenu),{label:'Read aloud',act(){N.speak(said(x));menuAlive()}}];
+  if(x.reply&&x.key){
+    it.push({label:'Reply by voice',note:'speak',act(){hear('reply',x)}});
+    QUICK.forEach(q=>it.push({label:q,note:'reply',act(){sendReply(x,q)}}));
+  }
+  if(x.key)it.push({label:'Clear from the phone',act(){N.clearNote(x.key);closeMenu();toast('Cleared')}});
+  openMenu(x.title||x.app,it,1);
+}
+function sendReply(x,text){closeMenu();toast(N.reply(x.key,text)?'Sent to '+(x.title||x.app):'Couldn\'t send that reply')}
+
+/* ---------- voice ---------- */
+// the phone listens once, then answers in i3heard. What is being asked for is kept here meanwhile
+let hearing=null;
+function hear(kind,about){hearing={kind,about};waiting('Listening… speak now');N.listen(kind)}
+window.i3heard=function(kind,text,problem){
+  const h=hearing;hearing=null;
+  if(!h||h.kind!==kind||!menu||!menu.wait)return;       // the driver moved on
+  if(problem||!text){closeMenu();toast(problem||'Didn\'t catch that');return}
+  if(kind==='place'){waiting('Finding "'+text+'"');N.lookup(text)}
+  else if(kind==='name'){
+    const want=text.toLowerCase().replace(/^call\s+/,''),all=menuData().everyone,words=want.split(/\s+/);
+    let hits=all.filter(c=>c.name.toLowerCase().includes(want));
+    if(!hits.length)hits=all.filter(c=>words.some(w=>w.length>2&&c.name.toLowerCase().split(/\s+/).some(p=>p.startsWith(w))));
+    if(!hits.length){closeMenu();toast('No contact called "'+text+'"');return}
+    openMenu('Call who?',[backTo(callMenu)].concat(hits.slice(0,8).map(c=>({label:c.name,note:numNote(c,''),act(){ring(c)}})),[{label:'Speak again',act(){hear('name')}}]),1);
+  }else if(kind==='reply'){
+    const x=h.about;
+    openMenu('Send this?',[backTo(()=>noteMenu(x)),{label:'Send: "'+text+'"',act(){sendReply(x,text)}},{label:'Speak again',act(){hear('reply',x)}}],1);
+  }
+};
+// places found for spoken words or an appointment
+window.i3found=function(r){
+  if(!menu||!menu.wait)return;
+  const items=(r&&r.items)||[];
+  if(!items.length){closeMenu();toast((r&&r.error)||'Nothing found for that');return}
+  openMenu('Go where?',[backTo(navMenu)].concat(items.map(p=>({label:p.name,note:(p.detail||'').split(',')[0],act(){goTo(p)}})),[{label:'Speak again',act(){hear('place')}}]),1);
+};
+
+/* ---------- message banner ---------- */
+let seenNotes=null,banner=null;
+function drawBanner(){
+  const n=D.notes||[],el=$('#banner');
+  if(seenNotes===null){if(D.notes)seenNotes=new Set(n.map(x=>x.key||x.when))}
+  else{const fresh=n.find(x=>!seenNotes.has(x.key||x.when));n.forEach(x=>seenNotes.add(x.key||x.when));
+    if(fresh&&!D.call)banner={x:fresh,until:Date.now()+9000}}
+  if(banner&&(Date.now()>banner.until||D.call||!n.some(x=>(x.key||x.when)===(banner.x.key||banner.x.when))))banner=null;
+  if(!banner||menu){if(!el.hidden)el.hidden=true;return}
+  const x=banner.x;if(el.hidden)el.hidden=false;
+  H('#banner',`<div><div class="ba">${esc(x.title||x.app)}</div><div class="bx">${esc(x.title?x.app:'')}${!moving()&&x.text?(x.title?' · ':'')+esc(x.text):''}</div></div><div class="bk">Press the knob</div>`);
+}
 
 /* ---------- home screen ---------- */
 const ICON={
@@ -609,7 +689,7 @@ const CARDS=['Navigate','Call','Music','Map','Car','Battery','Journey','Alerts']
 function cardLine(k){
   const m=D.media,c=D.call,n=(D.notes||[]).length;
   if(k==='Navigate')return route?'Route running · '+($('#eArr').textContent!=='--'?'arrive '+$('#eArr').textContent:'press to change'):'Places, chargers, addresses';
-  if(k==='Call')return c?(c.ongoing?'On call · ':'Ringing · ')+(c.name||'Unknown'):'Favourites, recent, contacts';
+  if(k==='Call')return c?(c.ongoing?'On call · ':'Ringing · ')+(c.name||'Unknown'):D.missed?D.missed+' missed call'+(D.missed>1?'s':''):'Favourites, recent, contacts';
   if(k==='Music')return m&&m.title?m.title:'Choose something to play';
   if(k==='Map')return 'The map on the whole screen';
   if(k==='Car')return (D.soc!=null?f(D.soc)+'% · ':'')+(D.rangeKm!=null?f(D.rangeKm)+(miles?' mi':' km'):'Range and trip');
@@ -623,8 +703,10 @@ function drawHome(){
   const tabs=$('#tabs'),ht=$('#hometitle');if(tabs.hidden!==home){tabs.hidden=home;ht.hidden=!home}
   if(!home)drawTitle();
   if(!home)return;
-  const n=(D.notes||[]).length;
-  H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${k==='Alerts'&&n?`<span class="cb">${n}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
+  const n=(D.notes||[]).length,badge=k=>k==='Alerts'?n:k==='Call'?(D.missed||0):0;
+  // while a route is running, the next turn stays in view above the cards
+  H('#hometitle',route&&!$('#turn').hidden?`<b>${esc($('#turnD').textContent)}</b> · ${esc($('#turnI').textContent)} · arrive <b>${esc($('#eArr').textContent)}</b>`:'Turn the knob to choose · press to open');
+  H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${badge(k)?`<span class="cb">${badge(k)}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
 }
 function openCard(k){
   home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k);showPage();
@@ -642,7 +724,7 @@ function render(){
   if(tq==null){S(pf,'width','0%');T('#pwTxt','--')}
   else if(tq<0){const w=Math.round(Math.min(1,-tq/150)*z*10)/10;S(pf,'left',(z-w)+'%');S(pf,'width',w+'%');S(pf,'background','var(--good)');T('#pwTxt','regen '+f(-tq)+' Nm')}
   else{const w=Math.round(Math.min(1,tq/250)*(100-z)*10)/10;S(pf,'left',z+'%');S(pf,'width',w+'%');S(pf,'background','var(--warn)');T('#pwTxt',f(tq)+' Nm')}
-  drawTyres();drawLimit();drawCall();if(!home)drawTitle();
+  drawTyres();drawLimit();drawCall();drawBanner();if(!home)drawTitle();
   T('#tgCabin',D.cabinC!=null?f(temp(D.cabinC))+'°':'');
   H('#rCar',sm(D.rangeKm!=null?f(D.rangeKm):'--',du()));
   const k=J&&J.km>3&&J.kwh>0.3?J.km/J.kwh:null;
