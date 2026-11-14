@@ -48,6 +48,12 @@ window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3cmd)return;
   try{switch(d.i3cmd){
     case 'knob':window.i3knob(d.dir);break;
     case 'press':window.i3press();break;
+    case 'click':{       // a click on the picture: a card or a list row is chosen and opened, anything else is a press of the knob
+      const el=document.elementFromPoint(d.x*window.innerWidth,d.y*window.innerHeight),card=el&&el.closest('.card'),row=el&&el.closest('.mi');
+      if(menu&&row&&!menu.wait){const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));
+        menu.sel=first+[...document.querySelectorAll('#menu .mi')].indexOf(row);drawMenu()}
+      else if(home&&card&&!menu&&!banner){homeSel=[...document.querySelectorAll('#home .card')].indexOf(card);drawHome()}
+      window.i3press()}break;
     case 'speed':sim.speedKmh=d.value*1.609344;break;
     case 'soc':sim.soc=d.value;break;
     case 'ring':if(!sim.call){sim.call={name:d.name||'Mum',text:'Mobile',number:'',outgoing:false,ongoing:false,since:Date.now()};say('The phone rings: '+(d.name||'Mum'))}break;

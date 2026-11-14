@@ -61,7 +61,7 @@ textarea{width:100%;min-height:74px;font:15px/1.4 var(--f);color:var(--ink);back
 
   <div class="bezel"><div class="screen" id="screen">
     <iframe id="car" title="The i3D car screen" tabindex="-1"></iframe>
-    <div class="touch" id="touch" title="Click to press the knob. Scroll to turn it."></div>
+    <div class="touch" id="touch" title="Click a card or a list row to open it. Scroll to turn the knob."></div>
     <div class="blocked" id="blocked" hidden>The car screen could not start in this viewer. Tell Claude and it will rebuild the simulator another way.</div>
   </div></div>
 
@@ -72,7 +72,7 @@ textarea{width:100%;min-height:74px;font:15px/1.4 var(--f);color:var(--ink);back
     <button class="big main" id="kPress">Press the knob</button>
     <button class="big" id="kRight">Turn right ⟳</button>
   </div>
-  <p class="keys">Keyboard: <kbd>←</kbd> <kbd>→</kbd> turn, <kbd>Enter</kbd> or <kbd>Space</kbd> press. On the screen itself, scroll to turn and click to press.</p>
+  <p class="keys">Keyboard: <kbd>←</kbd> <kbd>→</kbd> turn, <kbd>Enter</kbd> or <kbd>Space</kbd> press. On the screen itself, click a card or a list row to open it, and scroll to turn. The car has no touch screen, so clicking is a desk shortcut only.</p>
 
   <div class="cols">
     <section class="panel">
@@ -137,7 +137,8 @@ const isOn=sel=>$(sel).getAttribute('aria-pressed')==='true';
 
 // the knob
 const knob=dir=>send({i3cmd:'knob',dir}),push=()=>send({i3cmd:'press'});
-$('#kLeft').onclick=()=>knob(-1);$('#kRight').onclick=()=>knob(1);$('#kPress').onclick=push;$('#touch').onclick=push;
+$('#kLeft').onclick=()=>knob(-1);$('#kRight').onclick=()=>knob(1);$('#kPress').onclick=push;
+$('#touch').onclick=e=>{const r=$('#touch').getBoundingClientRect();send({i3cmd:'click',x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height})};
 let wheelAt=0;
 $('#touch').addEventListener('wheel',e=>{e.preventDefault();const now=Date.now();if(now-wheelAt<90)return;wheelAt=now;knob(e.deltaY>0||e.deltaX>0?1:-1)},{passive:false});
 document.addEventListener('keydown',e=>{
