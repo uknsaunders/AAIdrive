@@ -66,8 +66,8 @@ object DashDestinations {
 	}
 
 	private fun what3words(words: String): ResolveResult {
-		val key = BuildConfig.W3W_API_KEY
-		if (key.isBlank()) return ResolveResult(emptyList(), "what3words isn't set up yet: it needs a free API key added to the app's build")
+		val key = w3wKey.ifBlank { BuildConfig.W3W_API_KEY }
+		if (key.isBlank()) return ResolveResult(emptyList(), "what3words isn't set up yet: add a free API key in Send to car on the phone")
 		val json = JSONObject(fetch("https://api.what3words.com/v3/convert-to-coordinates?key=" +
 				URLEncoder.encode(key, "UTF-8") + "&words=" + URLEncoder.encode(words, "UTF-8")))
 		json.optJSONObject("error")?.let {
@@ -140,6 +140,11 @@ object DashDestinations {
 	/** The driver's own Google key for place search, set from the phone app. Blank means the free search only */
 	@Volatile var googleKey: String = ""
 
+	/** The driver's own what3words key, set from the phone app. Kept off the phone's build, so it's never inside a
+	 * downloadable APK. Falls back to a build-time key (BuildConfig.W3W_API_KEY) for anyone who built their own copy
+	 * with a repository secret instead. */
+	@Volatile var w3wKey: String = ""
+
 	/**
 	 * Finds places by name. Three sources, best first:
 	 * Google Places, if the driver has added a key: knows businesses and copes with misspellings.
@@ -164,6 +169,17 @@ object DashDestinations {
 		}
 		if (exact.isNotEmpty()) return exact
 		return photon(query, near)
+	}
+
+	/** Checks a what3words key with one small lookup. Returns what went wrong, or null if it works */
+	fun w3wProblem(key: String): String? {
+		return try {
+			val json = JSONObject(fetch("https://api.what3words.com/v3/convert-to-coordinates?key=" +
+					URLEncoder.encode(key.trim(), "UTF-8") + "&words=filled.count.soap"))
+			json.optJSONObject("error")?.optString("message")?.takeIf { it.isNotBlank() }
+		} catch (e: Exception) {
+			e.message ?: "Couldn't reach what3words"
+		}
 	}
 
 	/** Checks a Google key with one small search. Returns what went wrong, or null if it works */

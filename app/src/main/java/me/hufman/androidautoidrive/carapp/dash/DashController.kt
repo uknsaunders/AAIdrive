@@ -689,6 +689,7 @@ class DashController(val context: Context,
 				val here = carLocationProvider.currentLocation
 				val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(context)
 				DashDestinations.googleKey = DashStore.googleKey(context)
+				DashDestinations.w3wKey = DashStore.w3wKey(context)
 				val saved = DashStore.places(context).filter { it.name.equals(text.trim(), ignoreCase = true) }
 				val result = if (saved.isNotEmpty()) ResolveResult(saved) else DashDestinations.resolve(text, near)
 				result.items.take(6).forEach {

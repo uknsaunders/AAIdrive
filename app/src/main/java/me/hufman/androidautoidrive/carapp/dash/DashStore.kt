@@ -76,6 +76,14 @@ object DashStore {
 		prefs(context).edit().putString("ocmKey", key.trim()).apply()
 	}
 
+	/** The driver's own what3words key, kept on the phone only - not baked into the build, so it never ends up in a
+	 * downloadable APK. Falls back to BuildConfig.W3W_API_KEY (a repository secret) if nothing is saved here. */
+	fun w3wKey(context: Context): String = prefs(context).getString("w3wKey", "") ?: ""
+
+	fun setW3wKey(context: Context, key: String) {
+		prefs(context).edit().putString("w3wKey", key.trim()).apply()
+	}
+
 	/** Where to look for places when the car isn't connected: the saved Home, or the first saved place */
 	fun homeArea(context: Context): Pair<Double, Double>? {
 		val saved = places(context)

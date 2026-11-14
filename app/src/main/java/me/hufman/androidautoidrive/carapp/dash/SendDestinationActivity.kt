@@ -82,6 +82,7 @@ class SendDestinationActivity: Activity() {
 				val here = DashController.instance?.carLocationProvider?.currentLocation
 				val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(applicationContext)
 				DashDestinations.googleKey = DashStore.googleKey(applicationContext)
+				DashDestinations.w3wKey = DashStore.w3wKey(applicationContext)
 				val result = DashDestinations.resolve(text, near)
 				val json = JSONObject()
 				json.put("error", result.error ?: JSONObject.NULL)
@@ -153,11 +154,24 @@ class SendDestinationActivity: Activity() {
 			}
 		}
 
+		/** Saves the driver's what3words key after one test lookup. A blank key falls back to a build-time key, if there is one.
+		 * Kept on the phone only, never inside the downloadable APK. Answers window.onW3wKey(problem or null) */
+		@JavascriptInterface
+		fun setW3wKey(key: String) {
+			val clean = key.trim()
+			thread {
+				val problem = if (clean.isEmpty()) null else DashDestinations.w3wProblem(clean)
+				if (problem == null) DashStore.setW3wKey(applicationContext, clean)
+				val answer = if (problem == null) "null" else JSONObject.quote(problem)
+				runOnUiThread { webView?.evaluateJavascript("window.onW3wKey($answer)", null) }
+			}
+		}
+
 		@JavascriptInterface
 		fun status(): String {
 			val json = JSONObject()
 			json.put("car", DashController.instance != null)
-			json.put("w3w", BuildConfig.W3W_API_KEY.isNotBlank())
+			json.put("w3w", DashStore.w3wKey(applicationContext).isNotBlank() || BuildConfig.W3W_API_KEY.isNotBlank())
 			json.put("google", DashStore.googleKey(applicationContext).isNotBlank())
 			json.put("ocm", DashStore.ocmKey(applicationContext).isNotBlank())
 			return json.toString()

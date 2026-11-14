@@ -45,6 +45,10 @@ a{color:var(--accent)}
 <p class="sub">With a free Open Charge Map key, the Chargers list on the car shows whether each point is reported available, in use or out of service, not just where it is.</p>
 <div class="row"><input id="okey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Open Charge Map key"><button class="ghost" id="saveOcmKey">Save and test</button></div>
 <div id="ocmmsg"></div>
+<h2>what3words</h2>
+<p class="sub">So a shared <code>///three.word.address</code> resolves. Kept on the phone only - never built into the app, so it can't be found by anyone who downloads the app itself.</p>
+<div class="row"><input id="wkey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="what3words key"><button class="ghost" id="saveW3wKey">Save and test</button></div>
+<div id="w3wmsg"></div>
 <h2>Electricity price</h2>
 <div class="row"><input id="tariff" type="text" inputmode="decimal" placeholder="pence per kWh"><button class="ghost" id="saveTariff">Save</button></div>
 <p class="sub" style="margin-top:8px">Used for the cost per mile on the car's Journey page.</p>
@@ -56,7 +60,8 @@ const P=window.Phone||(()=>{let places=[{name:'Home',lat:49.19,lon:-2.03}],recen
   video:()=>'moving',go:(la,lo,n)=>{recents.unshift({name:n,lat:la,lon:lo});return 'queued'},places:()=>JSON.stringify(places),recents:()=>JSON.stringify(recents),
   savePlace:(n,la,lo)=>{places=places.filter(p=>p.name.toLowerCase()!==n.toLowerCase());places.unshift({name:n,lat:la,lon:lo})},
   deletePlace:n=>{places=places.filter(p=>p.name!==n)},tariff:()=>tariff,setTariff:p=>{tariff=p},status:()=>JSON.stringify({car:false,w3w:false,google:false,ocm:false}),setGoogleKey:k=>setTimeout(()=>window.onGoogleKey(k&&k.length<20?'API key not valid. Please pass a valid API key.':null),300),
-  setOcmKey:k=>setTimeout(()=>window.onOcmKey(k&&k.length<20?'Open Charge Map rejected that key.':null),300)}})();
+  setOcmKey:k=>setTimeout(()=>window.onOcmKey(k&&k.length<20?'Open Charge Map rejected that key.':null),300),
+  setW3wKey:k=>setTimeout(()=>window.onW3wKey(k&&k.length<10?'what3words rejected that key.':null),300)}})();
 const $=s=>document.querySelector(s);
 const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let seq=0,items=[];
@@ -66,6 +71,7 @@ function pills(){
   $('#pills').innerHTML=`<span class="pill ${st.car?'ok':''}">${st.car?'Car connected':'Car not connected yet'}</span><span class="pill ${st.w3w?'ok':'warn'}">${st.w3w?'what3words ready':'what3words key missing'}</span><span class="pill ${st.google?'ok':''}">${st.google?'Google search on':'Basic place search'}</span><span class="pill ${st.ocm?'ok':''}">${st.ocm?'Charger availability on':'Charger locations only'}</span>`;
   if(st.google&&!$('#gkey').value)$('#gkey').placeholder='Key saved. Clear and save to remove';
   if(st.ocm&&!$('#okey').value)$('#okey').placeholder='Key saved. Clear and save to remove';
+  if(st.w3w&&!$('#wkey').value)$('#wkey').placeholder='Key saved. Clear and save to remove';
 }
 // the Google key: saved only after one test search works
 let keyBusy=false;
@@ -83,6 +89,14 @@ window.onOcmKey=function(problem){ocmBusy=false;
   const had=$('#okey').value.trim();$('#okey').value='';$('#okey').placeholder='Open Charge Map key';
   ocmSay(had?'Key saved. The car will show live charger availability.':'Charger availability is off. Showing locations only.','ok');pills()};
 function saveOcmKey(){if(ocmBusy)return;ocmBusy=true;ocmSay('Testing the key…');P.setOcmKey($('#okey').value.trim())}
+// the what3words key: same pattern again
+let w3wBusy=false;
+function w3wSay(text,cls){$('#w3wmsg').innerHTML=text?`<div class="msg ${cls||''}">${esc(text)}</div>`:''}
+window.onW3wKey=function(problem){w3wBusy=false;
+  if(problem){w3wSay('what3words did not accept that key: '+problem,'err');return}
+  const had=$('#wkey').value.trim();$('#wkey').value='';$('#wkey').placeholder='what3words key';
+  w3wSay(had?'Key saved. ///three.word.addresses will now resolve.':'what3words is off. ///addresses will not resolve.','ok');pills()};
+function saveW3wKey(){if(w3wBusy)return;w3wBusy=true;w3wSay('Testing the key…');P.setW3wKey($('#wkey').value.trim())}
 function card(p,kind,i){
   const acts=[`<button class="small" data-a="go" data-k="${kind}" data-i="${i}">Navigate</button>`];
   if(kind==='res')acts.push(`<button class="small ghost" data-a="save" data-k="${kind}" data-i="${i}">Save</button>`);
@@ -143,6 +157,7 @@ $('#go').onclick=()=>find();
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
 $('#saveKey').onclick=saveKey;
 $('#saveOcmKey').onclick=saveOcmKey;
+$('#saveW3wKey').onclick=saveW3wKey;
 $('#saveTariff').onclick=()=>{const v=parseFloat(String($('#tariff').value).replace(',','.'));if(v>0&&v<200){P.setTariff(v);say('Price saved: '+v+'p per kWh.','ok')}else say('Enter pence per kWh, e.g. 28','err')};
 pills();load();window.onShared();
 </script></body></html>

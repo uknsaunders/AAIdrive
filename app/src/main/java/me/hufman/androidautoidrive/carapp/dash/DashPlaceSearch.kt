@@ -30,6 +30,7 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 			val here = locationProvider.currentLocation
 			val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(context)
 			DashDestinations.googleKey = DashStore.googleKey(context)
+			DashDestinations.w3wKey = DashStore.w3wKey(context)
 			val text = query.trim()
 
 			val callOnly = text.startsWith("call ", ignoreCase = true)

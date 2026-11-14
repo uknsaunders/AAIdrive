@@ -120,11 +120,15 @@ Everything else - the map, routing, weather, speed limits and charger locations 
 |---|---|---|
 | [Google Places API (New)](https://console.cloud.google.com/) | Place search finds businesses by name, like Google Maps | On the phone, in **Send to car** |
 | [Open Charge Map](https://openchargemap.org/site/develop/api) | The Chargers list shows what's reported available, not just where chargers are | On the phone, in **Send to car** |
-| [what3words](https://developer.what3words.com/) | `///three.word.address` links resolve | A GitHub repository secret, if you build your own copy |
+| [what3words](https://developer.what3words.com/) | `///three.word.address` links resolve | On the phone, in **Send to car** |
+
+All three are entered the same way, on the phone, and stay on the phone - never built into the app, so they can't be found by anyone who downloads `i3-dash.apk` from the release page.
 
 #### what3words
 
-what3words needs a free API key from what3words. If you build your own copy, add it as a repository secret named `W3W_API_KEY` (Settings → Secrets and variables → Actions) and run the build again. Until then the app shows "key missing" and `///words` will not resolve.
+Register for a free API key at [developer.what3words.com](https://developer.what3words.com/). In i3D on the phone, open **Send to car**, paste the key under **what3words** and tap **Save and test**. Until a key is saved, `///three.word.address` links won't resolve.
+
+If you'd rather bake it into your own build instead (so it doesn't need entering on every phone), add it as a repository secret named `W3W_API_KEY` (Settings → Secrets and variables → Actions) and run the build again - but note that puts it inside the downloadable APK, which this repo is public, so treat that as a convenience, not a private key.
 
 #### Better place search
 

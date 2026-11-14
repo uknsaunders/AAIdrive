@@ -3,6 +3,10 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026, what3words moves to the phone
+
+- **what3words key, entered on the phone:** Send to car now has a what3words box, saved and tested the same way as the Google and Open Charge Map keys. It was previously a GitHub repository secret baked into the build, which meant it sat inside the public, downloadable APK. All three keys now stay on the phone only. Building your own copy with a repository secret still works, as a fallback, but is no longer the suggested way.
+
 ## 14 November 2026, cards, Settings as a menu, and charger availability
 
 - **Settings is now a menu, not a single screen:** press the Settings card for a list - Display, Car colour, Battery and Video - a home for the smaller, less-used things. Turning the knob on the Settings screen no longer cycles the car colour directly; that is now one of the menu rows.
