@@ -68,14 +68,33 @@ object DashDestinations {
 	private fun what3words(words: String): ResolveResult {
 		val key = w3wKey.ifBlank { BuildConfig.W3W_API_KEY }
 		if (key.isBlank()) return ResolveResult(emptyList(), "what3words isn't set up yet: add a free API key in Send to car on the phone")
-		val json = JSONObject(fetch("https://api.what3words.com/v3/convert-to-coordinates?key=" +
-				URLEncoder.encode(key, "UTF-8") + "&words=" + URLEncoder.encode(words, "UTF-8")))
+		val (code, body) = fetchWithError("https://api.what3words.com/v3/convert-to-coordinates?key=" +
+				URLEncoder.encode(key, "UTF-8") + "&words=" + URLEncoder.encode(words, "UTF-8"))
+		val json = try { JSONObject(body) } catch (e: Exception) { JSONObject() }
 		json.optJSONObject("error")?.let {
 			return ResolveResult(emptyList(), it.optString("message", "what3words couldn't find ///$words"))
 		}
+		if (code !in 200..299) return ResolveResult(emptyList(), "what3words answered with error $code")
 		val coords = json.getJSONObject("coordinates")
 		val place = json.optString("nearestPlace").ifBlank { null }
 		return ResolveResult(listOf(Resolved("///$words", place, coords.getDouble("lat"), coords.getDouble("lng"))))
+	}
+
+	/** Like fetch(), but reads the body of an error response too instead of throwing it away -
+	 * what3words (and others) explain a rejected key in the JSON body of a 400/401, not just the HTTP status. */
+	private fun fetchWithError(url: String): Pair<Int, String> {
+		val connection = URL(url).openConnection() as HttpURLConnection
+		connection.setRequestProperty("User-Agent", USER_AGENT)
+		connection.connectTimeout = 12000
+		connection.readTimeout = 20000
+		return try {
+			val code = connection.responseCode
+			val body = (if (code in 200..299) connection.inputStream else connection.errorStream)
+				?.bufferedReader()?.use { it.readText() } ?: ""
+			Pair(code, body)
+		} finally {
+			connection.disconnect()
+		}
 	}
 
 	private fun fromGeo(text: String): ResolveResult {
@@ -171,12 +190,20 @@ object DashDestinations {
 		return photon(query, near)
 	}
 
-	/** Checks a what3words key with one small lookup. Returns what went wrong, or null if it works */
+	/** Checks a what3words key with one small lookup. Returns what went wrong, or null if it works.
+	 * what3words answers a bad key with a 400/401 and a JSON body explaining why, not just an HTTP error -
+	 * fetchWithError() reads that body instead of throwing it away. */
 	fun w3wProblem(key: String): String? {
 		return try {
-			val json = JSONObject(fetch("https://api.what3words.com/v3/convert-to-coordinates?key=" +
-					URLEncoder.encode(key.trim(), "UTF-8") + "&words=filled.count.soap"))
-			json.optJSONObject("error")?.optString("message")?.takeIf { it.isNotBlank() }
+			val (code, body) = fetchWithError("https://api.what3words.com/v3/convert-to-coordinates?key=" +
+					URLEncoder.encode(key.trim(), "UTF-8") + "&words=filled.count.soap")
+			if (code in 200..299) null
+			else try {
+				JSONObject(body).optJSONObject("error")?.optString("message")?.takeIf { it.isNotBlank() }
+					?: "what3words answered with error $code"
+			} catch (e: Exception) {
+				"what3words answered with error $code"
+			}
 		} catch (e: Exception) {
 			e.message ?: "Couldn't reach what3words"
 		}
