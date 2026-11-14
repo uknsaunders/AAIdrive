@@ -18,4 +18,5 @@
 sentry.properties
 _site
 .sass-cache
-spotify-app-remote/buildtools/simulator/i3d-simulator.html
+spotify-app-remote/build
+tools/simulator/i3d-simulator.html
