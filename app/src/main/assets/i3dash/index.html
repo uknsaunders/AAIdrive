@@ -130,7 +130,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .mi b{font:700 26px var(--f-d);color:var(--muted);flex:none}
 .mi.on{background:linear-gradient(180deg,var(--accent2),var(--accent));border-color:var(--edge);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
-.cardbox{display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:8px;flex:1;min-height:0;overflow:hidden}
+.cardbox{display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:8px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
 .card.dim{opacity:.55}
 .card.dim svg{stroke:var(--muted)}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
@@ -559,8 +559,13 @@ function drawMenu(){
   if(!menu){if(!el.hidden)el.hidden=true;return}
   if(el.hidden)el.hidden=false;
   if(menu.kind==='cards'){
-    const cards=menu.items.map((it,i)=>`<div class="card${i===menu.sel?' on':''}${it.dim?' dim':''}"><svg viewBox="0 0 24 24">${ICON[it.icon]||ICON.Settings}</svg><div><div class="ct">${esc(it.label)}</div>${it.note?`<div class="cx">${esc(it.note)}</div>`:''}</div></div>`).join('');
-    H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>turn to choose · press to select</small></div><div class="cardbox">${cards}</div>`);
+    // a card flagged bl:1 (eg. Resume) is pinned to the bottom-left cell: fix the row count
+    // explicitly and give it a definite row, since grid-row:-1 only reaches the EXPLICIT grid
+    // and ignores auto-added rows - verified with a Playwright test before shipping this.
+    const rowN=Math.ceil(menu.items.length/2);
+    const cards=menu.items.map((it,i)=>`<div class="card${i===menu.sel?' on':''}${it.dim?' dim':''}"${it.bl?` style="grid-column:1;grid-row:${rowN}"`:''}><svg viewBox="0 0 24 24">${ICON[it.icon]||ICON.Settings}</svg><div><div class="ct">${esc(it.label)}</div>${it.note?`<div class="cx">${esc(it.note)}</div>`:''}</div></div>`).join('');
+    H('#menu',`<div class="mt"><span>${esc(menu.title)}</span><small>turn to choose · press to select</small></div><div class="cardbox" style="grid-template-rows:repeat(${rowN},1fr)">${cards}</div>`);
+    const selCard=$('#menu .card.on');if(selCard)selCard.scrollIntoView({block:'nearest'});
     return;
   }
   const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));
@@ -597,13 +602,15 @@ function sectionMenu(){
 // settings: how the screen looks, the car colour, battery detail, and the odd extras
 const THEMES=['auto','day','night'],THEME_NAMES={auto:'Automatic',day:'Day',night:'Night'};
 function settingsMenu(sel){
-  const it=start(),first=it.length,t=store.get('theme','auto'),b=Math.floor(paint/4)%9,e=paint%4;
-  it.push({label:'Display',note:THEME_NAMES[t],act(){store.set('theme',THEMES[(THEMES.indexOf(t)+1)%3]);mapTheme();settingsMenu(first)}});
-  it.push({label:'Car colour',note:PAINT_NAMES[b]+' · '+BELT_NAMES[e],act(){paint=(paint+1)%36;store.set('paint',paint);paintCar();settingsMenu(first+1)}});
-  it.push({label:'Battery',more:1,note:D.soc!=null?f(D.soc)+'%':'',act:batteryMenu});
-  if(menuData(true).videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
-  it.push({label:'Close menu',act:closeMenu});
-  openMenu('Settings',it,sel==null?first:sel);
+  const t=store.get('theme','auto'),b=Math.floor(paint/4)%9,e=paint%4;
+  const cards=[{label:'‹ Home screen',icon:'Home',act:goHome}];
+  const iDisplay=cards.length;
+  cards.push({label:'Display',icon:'Display',note:THEME_NAMES[t],act(){store.set('theme',THEMES[(THEMES.indexOf(t)+1)%3]);mapTheme();settingsMenu(iDisplay)}});
+  const iColour=cards.length;
+  cards.push({label:'Car colour',icon:'Car',note:PAINT_NAMES[b]+' · '+BELT_NAMES[e],act(){paint=(paint+1)%36;store.set('paint',paint);paintCar();settingsMenu(iColour)}});
+  cards.push({label:'Battery',icon:'Battery',note:D.soc!=null?f(D.soc)+'%':'',act:batteryMenu});
+  if(menuData(true).videos.length)cards.push({label:'Video',icon:'Video',note:'parked only',act:videoMenu});
+  openCardMenu('Settings',cards,sel==null?1:sel);
 }
 // battery detail: a plain read-out, nothing here to choose
 function batteryMenu(){
@@ -689,7 +696,7 @@ function musicTopCards(rows){
   else rows.forEach((label,i)=>{const name=String(label).replace(/ \(playing\)$/,'');
     cards.push({label:name,icon:'Music',note:/\(playing\)$/.test(label)?'playing now':'',act(){waiting(name);N.musicPick(i)}})});
   const m=D.media;
-  if(m&&m.title)cards.push({label:'Resume',icon:'Resume',note:m.title,act:resumeMenu});
+  if(m&&m.title)cards.push({label:'Resume',icon:'Resume',note:m.title,bl:1,act:resumeMenu});
   if(menuData().videos.length)cards.push({label:'Video',icon:'Video',note:'parked only',act:videoMenu});
   openCardMenu('Music',cards,cards.length>1?1:0);
 }
@@ -791,7 +798,9 @@ const ICON={
   Voice:'<path d="M9 11a3 3 0 0 1 6 0v1a3 3 0 0 1-6 0zM6 11a6 6 0 0 0 12 0M12 17v3M9 20h6"/>',
   Keyboard:'<rect x="3" y="7" width="18" height="11" rx="2"/><path d="M6 11h1M10 11h1M14 11h1M18 11h1M6 14.5h12"/>',
   Resume:'<circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
-  Video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>'
+  Video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
+  Display:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 20h8M12 17v3"/>',
+  Battery:'<rect x="2.5" y="8" width="17" height="8" rx="1.5"/><path d="M19.5 10.5h2v3h-2z" fill="currentColor"/><path d="M6 10.5v3M9 10.5v3" stroke-width="1.6"/>'
 };
 const CARDS=['Navigate','Call','Alerts','Music','Car','Journey','Chargers','Settings'];
 function cardLine(k){
@@ -819,7 +828,7 @@ function drawHome(){
 }
 function openCard(k){
   home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k==='Settings'?'Info':k);showPage();
-  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
+  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music')musicMenu();
 }
 window.i3hidden=function(){closeMenu()};
 setWxIcon();
