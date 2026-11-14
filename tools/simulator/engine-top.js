@@ -29,7 +29,7 @@ window.fetch=async function(u){u=String(u);
       {distance:d2,name:'La Grande Route de Faldouet',maneuver:{type:'turn',modifier:north===east?'right':'left'}},
       {distance:0,name:'',maneuver:{type:'arrive'}}]}]}]})}
   if(u.includes('open-meteo'))return ok({current:{weather_code:2,is_day:1}});
-  if(u.includes('overpass')){const q=decodeURIComponent(u);return ok({elements:q.includes('charging')?[{lat:sim.lat+0.012,lon:sim.lon+0.01,tags:{name:'Gorey Pier charger'}}]:[]})}
+  if(u.includes('overpass')){const q=decodeURIComponent(u);return ok({elements:q.includes('charging')?[{lat:sim.lat+0.012,lon:sim.lon+0.01,tags:{name:'Gorey Pier',capacity:'2'}},{lat:sim.lat-0.004,lon:sim.lon-0.006,tags:{name:'Grouville Parish Hall',capacity:'1'}},{lat:sim.lat+0.003,lon:sim.lon-0.07,tags:{operator:'Evolve',capacity:'6'}},{lat:sim.lat-0.01,lon:sim.lon-0.03,tags:{name:'Longueville Waitrose',capacity:'4'}},{lat:sim.lat+0.02,lon:sim.lon-0.09,tags:{name:'Sand Street car park',capacity:'8'}},{lat:sim.lat+0.04,lon:sim.lon-0.1,tags:{}}]:[]})}
   throw new Error('not loaded in the simulator');
 };
 const people=()=>sim.contacts?{contacts:EVERYONE.filter(p=>p.name==='Sarah'||p.name==='Mum'),everyone:EVERYONE,recentCalls:[{name:'Tom',number:'07700 900789',missed:sim.missed>0},{name:'Sarah',number:'+441534555010'},{name:'Garage (Bagot Road)',number:'01534 000111'},{name:'01534 000333',number:'01534 000333'}]}:{contacts:[],everyone:[],recentCalls:[]};

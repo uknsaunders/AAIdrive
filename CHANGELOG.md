@@ -16,6 +16,7 @@ First batch of changes from comparing i3D with Android Auto and Apple CarPlay. N
 - **Home screen:** while a route is running, the next turn and arrival time show above the cards.
 - **Music:** Forward 30 seconds and Back 15 seconds, for podcasts.
 - The phone's setup list has a new item, "Voice and calendar".
+- **Chargers replaces Battery:** the Battery card has gone, because Car and Journey already cover it. Chargers lists the nearest charging points with distance and number of points, and a press drives to one. Battery temperature, 12 V battery and energy left moved to Car colour and info.
 
 ## 14 November 2026
 

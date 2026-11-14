@@ -252,7 +252,7 @@ window.i3feed=function(d){
 };
 
 /* ---------- pages, turned with the iDrive knob ---------- */
-const PAGES=['Car','Music','Call','Battery','Journey','Alerts','Map','Info'];let page=0,home=true,homeSel=0;
+const PAGES=['Car','Music','Call','Chargers','Journey','Alerts','Map','Info'];let page=0,home=true,homeSel=0;
 window.i3knob=function(dir){
   if(menu){menu.sel=Math.max(0,Math.min(menu.items.length-1,menu.sel+(dir>0?1:-1)));drawMenu();menuAlive();return}
   if(home){homeSel=Math.max(0,Math.min(CARDS.length-1,homeSel+(dir>0?1:-1)));drawHome();return}
@@ -269,24 +269,19 @@ function showPage(){
   drawPanel();drawNowPlaying();drawHome();
 }
 // the line at the top of every section: its name, and what the knob does there
-const TITLES={Info:'Car colour and info',Alerts:'Phone alerts',Journey:'Journeys and costs',Battery:'Battery'};
-function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Car'||p==='Info'||(p==='Alerts'&&(D.notes||[]).length>0)}
+const TITLES={Info:'Car colour and info',Alerts:'Phone alerts',Journey:'Journeys and costs',Chargers:'Chargers nearby'};
+function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Car'||p==='Info'||(p==='Chargers'&&chargers.length>0)||(p==='Alerts'&&(D.notes||[]).length>0)}
 function drawTitle(){const p=PAGES[page];H('#tabs',`<b>${TITLES[p]||p}</b><span><i>Press the knob</i> for ${hasOptions()?'options and Home':'the Home screen'}</span>`)}
 // the car is under way: message text stays off the screen and long lists get shorter
 const moving=()=>(D.speedKmh||0)>3;
 const MOVING_ROWS=12;
 function drawPanel(){
   const p=PAGES[page],el={set innerHTML(v){H('#panel',v)}};
-  if(p==='Battery'){
-    el.innerHTML=`<div class="frost"><h2>High-voltage battery</h2><dl class="kv">
-      <dt>Charge</dt><dd>${f(D.soc,1)}%</dd>
-      <dt>Energy left (est.)</dt><dd>${f(D.soc!=null?D.soc/100*USABLE_KWH:null,1)} kWh</dd>
-      <dt>Range (car estimate)</dt><dd>${D.rangeKm!=null?f(D.rangeKm)+' '+du():'--'}</dd>
-      <dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd>
-      <dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>
-      <dt>Nearest charger (approx.)</dt><dd>${(()=>{const n=nearestCharger();return n?esc(fmtD(n.d*1.25))+' · '+esc(n.c.name.slice(0,18)):'--'})()}</dd>
-      <dt>Odometer</dt><dd>${D.odoKm!=null?Math.round(dist(D.odoKm)).toLocaleString()+' '+du():'--'}</dd></dl>
-      </div>`;
+  if(p==='Chargers'){
+    const near=nearChargers(5);
+    const rows=near.length?near.map(n=>`<div class="al-row" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><div class="al-t">${esc(n.c.name)}</div><div class="al-app" style="white-space:nowrap">${esc(fmtD(n.d*1.25))}${n.c.info?' · '+esc(n.c.info):''}</div></div>`).join(''):
+      `<div style="color:#c3cfdb;font-size:20px">${pos?'Looking for charging points nearby…':'Waiting for the car\'s position.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Chargers nearby</h2><div class="al">${rows}</div><div class="hint">${near.length?'<b style="color:var(--accent)">Press the knob</b> to drive to one · ':''}${D.soc!=null?f(D.soc)+'% in the battery':''}</div></div>`;
   }else if(p==='Journey'){
     const all=trips.slice();if(J&&J.km>0.3)all.unshift({start:J.start,km:J.km,kwh:J.kwh,now:true});
     const now=Date.now(),day=864e5,midnight=new Date().setHours(0,0,0,0);
@@ -328,7 +323,7 @@ function drawPanel(){
     const b=Math.floor(paint/4)%9,e=paint%4;
     el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
       <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
-      <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Music access</dt><dd>${D.mediaPermission===false?'Not allowed':'On'}</dd><dt>Usable battery</dt><dd>${USABLE_KWH} kWh</dd><dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd></dl>
+      <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Energy left (est.)</dt><dd>${f(D.soc!=null?D.soc/100*USABLE_KWH:null,1)} of ${USABLE_KWH} kWh</dd><dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd><dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>${/^no /i.test(tyreInfo())?'':`<dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd>`}</dl>
       <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn the knob to change colour · press for Home</div></div>`;
   }else el.innerHTML='';
 }
@@ -428,7 +423,8 @@ async function fetchChargers(){
   try{
     const q='[out:json][timeout:15];node["amenity"="charging_station"](around:20000,'+pos[1].toFixed(4)+','+pos[0].toFixed(4)+');out body 80;';
     const j=await (await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))).json();
-    chargers=(j.elements||[]).map(e=>({lon:e.lon,lat:e.lat,name:(e.tags&&(e.tags.name||e.tags.operator||e.tags.network))||'Charging point'}));
+    chargers=(j.elements||[]).map(e=>{const t=e.tags||{},n=parseInt(t.capacity,10);
+      return {lon:e.lon,lat:e.lat,name:t.name||t.operator||t.network||'Charging point',info:n>0?n+(n>1?' points':' point'):''}});
     chgAt=pos;drawChargers();
   }catch(e){log('chargers: '+e.message)}
   chgBusy=false;
@@ -440,6 +436,19 @@ function drawChargers(){
     if(flat){if(chgLayer)chgLayer.clearLayers();else chgLayer=L.layerGroup().addTo(flat);
       chargers.forEach(c=>L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:2,fillColor:'#19c37d',fillOpacity:1}).addTo(chgLayer))}
   }catch(e){log('draw chargers: '+e.message)}
+}
+// the closest charging points, nearest first, with the straight-line distance to each
+function nearChargers(count){
+  if(!pos)return [];
+  return chargers.map(c=>({c,d:hav(pos,[c.lon,c.lat])})).sort((a,b)=>a.d-b.d).slice(0,count);
+}
+function chargersMenu(){
+  const it=start(),first=it.length;
+  nearChargers(8).forEach(n=>it.push({label:n.c.name,note:fmtD(n.d*1.25),act(){goTo({lat:n.c.lat,lon:n.c.lon,name:n.c.name})}}));
+  if(it.length===first)it.push({label:'No charging points found yet',dim:1});
+  if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}});
+  it.push({label:'Close menu',act:closeMenu});
+  openMenu('Chargers',it,first);
 }
 function nearestCharger(){
   if(!pos||!chargers.length)return null;
@@ -527,6 +536,7 @@ function sectionMenu(){
   if(D.call&&(p==='Call'||!D.call.ongoing)){const it=start();it.push({label:'Close menu',act:closeMenu});openMenu(D.call.ongoing?'Phone call':'Incoming call',it,0);menu.call=true;return}
   if(p==='Music')musicMenu();else if(p==='Map')navMenu();else if(p==='Call')callMenu();
   else if(p==='Alerts'&&(D.notes||[]).length)alertsMenu();
+  else if(p==='Chargers'&&chargers.length)chargersMenu();
   else if(p==='Car'||p==='Info')carMenu();
   else if(D.call){const it=start();it.push({label:'Close menu',act:closeMenu});openMenu(TITLES[p]||p,it,it.length-2)}
   else goHome();
@@ -681,11 +691,11 @@ const ICON={
   Music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   Map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/>',
   Car:'<path d="M5 11l1.6-4.6A2 2 0 0 1 8.5 5h7a2 2 0 0 1 1.9 1.4L19 11M3 17v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4M6 17v2M18 17v2M3 17h18"/><circle cx="7" cy="14" r=".6"/><circle cx="17" cy="14" r=".6"/>',
-  Battery:'<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 10.5v3M10.5 9.5l-2 3h3l-2 3"/>',
+  Chargers:'<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/>',
   Journey:'<path d="M4 20h16M5 16l4.5-5.5 3.5 3L19 6M15 6h4v4"/>',
   Alerts:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/>'
 };
-const CARDS=['Navigate','Call','Music','Map','Car','Battery','Journey','Alerts'];
+const CARDS=['Navigate','Call','Music','Map','Car','Chargers','Journey','Alerts'];
 function cardLine(k){
   const m=D.media,c=D.call,n=(D.notes||[]).length;
   if(k==='Navigate')return route?'Route running · '+($('#eArr').textContent!=='--'?'arrive '+$('#eArr').textContent:'press to change'):'Places, chargers, addresses';
@@ -693,7 +703,7 @@ function cardLine(k){
   if(k==='Music')return m&&m.title?m.title:'Choose something to play';
   if(k==='Map')return 'The map on the whole screen';
   if(k==='Car')return (D.soc!=null?f(D.soc)+'% · ':'')+(D.rangeKm!=null?f(D.rangeKm)+(miles?' mi':' km'):'Range and trip');
-  if(k==='Battery')return 'Charge, health, temperature';
+  if(k==='Chargers'){const n=nearestCharger();return n?fmtD(n.d*1.25)+' · '+n.c.name:'Charging points nearby'}
   if(k==='Journey')return 'Trips and what they cost';
   return n?n+' new':'Nothing new';
 }
@@ -710,7 +720,7 @@ function drawHome(){
 }
 function openCard(k){
   home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k);showPage();
-  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
+  if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
 }
 window.i3hidden=function(){closeMenu()};
 setWxIcon();
@@ -735,7 +745,7 @@ function render(){
   H('#jEff',sm(k?(miles?f(k*MI,1):f(100/k,1)):'--',miles?'mi/kWh':'kWh/100'));
   H('#jAvg',D.avgConsumption!=null?sm(f(D.avgConsumption,1),/MI/i.test(String(D.avgConsumptionUnit))?'mi/kWh':'kWh/100'):'--');
   T('#wx',D.ambientC!=null?f(temp(D.ambientC))+'°':'--');
-  if(PAGES[page]==='Battery'||PAGES[page]==='Music'||PAGES[page]==='Info'||PAGES[page]==='Alerts')drawPanel();
+  if(PAGES[page]==='Chargers'||PAGES[page]==='Music'||PAGES[page]==='Info'||PAGES[page]==='Alerts')drawPanel();
   drawHome();
   drawNowPlaying();
 }

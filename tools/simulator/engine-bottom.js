@@ -32,7 +32,7 @@ function tick(){
   if(sim.music&&sim.playing&&sim.access)sim.posMs=(sim.posMs+dt*1000)%1800000;
   const t=TRACKS[sim.track],showMusic=sim.music&&sim.access;
   const call=sim.call?Object.assign({},sim.call,sim.access||sim.call.outgoing?{}:{name:''}):null;
-  window.i3feed({soc:sim.soc,rangeKm:Math.round(sim.soc*1.52),speedKmh:sim.speedKmh,units:'Miles,CELSIUS',ambientC:12,cabinC:19,torqueNm:sim.speedKmh>0?35:0,tariffP:28,odoKm:41230,
+  window.i3feed({soc:sim.soc,rangeKm:Math.round(sim.soc*1.52),speedKmh:sim.speedKmh,units:'Miles,CELSIUS',ambientC:12,cabinC:19,batteryC:17,battery12v:92,torqueNm:sim.speedKmh>0?35:0,tariffP:28,odoKm:41230,
     lat:sim.lat,lon:sim.lon,heading:sim.heading,mediaPermission:sim.access,
     media:showMusic?{title:t[0],artist:t[1],album:t[2],app:APPS[sim.app],playing:sim.playing,pos:sim.posMs,dur:1800000}:null,
     notes:sim.access?sim.notes:null,call:call,missed:sim.contacts?sim.missed:0,

@@ -16,7 +16,7 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 |---|---|
 | **Car** | Battery, speed, range, journey figures, tyre rings that colour only when a tyre is low, and the map. |
 | **Music** | Now playing with artwork from Spotify, Amazon Music, Apple Music or BBC Sounds. Pick another app or playlist from the car menu (see below). |
-| **Battery** | Charge, range and the nearest charger. |
+| **Chargers** | The nearest charging points with distance. Press the knob to drive to one. |
 | **Alerts** | Your recent phone notifications, newest first, with a count on the tab. |
 | **Journey** | Miles, cost and efficiency for today, 7 days and 30 days, a 14 day chart and recent trips. |
 | **Call** | Favourites, recent calls and all your contacts, dialled from the knob. |
@@ -59,7 +59,7 @@ If it sits on "waiting for car connection", close the BMW Connected app, restart
 
 ## Using it in the car
 
-i3D opens on a home screen with a card for each part: Navigate, Call, Music, Map, Car, Battery, Journey and Alerts. Turn the iDrive knob to choose a card and press to open it.
+i3D opens on a home screen with a card for each part: Navigate, Call, Music, Map, Car, Chargers, Journey and Alerts. Turn the iDrive knob to choose a card and press to open it.
 
 ![Home screen](docs/screenshots/home.png)
 
@@ -67,7 +67,7 @@ Each section shows its name at the top, with no row of buttons. Press the knob f
 
 ![The Navigate list beside the map](docs/screenshots/menu-nav.png)
 
-- **‹ Home screen** starts every list, so you can always get back to the cards. Battery and Journey have nothing to choose, so one press there goes straight home.
+- **‹ Home screen** starts every list, so you can always get back to the cards. Journey has nothing to choose, so one press there goes straight home.
 - **Navigate** and **Map**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
 - **Call**: favourites, recent calls, **All contacts**, or type a name. If someone has more than one number, you pick which (Mobile, Work and so on) before it dials.
 - **Music**: pause, skip, or choose an app and one of its playlists. Videos you sent from the phone are here too, parked only.

@@ -62,8 +62,9 @@ Name, number and running time. Press the knob to hang up.
 Press the knob to answer or decline.
 ![Incoming call](screenshots/call-ringing.png)
 
-### Battery
-![Battery section](screenshots/battery.png)
+### Chargers
+The nearest charging points. Press the knob to drive to one.
+![Chargers section](screenshots/chargers.png)
 
 ### Journey
 ![Journey section](screenshots/journey.png)
