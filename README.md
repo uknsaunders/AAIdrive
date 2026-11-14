@@ -15,13 +15,13 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | Page | What it shows |
 |---|---|
 | **Car** | Battery, speed, range, journey figures, tyre rings that colour only when a tyre is low, and the map. |
-| **Music** | Now playing with artwork from Spotify, Amazon Music, Apple Music or BBC Sounds. Pick another app or playlist from the car menu (see below). |
-| **Chargers** | The nearest charging points with distance. Press the knob to drive to one. |
+| **Music** | Now playing with artwork from Spotify, Amazon Music, Apple Music or BBC Sounds. Choose another app from the car menu (see below). |
+| **Chargers** | The nearest charging points, nearest first, with distance and - with a free Open Charge Map key - what's reported available. Press the knob to drive to one. |
 | **Alerts** | Your recent phone notifications, newest first, with a count on the tab. |
 | **Journey** | Miles, cost and efficiency for today, 7 days and 30 days, a 14 day chart and recent trips. |
 | **Call** | Favourites, recent calls and all your contacts, dialled from the knob. |
 | **Navigate** | Full-screen 3D map, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
-| **Settings** | Day, night or automatic display, the car colour, and battery details. |
+| **Settings** | Day, night or automatic display, the car colour, and battery details - the home for the smaller, less-used things. |
 
 Calls show a panel with the name, number and time. Press the knob to answer, decline or hang up.
 
@@ -63,16 +63,20 @@ i3D opens on a home screen with eight cards. The top row is phone and media: Nav
 
 ![Home screen](docs/screenshots/home.png)
 
-Each section shows its name at the top, with no row of buttons. Press the knob for that section's list. It opens on the left half and the map stays on the right at full size. Turn to choose, press to select. It closes by itself after 20 seconds.
+Each section shows its name at the top, with no row of buttons. Press the knob for that section's menu. It opens on the left half and the map stays on the right at full size. Turn to choose, press to select. It closes by itself after 20 seconds.
+
+A menu with a few options to choose between shows as cards, the same as the home screen. Anything you might scroll through - contacts, chargers, places - stays a plain list.
 
 ![The Navigate list beside the map](docs/screenshots/menu-nav.png)
 
-- **‹ Home screen** starts every list, so you can always get back to the cards. Journey has nothing to choose, so one press there goes straight home.
-- **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
-- **Call**: favourites, recent calls, **All contacts**, or type a name. If someone has more than one number, you pick which (Mobile, Work and so on) before it dials.
-- **Music**: pause, skip, or choose an app and one of its playlists. Videos you sent from the phone are here too, parked only.
-- **Alerts**: **Read alerts aloud** speaks your latest three.
-- **Settings**: display (Automatic, Day or Night). Turn the knob on that screen to change the car colour.
+- **‹ Home screen** is always one of the choices, so you can always get back to the cards. Journey has nothing to choose, so one press there goes straight home.
+- **Navigate**: a list - saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash, and the map stays full-screen.
+- **Call**: cards - **Recents** (favourites, missed and recent calls, as a list), **Speak a name**, **All contacts**, or **Type a name**. If someone has more than one number, you pick which (Mobile, Work and so on) before it dials.
+- **Music**: cards - your apps first, so you pick what to play. **Resume** - whatever was last playing, with pause, skip and seek - is a later card, not the first thing offered. Videos you sent from the phone are here too, parked only.
+- **Alerts**: a list. **Read alerts aloud** speaks your latest three.
+- **Settings**: a list - display (Automatic, Day or Night), car colour, battery detail, and Video.
+
+![Choosing cards for Call: Recents, Speak a name, All contacts, Type a name](docs/screenshots/menu-call-list.png)
 
 ![Choosing which number to call](docs/screenshots/menu-call-numbers.png)
 
@@ -108,11 +112,21 @@ Share a place from Google Maps or any app and choose **i3 Dash**, or open the ap
 
 Share a YouTube video or playlist to i3D from the YouTube app, or paste the link into **Send to car**, and tap **Play on car**. It plays on the car screen with sound through the phone, only while the car is standing still. Videos you send are kept in the car's menu under **Video**, so you can start them again without the phone. If the car starts moving it stops and the dashboard comes back, and turning or pressing the knob stops it too. If the car gives no speed reading, video will not start. It has not been tried in a car yet, and YouTube can refuse to play some videos in an embedded player.
 
-### what3words
+### Getting your API keys (optional)
+
+Everything else - the map, routing, weather, speed limits and charger locations - uses free, keyless public services. Three things work better with your own free key. None are required; the app works without them, just with the basic version of each.
+
+| Key | What it improves | Where it's entered |
+|---|---|---|
+| [Google Places API (New)](https://console.cloud.google.com/) | Place search finds businesses by name, like Google Maps | On the phone, in **Send to car** |
+| [Open Charge Map](https://openchargemap.org/site/develop/api) | The Chargers list shows what's reported available, not just where chargers are | On the phone, in **Send to car** |
+| [what3words](https://developer.what3words.com/) | `///three.word.address` links resolve | A GitHub repository secret, if you build your own copy |
+
+#### what3words
 
 what3words needs a free API key from what3words. If you build your own copy, add it as a repository secret named `W3W_API_KEY` (Settings → Secrets and variables → Actions) and run the build again. Until then the app shows "key missing" and `///words` will not resolve.
 
-### Better place search (optional)
+#### Better place search
 
 Out of the box, place search uses OpenStreetMap. It finds addresses, postcodes and well-known places, and it forgives spelling, but it does not know every business.
 
@@ -124,6 +138,17 @@ Add your own Google key and the search works like Google Maps: "cheeky monkies n
 4. In i3D on the phone, open **Send to car**, paste the key under **Better place search** and tap **Save and test**.
 
 Google's [price list](https://developers.google.com/maps/billing-and-pricing/pricing) gives 5,000 free text searches a month, far more than one car needs. To be certain of no bill, set a daily quota on the key in the console. The key is stored on your phone only and is not part of the app or this repository.
+
+#### Charger availability
+
+Out of the box, the Chargers list uses OpenStreetMap, which knows where chargers are but not whether they're free right now.
+
+Add a free [Open Charge Map](https://openchargemap.org/site/develop/api) key and the car also shows what's reported working - available, in use, or faulted - and the power rating, where the operator shares it. Not every network reports live status, so this is "as reported", not a guarantee.
+
+1. Register for a free API key at [openchargemap.org](https://openchargemap.org/site/develop/api). No card needed.
+2. In i3D on the phone, open **Send to car**, paste the key under **Charger availability** and tap **Save and test**.
+
+The key is stored on your phone only, and the car asks Open Charge Map directly - it is not part of the app or this repository.
 
 ## Phone app
 

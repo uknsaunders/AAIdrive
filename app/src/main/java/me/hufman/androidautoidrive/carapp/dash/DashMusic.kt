@@ -54,7 +54,7 @@ class DashMusic(val context: Context) {
 		apps = try {
 			discovery.allApps
 				.filter { !it.hidden && (it.className != null || it.controllable) }
-				.sortedWith(compareByDescending<MusicAppInfo> { it.playing }.thenBy { it.name.lowercase() })
+				.sortedBy { it.name.lowercase() }   // alphabetical: picking a service is the point, not favouring what's already playing
 		} catch (e: Exception) {
 			emptyList()
 		}

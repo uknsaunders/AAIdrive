@@ -236,6 +236,7 @@ class DashController(val context: Context,
 			data.forEach { (k, v) -> json.put(k, v) }
 			json.put("t", System.currentTimeMillis())
 			json.put("tariffP", DashStore.tariff(context))
+			json.put("ocmKey", DashStore.ocmKey(context))
 			js("window.i3feed && window.i3feed($json)")
 			handler.postDelayed(this, PUSH_INTERVAL_MS)
 		}

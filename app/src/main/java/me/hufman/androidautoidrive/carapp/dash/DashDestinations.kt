@@ -176,6 +176,28 @@ object DashDestinations {
 		}
 	}
 
+	/** Checks an Open Charge Map key with one small lookup. Returns what went wrong, or null if it works.
+	 * The car does the real lookups itself (see index.html), this is just to catch a bad key early. */
+	fun ocmProblem(key: String): String? {
+		val connection = try {
+			(URL("https://api.openchargemap.io/v3/poi/?output=json&latitude=49.19&longitude=-2.11&distance=5&distanceunit=KM&maxresults=1&key=${URLEncoder.encode(key.trim(), "UTF-8")}&compact=true&verbose=false")
+				.openConnection() as HttpURLConnection).also {
+				it.connectTimeout = 10000; it.readTimeout = 10000; it.setRequestProperty("User-Agent", USER_AGENT)
+			}
+		} catch (e: Exception) {
+			return e.message ?: "Couldn't reach Open Charge Map"
+		}
+		return try {
+			if (connection.responseCode == 401 || connection.responseCode == 403) "Open Charge Map rejected that key"
+			else if (connection.responseCode !in 200..299) "Open Charge Map answered with error ${connection.responseCode}"
+			else null
+		} catch (e: Exception) {
+			e.message ?: "Couldn't reach Open Charge Map"
+		} finally {
+			connection.disconnect()
+		}
+	}
+
 	/** Google Places text search: the same finder as Google Maps, so "cheeky monkies nursery" finds the nursery */
 	private fun google(query: String, near: Pair<Double, Double>?, key: String): List<Resolved> {
 		val body = JSONObject().put("textQuery", query).put("pageSize", 8)

@@ -140,12 +140,26 @@ class SendDestinationActivity: Activity() {
 			}
 		}
 
+		/** Saves the driver's Open Charge Map key after one test lookup. A blank key switches live charger availability off.
+		 * Answers window.onOcmKey(problem or null) */
+		@JavascriptInterface
+		fun setOcmKey(key: String) {
+			val clean = key.trim()
+			thread {
+				val problem = if (clean.isEmpty()) null else DashDestinations.ocmProblem(clean)
+				if (problem == null) DashStore.setOcmKey(applicationContext, clean)
+				val answer = if (problem == null) "null" else JSONObject.quote(problem)
+				runOnUiThread { webView?.evaluateJavascript("window.onOcmKey($answer)", null) }
+			}
+		}
+
 		@JavascriptInterface
 		fun status(): String {
 			val json = JSONObject()
 			json.put("car", DashController.instance != null)
 			json.put("w3w", BuildConfig.W3W_API_KEY.isNotBlank())
 			json.put("google", DashStore.googleKey(applicationContext).isNotBlank())
+			json.put("ocm", DashStore.ocmKey(applicationContext).isNotBlank())
 			return json.toString()
 		}
 	}

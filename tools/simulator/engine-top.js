@@ -9,7 +9,7 @@ const APPS=['Spotify','Amazon Music','BBC Sounds','YouTube Music'],LISTS=['Liked
 const two=(a,b)=>[{number:a,label:'Mobile'},{number:b,label:'Work'}],one=a=>[{number:a,label:'Mobile'}];
 const EVERYONE=[['Andy Le Brun','07700 900111'],['Garage (Bagot Road)','01534 000111'],['Mum','07700 900456'],['Sarah','07700 900123','01534 555010'],['Tom','07700 900789','01534 555020'],['Vet','01534 000222']]
   .map(p=>({name:p[0],number:p[1],numbers:p[2]?two(p[1],p[2]):one(p[1])}));
-const sim={missed:1,soc:78,rangeKm:118,speedKmh:0,music:true,playing:true,track:0,app:0,posMs:60000,notes:[],call:null,access:true,contacts:true,lat:49.1885,lon:-2.0335,heading:10,route:null,along:0,level:0};
+const sim={missed:1,soc:78,rangeKm:118,speedKmh:0,music:true,playing:true,track:0,app:0,posMs:60000,notes:[],call:null,access:true,contacts:true,ocmKey:true,lat:49.1885,lon:-2.0335,heading:10,route:null,along:0,level:0};
 window.__sim=sim;window.__simPost=post;window.__simSay=say;window.__simTracks=TRACKS;window.__simApps=APPS;
 // moves the clock to midday or late evening, and says by how much it moved
 window.__simTime=day=>{const n=new RealDate();n.setUTCHours(day?12:22,30,0,0);const was=off;off=n.getTime()-RealDate.now();return off-was};
@@ -30,6 +30,15 @@ window.fetch=async function(u){u=String(u);
       {distance:0,name:'',maneuver:{type:'arrive'}}]}]}]})}
   if(u.includes('open-meteo'))return ok({current:{weather_code:2,is_day:1}});
   if(u.includes('overpass')){const q=decodeURIComponent(u);return ok({elements:q.includes('charging')?[{lat:sim.lat+0.012,lon:sim.lon+0.01,tags:{name:'Gorey Pier',capacity:'2'}},{lat:sim.lat-0.004,lon:sim.lon-0.006,tags:{name:'Grouville Parish Hall',capacity:'1'}},{lat:sim.lat+0.003,lon:sim.lon-0.07,tags:{operator:'Evolve',capacity:'6'}},{lat:sim.lat-0.01,lon:sim.lon-0.03,tags:{name:'Longueville Waitrose',capacity:'4'}},{lat:sim.lat+0.02,lon:sim.lon-0.09,tags:{name:'Sand Street car park',capacity:'8'}},{lat:sim.lat+0.04,lon:sim.lon-0.1,tags:{}}]:[]})}
+  if(u.includes('openchargemap')){
+    const poi=(title,lat,lon,points,kw,statuses)=>({AddressInfo:{Title:title,Latitude:lat,Longitude:lon},NumberOfPoints:points,
+      Connections:statuses.map(s=>({PowerKW:kw,StatusType:{Title:s,IsOperational:s==='Available'}}))});
+    return ok([
+      poi('Gorey Pier',sim.lat+0.012,sim.lon+0.01,2,22,['Available','In Use']),
+      poi('Grouville Parish Hall',sim.lat-0.004,sim.lon-0.006,1,7,['Available']),
+      poi('Longueville Waitrose',sim.lat-0.01,sim.lon-0.03,4,50,['Available','Available','Faulted','In Use']),
+      poi('Sand Street car park',sim.lat+0.02,sim.lon-0.09,8,7,['In Use','In Use','In Use','In Use','In Use','In Use','In Use','In Use'])
+    ])}
   throw new Error('not loaded in the simulator');
 };
 const people=()=>sim.contacts?{contacts:EVERYONE.filter(p=>p.name==='Sarah'||p.name==='Mum'),everyone:EVERYONE,recentCalls:[{name:'Tom',number:'07700 900789',missed:sim.missed>0},{name:'Sarah',number:'+441534555010'},{name:'Garage (Bagot Road)',number:'01534 000111'},{name:'01534 000333',number:'01534 000333'}]}:{contacts:[],everyone:[],recentCalls:[]};

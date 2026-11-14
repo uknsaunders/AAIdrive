@@ -69,6 +69,13 @@ object DashStore {
 		prefs(context).edit().putString("googleKey", key.trim()).apply()
 	}
 
+	/** The driver's own Open Charge Map key, for live charger availability. Sent to the car so it can ask OCM directly */
+	fun ocmKey(context: Context): String = prefs(context).getString("ocmKey", "") ?: ""
+
+	fun setOcmKey(context: Context, key: String) {
+		prefs(context).edit().putString("ocmKey", key.trim()).apply()
+	}
+
 	/** Where to look for places when the car isn't connected: the saved Home, or the first saved place */
 	fun homeArea(context: Context): Pair<Double, Double>? {
 		val saved = places(context)

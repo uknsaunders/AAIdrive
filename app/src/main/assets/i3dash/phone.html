@@ -41,6 +41,10 @@ a{color:var(--accent)}
 <p class="sub">With your own Google key, the search finds businesses by name, even misspelt, the way Google Maps does. Without one it uses OpenStreetMap, which knows addresses and postcodes but fewer businesses.</p>
 <div class="row"><input id="gkey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Google Places key"><button class="ghost" id="saveKey">Save and test</button></div>
 <div id="keymsg"></div>
+<h2>Charger availability</h2>
+<p class="sub">With a free Open Charge Map key, the Chargers list on the car shows whether each point is reported available, in use or out of service, not just where it is.</p>
+<div class="row"><input id="okey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Open Charge Map key"><button class="ghost" id="saveOcmKey">Save and test</button></div>
+<div id="ocmmsg"></div>
 <h2>Electricity price</h2>
 <div class="row"><input id="tariff" type="text" inputmode="decimal" placeholder="pence per kWh"><button class="ghost" id="saveTariff">Save</button></div>
 <p class="sub" style="margin-top:8px">Used for the cost per mile on the car's Journey page.</p>
@@ -51,15 +55,17 @@ const P=window.Phone||(()=>{let places=[{name:'Home',lat:49.19,lon:-2.03}],recen
   return{shared:()=>'',resolve:(id,t)=>setTimeout(()=>window.onResolved(id,{error:null,items:[{name:t,detail:'Test result, Jersey',lat:49.2,lon:-2.1}]}),200),
   video:()=>'moving',go:(la,lo,n)=>{recents.unshift({name:n,lat:la,lon:lo});return 'queued'},places:()=>JSON.stringify(places),recents:()=>JSON.stringify(recents),
   savePlace:(n,la,lo)=>{places=places.filter(p=>p.name.toLowerCase()!==n.toLowerCase());places.unshift({name:n,lat:la,lon:lo})},
-  deletePlace:n=>{places=places.filter(p=>p.name!==n)},tariff:()=>tariff,setTariff:p=>{tariff=p},status:()=>JSON.stringify({car:false,w3w:false,google:false}),setGoogleKey:k=>setTimeout(()=>window.onGoogleKey(k&&k.length<20?'API key not valid. Please pass a valid API key.':null),300)}})();
+  deletePlace:n=>{places=places.filter(p=>p.name!==n)},tariff:()=>tariff,setTariff:p=>{tariff=p},status:()=>JSON.stringify({car:false,w3w:false,google:false,ocm:false}),setGoogleKey:k=>setTimeout(()=>window.onGoogleKey(k&&k.length<20?'API key not valid. Please pass a valid API key.':null),300),
+  setOcmKey:k=>setTimeout(()=>window.onOcmKey(k&&k.length<20?'Open Charge Map rejected that key.':null),300)}})();
 const $=s=>document.querySelector(s);
 const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let seq=0,items=[];
 function say(text,cls){$('#msg').innerHTML=text?`<div class="msg ${cls||''}">${esc(text)}</div>`:''}
 function pills(){
-  let st={car:false,w3w:false};try{st=JSON.parse(P.status())}catch(e){}
-  $('#pills').innerHTML=`<span class="pill ${st.car?'ok':''}">${st.car?'Car connected':'Car not connected yet'}</span><span class="pill ${st.w3w?'ok':'warn'}">${st.w3w?'what3words ready':'what3words key missing'}</span><span class="pill ${st.google?'ok':''}">${st.google?'Google search on':'Basic place search'}</span>`;
+  let st={car:false,w3w:false,ocm:false};try{st=JSON.parse(P.status())}catch(e){}
+  $('#pills').innerHTML=`<span class="pill ${st.car?'ok':''}">${st.car?'Car connected':'Car not connected yet'}</span><span class="pill ${st.w3w?'ok':'warn'}">${st.w3w?'what3words ready':'what3words key missing'}</span><span class="pill ${st.google?'ok':''}">${st.google?'Google search on':'Basic place search'}</span><span class="pill ${st.ocm?'ok':''}">${st.ocm?'Charger availability on':'Charger locations only'}</span>`;
   if(st.google&&!$('#gkey').value)$('#gkey').placeholder='Key saved. Clear and save to remove';
+  if(st.ocm&&!$('#okey').value)$('#okey').placeholder='Key saved. Clear and save to remove';
 }
 // the Google key: saved only after one test search works
 let keyBusy=false;
@@ -69,6 +75,14 @@ window.onGoogleKey=function(problem){keyBusy=false;
   const had=$('#gkey').value.trim();$('#gkey').value='';$('#gkey').placeholder='Google Places key';
   keySay(had?'Key saved. Place search now uses Google.':'Google search is off. Using the basic search.','ok');pills()};
 function saveKey(){if(keyBusy)return;keyBusy=true;keySay('Testing the key…');P.setGoogleKey($('#gkey').value.trim())}
+// the Open Charge Map key: same pattern, saved only after one test lookup works
+let ocmBusy=false;
+function ocmSay(text,cls){$('#ocmmsg').innerHTML=text?`<div class="msg ${cls||''}">${esc(text)}</div>`:''}
+window.onOcmKey=function(problem){ocmBusy=false;
+  if(problem){ocmSay('Open Charge Map did not accept that key: '+problem,'err');return}
+  const had=$('#okey').value.trim();$('#okey').value='';$('#okey').placeholder='Open Charge Map key';
+  ocmSay(had?'Key saved. The car will show live charger availability.':'Charger availability is off. Showing locations only.','ok');pills()};
+function saveOcmKey(){if(ocmBusy)return;ocmBusy=true;ocmSay('Testing the key…');P.setOcmKey($('#okey').value.trim())}
 function card(p,kind,i){
   const acts=[`<button class="small" data-a="go" data-k="${kind}" data-i="${i}">Navigate</button>`];
   if(kind==='res')acts.push(`<button class="small ghost" data-a="save" data-k="${kind}" data-i="${i}">Save</button>`);
@@ -128,6 +142,7 @@ document.addEventListener('click',e=>{
 $('#go').onclick=()=>find();
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
 $('#saveKey').onclick=saveKey;
+$('#saveOcmKey').onclick=saveOcmKey;
 $('#saveTariff').onclick=()=>{const v=parseFloat(String($('#tariff').value).replace(',','.'));if(v>0&&v<200){P.setTariff(v);say('Price saved: '+v+'p per kWh.','ok')}else say('Enter pence per kWh, e.g. 28','err')};
 pills();load();window.onShared();
 </script></body></html>

@@ -93,6 +93,9 @@ textarea{width:100%;min-height:74px;font:15px/1.4 var(--f);color:var(--ink);back
       <div class="group"><span>Phone permissions</span>
         <div class="row"><button id="cAccess" aria-pressed="true">Notification access</button><button id="cContacts" aria-pressed="true">Calls and contacts</button></div>
         <p class="small">Switch one off to see what the car shows before the phone's setup list is finished.</p></div>
+      <div class="group"><span>Charger availability</span>
+        <div class="row"><button id="cOcm" aria-pressed="true">Open Charge Map key set</button></div>
+        <p class="small">Switch off to see the Chargers list with locations only, no reported availability.</p></div>
     </section>
 
     <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -159,6 +162,7 @@ $('#sSoc').oninput=e=>{$('#oSoc').textContent=e.target.value+'%';send({i3cmd:'so
 $('#cDay').onclick=()=>send({i3cmd:'day',on:true});$('#cNight').onclick=()=>send({i3cmd:'day',on:false});
 $('#cAccess').onclick=()=>{const on=!isOn('#cAccess');press('#cAccess',on);send({i3cmd:'access',on})};
 $('#cContacts').onclick=()=>{const on=!isOn('#cContacts');press('#cContacts',on);send({i3cmd:'contacts',on})};
+$('#cOcm').onclick=()=>{const on=!isOn('#cOcm');press('#cOcm',on);send({i3cmd:'ocm',on})};
 
 // the log
 function addLog(text){$('#logEmpty').hidden=true;const li=document.createElement('li'),t=document.createElement('time'),s=document.createElement('span');

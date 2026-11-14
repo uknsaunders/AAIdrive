@@ -32,7 +32,7 @@ function tick(){
   if(sim.music&&sim.playing&&sim.access)sim.posMs=(sim.posMs+dt*1000)%1800000;
   const t=TRACKS[sim.track],showMusic=sim.music&&sim.access;
   const call=sim.call?Object.assign({},sim.call,sim.access||sim.call.outgoing?{}:{name:''}):null;
-  window.i3feed({soc:sim.soc,rangeKm:Math.round(sim.soc*1.52),speedKmh:sim.speedKmh,units:'Miles,CELSIUS',ambientC:12,cabinC:19,batteryC:17,battery12v:92,torqueNm:sim.speedKmh>0?35:0,tariffP:28,odoKm:41230,
+  window.i3feed({soc:sim.soc,rangeKm:Math.round(sim.soc*1.52),speedKmh:sim.speedKmh,units:'Miles,CELSIUS',ambientC:12,cabinC:19,batteryC:17,battery12v:92,torqueNm:sim.speedKmh>0?35:0,tariffP:28,odoKm:41230,ocmKey:sim.ocmKey?'demo-key':'',
     lat:sim.lat,lon:sim.lon,heading:sim.heading,mediaPermission:sim.access,
     media:showMusic?{title:t[0],artist:t[1],album:t[2],app:APPS[sim.app],playing:sim.playing,pos:sim.posMs,dur:1800000}:null,
     notes:sim.access?sim.notes:null,call:call,missed:sim.contacts?sim.missed:0,
@@ -50,7 +50,8 @@ window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3cmd)return;
     case 'press':window.i3press();break;
     case 'click':{       // a click on the picture: a card or a list row is chosen and opened, anything else is a press of the knob
       const el=document.elementFromPoint(d.x*window.innerWidth,d.y*window.innerHeight),card=el&&el.closest('.card'),row=el&&el.closest('.mi');
-      if(menu&&row&&!menu.wait){const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));
+      if(menu&&menu.kind==='cards'&&card&&el.closest('#menu')){menu.sel=[...document.querySelectorAll('#menu .card')].indexOf(card);drawMenu()}
+      else if(menu&&row&&!menu.wait){const n=menu.items.length,first=Math.max(0,Math.min(n-MENU_ROWS,menu.sel-Math.floor(MENU_ROWS/2)));
         menu.sel=first+[...document.querySelectorAll('#menu .mi')].indexOf(row);drawMenu()}
       else if(home&&card&&!menu&&!banner){homeSel=[...document.querySelectorAll('#home .card')].indexOf(card);drawHome()}
       window.i3press()}break;
@@ -65,6 +66,7 @@ window.addEventListener('message',e=>{const d=e.data;if(!d||!d.i3cmd)return;
     case 'day':{const moved=window.__simTime(d.on);if(sim.call)sim.call.since+=moved;sim.notes.forEach(n=>{n.when+=moved});mapTheme()}break;
     case 'access':sim.access=d.on;say(d.on?'Notification access: allowed':'Notification access: not allowed (no music details, alerts or caller names)');break;
     case 'contacts':sim.contacts=d.on;menuCache=null;say(d.on?'Calls and contacts: allowed':'Calls and contacts: not allowed');break;
+    case 'ocm':sim.ocmKey=d.on;chgAt=null;chgTry=0;say(d.on?'Open Charge Map key set: chargers show reported availability':'No Open Charge Map key: chargers show locations only');break;
   }}catch(err){say('Simulator error: '+err.message)}
   tick();
 });

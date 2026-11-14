@@ -3,6 +3,13 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026, cards, Settings as a menu, and charger availability
+
+- **Settings is now a menu, not a single screen:** press the Settings card for a list - Display, Car colour, Battery and Video - a home for the smaller, less-used things. Turning the knob on the Settings screen no longer cycles the car colour directly; that is now one of the menu rows.
+- **Call and Music menus are cards:** the top-level choices - Recents, Speak a name, All contacts, Type a name for Call; your apps for Music - show as cards, like the home screen. Anything you'd scroll through (the Recents list, All contacts, a browsed playlist) stays a plain list.
+- **Music: apps first.** Pressing Music shows your installed apps as cards, so you choose what to play before anything else. **Resume** - what was last playing, with pause, skip, forward and back - is a later card, not the first one offered.
+- **Chargers: live availability (optional).** With a free Open Charge Map key saved on the phone, the Chargers list shows what's reported available, in use or faulted, and the power rating, alongside the distance - not just where chargers are.
+
 ## 14 November 2026, new layout and colours
 
 - **Home screen:** the top row is phone and media (Navigate, Call, Alerts, Music) and the bottom row is the car (Car, Journey, Chargers, Settings). The car row's icons are amber so the two rows are easy to tell apart.

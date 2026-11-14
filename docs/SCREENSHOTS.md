@@ -11,28 +11,33 @@ Two things to know:
 What you see when i3D opens. Turn the knob to choose a card, press to open it.
 ![Home screen](screenshots/home.png)
 
-## Lists
-Press the knob inside a section for its list. It takes the left half and the map stays on the right. Every list starts with "‹ Home screen".
+## Menus
+Press the knob inside a section for its menu. It takes the left half and the map stays on the right, and always has a way back to the Home screen.
+
+A few options to choose between show as cards, the same way the Home screen does. A list you might scroll through - contacts, chargers, places - stays a list.
 
 ### Navigate
+A list: places don't fit as cards.
 ![Navigate list](screenshots/menu-nav.png)
 
 ### Call
-Favourites, recent calls, all contacts, or type a name.
-![Call list](screenshots/menu-call-list.png)
+Cards: Recents, Speak a name, All contacts, Type a name.
+![Call cards](screenshots/menu-call-list.png)
+
+### Recents
+Favourites, missed and recent calls together - a list, opened from the Recents card.
+![Recents list](screenshots/menu-call-recents.png)
 
 ### Choosing a number
 Shown when a contact has more than one.
 ![Number list](screenshots/menu-call-numbers.png)
 
 ### Music
-![Music list](screenshots/menu-music.png)
-
-### Car
-![Car list](screenshots/menu-car.png)
+Cards: your apps first, with **Resume** - what was last playing - as a later card, not the first thing offered.
+![Music cards](screenshots/menu-music.png)
 
 ### During a call
-Hang up is first.
+A short list. Hang up is first.
 ![Call options](screenshots/menu-call.png)
 
 ## Sections
@@ -60,7 +65,7 @@ Press the knob to answer or decline.
 ![Incoming call](screenshots/call-ringing.png)
 
 ### Chargers
-The nearest charging points. Press the knob to drive to one.
+The nearest charging points, nearest first. Press the knob to drive to one. With an Open Charge Map key saved on the phone, it also shows what's reported available, as here - without one, just the location and point count.
 ![Chargers section](screenshots/chargers.png)
 
 ### Journey
@@ -70,8 +75,11 @@ The nearest charging points. Press the knob to drive to one.
 ![Alerts section](screenshots/alerts.png)
 
 ### Settings
-Turn the knob to change the car colour. Press for the display setting.
+Press the knob for its menu: the display mode, car colour, battery detail and video. It's the home for the smaller, less-used things.
 ![Settings section](screenshots/colour.png)
+
+### The Settings menu
+![Settings menu](screenshots/menu-settings.png)
 
 ### At night
 ![Home at night](screenshots/home-night.png)
