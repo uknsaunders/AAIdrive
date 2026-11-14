@@ -3,6 +3,13 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026
+
+- **Better address finder:** place search now forgives spelling. If the exact OpenStreetMap search finds nothing, a second, looser search runs, and far-away matches are dropped when there are nearby ones.
+- **Google place search (optional):** paste your own Google Places key into Send to car on the phone and the search finds businesses by name, even misspelt, in the car and on the phone. The key is tested before it is saved and stays on the phone.
+- With the car not connected, searches from the phone now look near your saved Home first.
+- **Desk simulator:** `tools/simulator` builds a page that runs the car screen at a desk with a stand-in phone.
+
 ## 13 November 2026, evening
 
 After the drive with the home screen.

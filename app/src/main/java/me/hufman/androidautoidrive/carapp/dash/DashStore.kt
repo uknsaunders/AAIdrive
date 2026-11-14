@@ -62,6 +62,20 @@ object DashStore {
 		writeList(context, "recents", list.take(MAX_RECENTS))
 	}
 
+	/** The driver's own Google Places key, for finding businesses by name. Kept on the phone only */
+	fun googleKey(context: Context): String = prefs(context).getString("googleKey", "") ?: ""
+
+	fun setGoogleKey(context: Context, key: String) {
+		prefs(context).edit().putString("googleKey", key.trim()).apply()
+	}
+
+	/** Where to look for places when the car isn't connected: the saved Home, or the first saved place */
+	fun homeArea(context: Context): Pair<Double, Double>? {
+		val saved = places(context)
+		val home = saved.firstOrNull { it.name.equals("Home", ignoreCase = true) } ?: saved.firstOrNull()
+		return home?.let { Pair(it.lat, it.lon) }
+	}
+
 	/** Electricity price, pence per kWh */
 	fun tariff(context: Context): Double = prefs(context).getFloat("tariffPence", DEFAULT_TARIFF_PENCE.toFloat()).toDouble()
 

@@ -28,7 +28,8 @@ class DashPlaceSearch(private val locationProvider: CarLocationProvider,
 	override fun searchLocationsAsync(query: String): Deferred<List<MapResult>> = scope.async {
 		try {
 			val here = locationProvider.currentLocation
-			val near = here?.let { Pair(it.latitude, it.longitude) }
+			val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(context)
+			DashDestinations.googleKey = DashStore.googleKey(context)
 			val text = query.trim()
 
 			val callOnly = text.startsWith("call ", ignoreCase = true)

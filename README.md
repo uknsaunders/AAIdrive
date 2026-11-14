@@ -106,6 +106,19 @@ Share a YouTube video or playlist to i3D from the YouTube app, or paste the link
 
 what3words needs a free API key from what3words. If you build your own copy, add it as a repository secret named `W3W_API_KEY` (Settings → Secrets and variables → Actions) and run the build again. Until then the app shows "key missing" and `///words` will not resolve.
 
+### Better place search (optional)
+
+Out of the box, place search uses OpenStreetMap. It finds addresses, postcodes and well-known places, and it forgives spelling, but it does not know every business.
+
+Add your own Google key and the search works like Google Maps: "cheeky monkies nursery" finds the nursery. It covers both typing in the car and Send to car on the phone.
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create a project and a billing account. Google asks for a card.
+2. Enable **Places API (New)** for the project.
+3. Under Credentials, create an **API key** and restrict it to Places API (New).
+4. In i3D on the phone, open **Send to car**, paste the key under **Better place search** and tap **Save and test**.
+
+Google's [price list](https://developers.google.com/maps/billing-and-pricing/pricing) gives 5,000 free text searches a month, far more than one car needs. To be certain of no bill, set a daily quota on the key in the console. The key is stored on your phone only and is not part of the app or this repository.
+
 ## Phone app
 
 <img src="docs/screenshots/phone-home.png" alt="The i3D home screen" width="260">

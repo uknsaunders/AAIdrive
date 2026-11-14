@@ -18,7 +18,7 @@ data class Resolved(val name: String, val detail: String?, val lat: Double, val 
 data class ResolveResult(val items: List<Resolved>, val error: String? = null)
 
 /**
- * Turns whatever was typed or shared into places: names and postcodes (OpenStreetMap Nominatim),
+ * Turns whatever was typed or shared into places: names and postcodes (Google Places if a key is set, else OpenStreetMap),
  * what3words addresses, Google Maps links, geo: links and plain coordinates.
  * Also finds charging points near a spot.
  */
@@ -137,7 +137,87 @@ object DashDestinations {
 		return ResolveResult(emptyList(), "Couldn't find a place in that link")
 	}
 
+	/** The driver's own Google key for place search, set from the phone app. Blank means the free search only */
+	@Volatile var googleKey: String = ""
+
+	/**
+	 * Finds places by name. Three sources, best first:
+	 * Google Places, if the driver has added a key: knows businesses and copes with misspellings.
+	 * OpenStreetMap Nominatim: exact names, addresses and postcodes.
+	 * OpenStreetMap Photon: the same places, but forgiving of spelling, for when the exact search finds nothing.
+	 */
 	fun search(query: String, near: Pair<Double, Double>?): List<Resolved> {
+		val key = googleKey
+		if (key.isNotBlank()) {
+			try {
+				val places = google(query, near, key)
+				if (places.isNotEmpty()) return places
+			} catch (e: Exception) {
+				Log.w(TAG, "Google place search failed, using the free search", e)
+			}
+		}
+		val exact = try {
+			nominatim(query, near)
+		} catch (e: Exception) {
+			Log.w(TAG, "Exact place search failed", e)
+			emptyList()
+		}
+		if (exact.isNotEmpty()) return exact
+		return photon(query, near)
+	}
+
+	/** Checks a Google key with one small search. Returns what went wrong, or null if it works */
+	fun googleProblem(key: String): String? {
+		return try {
+			google("St Helier", null, key)
+			null
+		} catch (e: Exception) {
+			e.message ?: "Couldn't reach Google"
+		}
+	}
+
+	/** Google Places text search: the same finder as Google Maps, so "cheeky monkies nursery" finds the nursery */
+	private fun google(query: String, near: Pair<Double, Double>?, key: String): List<Resolved> {
+		val body = JSONObject().put("textQuery", query).put("pageSize", 8)
+		if (near != null) {
+			body.put("locationBias", JSONObject().put("circle", JSONObject()
+				.put("center", JSONObject().put("latitude", near.first).put("longitude", near.second))
+				.put("radius", 40000.0)))
+		}
+		val connection = URL("https://places.googleapis.com/v1/places:searchText").openConnection() as HttpURLConnection
+		connection.requestMethod = "POST"
+		connection.doOutput = true
+		connection.connectTimeout = 10000
+		connection.readTimeout = 15000
+		connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+		connection.setRequestProperty("X-Goog-Api-Key", key.trim())
+		connection.setRequestProperty("X-Goog-FieldMask", "places.displayName,places.formattedAddress,places.location")
+		val reply = try {
+			connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+			if (connection.responseCode !in 200..299) {
+				val problem = try { connection.errorStream?.bufferedReader()?.use { it.readText() } } catch (e: Exception) { null }
+				val message = try { JSONObject(problem ?: "{}").optJSONObject("error")?.optString("message") } catch (e: Exception) { null }
+				throw java.io.IOException(message?.takeIf { it.isNotBlank() } ?: "Google answered with error ${connection.responseCode}")
+			}
+			connection.inputStream.bufferedReader().use { it.readText() }
+		} finally {
+			connection.disconnect()
+		}
+		val places = JSONObject(reply).optJSONArray("places") ?: return emptyList()
+		val items = mutableListOf<Resolved>()
+		for (i in 0 until places.length()) {
+			val place = places.getJSONObject(i)
+			val location = place.optJSONObject("location") ?: continue
+			if (!location.has("latitude") || !location.has("longitude")) continue
+			val address = place.optString("formattedAddress")
+			val name = place.optJSONObject("displayName")?.optString("text")?.takeIf { it.isNotBlank() } ?: address.substringBefore(",")
+			if (name.isBlank()) continue
+			items.add(Resolved(name, address.ifBlank { null }, location.getDouble("latitude"), location.getDouble("longitude")))
+		}
+		return items
+	}
+
+	private fun nominatim(query: String, near: Pair<Double, Double>?): List<Resolved> {
 		val bias = if (near != null) {
 			"&viewbox=${near.second - 0.5},${near.first + 0.35},${near.second + 0.5},${near.first - 0.35}"
 		} else ""
@@ -153,6 +233,29 @@ object DashDestinations {
 			items.add(Resolved(name, display.substringAfter(", ", display), lat, lon))
 		}
 		return items
+	}
+
+	/** Photon reads the same OpenStreetMap places but forgives spelling. Places near the car come first, and far ones are dropped if any are near */
+	private fun photon(query: String, near: Pair<Double, Double>?): List<Resolved> {
+		val bias = if (near != null) "&lat=${near.first}&lon=${near.second}" else ""
+		val url = "https://photon.komoot.io/api/?limit=10&lang=en&q=" + URLEncoder.encode(query, "UTF-8") + bias
+		val features = JSONObject(fetch(url)).optJSONArray("features") ?: return emptyList()
+		val items = mutableListOf<Resolved>()
+		for (i in 0 until features.length()) {
+			val feature = features.getJSONObject(i)
+			val coordinates = feature.optJSONObject("geometry")?.optJSONArray("coordinates") ?: continue
+			if (coordinates.length() < 2) continue
+			val about = feature.optJSONObject("properties") ?: JSONObject()
+			val road = listOf(about.optString("housenumber"), about.optString("street")).filter { it.isNotBlank() }.joinToString(" ")
+			val name = about.optString("name").ifBlank { road }
+			if (name.isBlank()) continue
+			val detail = listOf(road.takeIf { it != name }, about.optString("city").ifBlank { about.optString("county") }, about.optString("postcode"), about.optString("country"))
+				.filter { !it.isNullOrBlank() }.distinct().joinToString(", ")
+			items.add(Resolved(name, detail.ifBlank { null }, coordinates.getDouble(1), coordinates.getDouble(0)))
+		}
+		if (near == null) return items.take(8)
+		val close = items.filter { distanceMeters(near.first, near.second, it.lat, it.lon) < 100000 }
+		return (if (close.isNotEmpty()) close else items).take(8)
 	}
 
 	/** Charging points from OpenStreetMap near a spot, nearest first */

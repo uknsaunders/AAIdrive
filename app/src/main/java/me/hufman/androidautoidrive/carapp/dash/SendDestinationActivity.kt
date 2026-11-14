@@ -80,7 +80,8 @@ class SendDestinationActivity: Activity() {
 		fun resolve(id: Int, text: String) {
 			thread {
 				val here = DashController.instance?.carLocationProvider?.currentLocation
-				val near = here?.let { Pair(it.latitude, it.longitude) }
+				val near = here?.let { Pair(it.latitude, it.longitude) } ?: DashStore.homeArea(applicationContext)
+				DashDestinations.googleKey = DashStore.googleKey(applicationContext)
 				val result = DashDestinations.resolve(text, near)
 				val json = JSONObject()
 				json.put("error", result.error ?: JSONObject.NULL)
@@ -127,11 +128,24 @@ class SendDestinationActivity: Activity() {
 		@JavascriptInterface
 		fun setTariff(pence: Double) = DashStore.setTariff(applicationContext, pence)
 
+		/** Saves the driver's Google key after one test search. A blank key switches Google search off. Answers window.onGoogleKey(problem or null) */
+		@JavascriptInterface
+		fun setGoogleKey(key: String) {
+			val clean = key.trim()
+			thread {
+				val problem = if (clean.isEmpty()) null else DashDestinations.googleProblem(clean)
+				if (problem == null) DashStore.setGoogleKey(applicationContext, clean)
+				val answer = if (problem == null) "null" else JSONObject.quote(problem)
+				runOnUiThread { webView?.evaluateJavascript("window.onGoogleKey($answer)", null) }
+			}
+		}
+
 		@JavascriptInterface
 		fun status(): String {
 			val json = JSONObject()
 			json.put("car", DashController.instance != null)
 			json.put("w3w", BuildConfig.W3W_API_KEY.isNotBlank())
+			json.put("google", DashStore.googleKey(applicationContext).isNotBlank())
 			return json.toString()
 		}
 	}
