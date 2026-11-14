@@ -65,11 +65,16 @@ object DashDestinations {
 		}
 	}
 
+	/** what3words answers 402 when the plan lacks convert-to-coordinates - always the case on the Free plan,
+	 * which only covers autosuggest and available-languages (developer.what3words.com/public-api/docs) */
+	private val W3W_PLAN = "Your what3words plan can't turn three words into a location - the Free plan doesn't include that (convert-to-coordinates). It needs a paid plan, e.g. Basic."
+
 	private fun what3words(words: String): ResolveResult {
 		val key = w3wKey.ifBlank { BuildConfig.W3W_API_KEY }
-		if (key.isBlank()) return ResolveResult(emptyList(), "what3words isn't set up yet: add a free API key in Send to car on the phone")
+		if (key.isBlank()) return ResolveResult(emptyList(), "what3words isn't set up yet: add a key from a paid what3words plan in Send to car on the phone")
 		val (code, body) = fetchWithError("https://api.what3words.com/v3/convert-to-coordinates?key=" +
 				URLEncoder.encode(key, "UTF-8") + "&words=" + URLEncoder.encode(words, "UTF-8"))
+		if (code == 402) return ResolveResult(emptyList(), W3W_PLAN)
 		val json = try { JSONObject(body) } catch (e: Exception) { JSONObject() }
 		json.optJSONObject("error")?.let {
 			return ResolveResult(emptyList(), it.optString("message", "what3words couldn't find ///$words"))
@@ -198,6 +203,7 @@ object DashDestinations {
 			val (code, body) = fetchWithError("https://api.what3words.com/v3/convert-to-coordinates?key=" +
 					URLEncoder.encode(key.trim(), "UTF-8") + "&words=filled.count.soap")
 			if (code in 200..299) null
+			else if (code == 402) W3W_PLAN
 			else try {
 				JSONObject(body).optJSONObject("error")?.optString("message")?.takeIf { it.isNotBlank() }
 					?: "what3words answered with error $code"

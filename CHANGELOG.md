@@ -3,6 +3,12 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026, Settings as cards, Resume always bottom-left, what3words plan note
+
+- **Settings opens as cards:** the Settings tile now goes straight to cards (Display, Car colour, Battery, Video), like Call and Music.
+- **Resume stays bottom-left and on screen:** with several music apps, Resume is pinned to the bottom-left card, and the cards shrink when there are more than three rows so nothing falls off the screen.
+- **what3words needs a paid plan:** the Free what3words API plan can't turn three words into a location, so a Free key is refused. The app now says this plainly instead of passing on what3words' "quota exceeded" wording, and the README says so too.
+
 ## 14 November 2026, what3words moves to the phone
 
 - **what3words key, entered on the phone:** Send to car now has a what3words box, saved and tested the same way as the Google and Open Charge Map keys. It was previously a GitHub repository secret baked into the build, which meant it sat inside the public, downloadable APK. All three keys now stay on the phone only. Building your own copy with a repository secret still works, as a fallback, but is no longer the suggested way.
