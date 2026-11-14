@@ -20,8 +20,8 @@ This is a personal fork of [AAIdrive](https://github.com/BimmerGestalt/AAIdrive)
 | **Alerts** | Your recent phone notifications, newest first, with a count on the tab. |
 | **Journey** | Miles, cost and efficiency for today, 7 days and 30 days, a 14 day chart and recent trips. |
 | **Call** | Favourites, recent calls and all your contacts, dialled from the knob. |
-| **Map** | 3D map that is light by day and dark at night, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
-| **i** | Connection details and the raw data the car sends. |
+| **Navigate** | Full-screen 3D map, routing with spoken directions, live speed limit with an over-limit warning, and chargers. |
+| **Settings** | Day, night or automatic display, the car colour, and battery details. |
 
 Calls show a panel with the name, number and time. Press the knob to answer, decline or hang up.
 
@@ -59,7 +59,7 @@ If it sits on "waiting for car connection", close the BMW Connected app, restart
 
 ## Using it in the car
 
-i3D opens on a home screen with a card for each part: Navigate, Call, Music, Map, Car, Chargers, Journey and Alerts. Turn the iDrive knob to choose a card and press to open it.
+i3D opens on a home screen with eight cards. The top row is phone and media: Navigate, Call, Alerts and Music. The bottom row is the car: Car, Journey, Chargers and Settings. The whole screen is light by day and dark at night. Turn the iDrive knob to choose a card and press to open it.
 
 ![Home screen](docs/screenshots/home.png)
 
@@ -68,11 +68,11 @@ Each section shows its name at the top, with no row of buttons. Press the knob f
 ![The Navigate list beside the map](docs/screenshots/menu-nav.png)
 
 - **‹ Home screen** starts every list, so you can always get back to the cards. Journey has nothing to choose, so one press there goes straight home.
-- **Navigate** and **Map**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
+- **Navigate**: saved places, the nearest charger, recent places, or **Type a place** on the car's letter wheel. Picking a result comes straight back to the dash.
 - **Call**: favourites, recent calls, **All contacts**, or type a name. If someone has more than one number, you pick which (Mobile, Work and so on) before it dials.
 - **Music**: pause, skip, or choose an app and one of its playlists. Videos you sent from the phone are here too, parked only.
 - **Alerts**: **Read alerts aloud** speaks your latest three.
-- **Car**: car colour and info.
+- **Settings**: display (Automatic, Day or Night). Turn the knob on that screen to change the car colour.
 
 ![Choosing which number to call](docs/screenshots/menu-call-numbers.png)
 

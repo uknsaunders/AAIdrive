@@ -18,12 +18,28 @@
    so everything is kept inside these margins */
 :root{--safe-top:46px;--safe-left:40px;--safe-right:84px;--safe-bottom:6px}
 :root{
-  --bg:#0a0e13; --panel:#111821; --panel2:#18212c; --line:#243243; --ink:#e7edf4; --muted:#8597ab;
-  --accent:#4c93ff; --accent-ink:#06101f; --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
+  /* night: near-black with BMW blue. --accent fills the chosen item, --hi is blue text, --car tints the car row */
+  --bg:#070b10; --bg2:#0f1721; --panel:#121a24; --panel2:#1a2532; --line:#2a3a4d; --ink:#eef3f8; --muted:#8a9bb0; --soft:var(--soft);
+  --accent:#1c69d4; --accent2:#3d8df0; --accent-ink:#ffffff; --hi:#62adff; --car:#f5a03a; --edge:#a9cfff;
+  --good:#2fd49a; --warn:#f2a73b; --bad:#ff6b6b;
+  --veil1:rgba(24,33,44,.55); --veil2:rgba(10,14,19,.8); --glass:rgba(17,24,33,.62); --glassline:rgba(255,255,255,.08);
+  --tint:rgba(255,255,255,.06); --tagbg:rgba(10,14,19,.75); --glow:#243245; --callbg:rgba(10,14,19,.74); --track:rgba(255,255,255,.12);
+  --lift:0 0 0 rgba(0,0,0,0);
   --f-d:"Inter",system-ui,sans-serif; --f-b:"Inter",system-ui,sans-serif;
 }
+/* day: light silver and white with dark text, so it reads in sunshine */
+body.daymap{
+  --bg:#dfe5ec; --bg2:#f4f6f9; --panel:#ffffff; --panel2:#fbfcfd; --line:#bcc7d3; --ink:#101a25; --muted:#536378; --soft:#2f3f55;
+  --accent:#1c69d4; --accent2:#3585ee; --accent-ink:#ffffff; --hi:#1257b8; --car:#c26400; --edge:#0f4fa8;
+  --good:#0b8a5c; --warn:#a85f00; --bad:#d32f2f;
+  --veil1:rgba(255,255,255,.9); --veil2:rgba(236,240,245,.97); --glass:rgba(255,255,255,.86); --glassline:rgba(0,0,0,.14);
+  --tint:rgba(16,50,100,.08); --tagbg:rgba(255,255,255,.88); --glow:#ffffff; --callbg:rgba(244,247,250,.92); --track:rgba(0,0,0,.14);
+  --lift:0 2px 6px rgba(20,40,70,.16);
+}
 [hidden]{display:none!important}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-b);overflow:hidden}
+html{background:#070b10}
+html,body{margin:0;height:100%;color:var(--ink);font-family:var(--f-b);overflow:hidden}
+body{background:linear-gradient(180deg,var(--bg2),var(--bg))}
 *{box-sizing:border-box}
 .num{font-family:var(--f-d);font-variant-numeric:tabular-nums}
 .lbl{font:600 16px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
@@ -34,7 +50,7 @@ header{display:flex;align-items:flex-end;gap:14px;padding:0 6px 5px;border-botto
 .tabs{display:flex;align-items:baseline;gap:16px;padding-bottom:4px;min-width:0}
 .tabs b{font:700 27px var(--f-d);white-space:nowrap}
 .tabs span{font:500 20px var(--f-b);color:var(--muted);white-space:nowrap}
-.tabs span i{font-style:normal;color:var(--accent);font-weight:600}
+.tabs span i{font-style:normal;color:var(--hi);font-weight:600}
 .sp{flex:1}
 .wxb{display:flex;align-items:center;gap:6px;margin-left:12px;font:600 28px var(--f-d)}
 .wxi svg{width:32px;height:32px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
@@ -48,40 +64,40 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .carzone{position:relative;flex:1 1 auto;min-height:0;display:flex;justify-content:center}
 .ovl{position:absolute;left:2px;top:0}.ovr{position:absolute;right:2px;top:0;text-align:right}
 .carzone .carwrap{flex:none;align-self:stretch;width:auto;max-width:none;margin:0}
-.carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,#243245,transparent 70%)}
+.carwrap{position:relative;flex:1 1 auto;min-height:0;max-width:100%;margin:0 auto;aspect-ratio:857/498;background:radial-gradient(ellipse at 50% 60%,var(--glow),transparent 70%)}
 .carwrap img{position:absolute;inset:0;width:100%;height:100%}
-.tag{position:absolute;transform:translate(-50%,-50%);font:600 20px var(--f-d);background:rgba(10,14,19,.75);border-radius:4px;padding:0 5px;white-space:nowrap}
+.tag{position:absolute;transform:translate(-50%,-50%);font:600 20px var(--f-d);background:var(--tagbg);border-radius:4px;padding:0 5px;white-space:nowrap}
 .tag:empty{display:none}
 .ty{display:none;position:absolute;transform:translate(-50%,-50%);width:23%;aspect-ratio:1;border-radius:50%;border:5px solid var(--warn);box-shadow:0 0 16px var(--warn),inset 0 0 16px var(--warn);z-index:3}
 .ty.low,.ty.bad{display:block}.ty.bad{border-color:var(--bad);box-shadow:0 0 16px var(--bad),inset 0 0 16px var(--bad)}
-.ty i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 22px var(--f-d);white-space:nowrap;background:rgba(10,14,19,.85);border-radius:5px;padding:0 6px;font-style:normal}
+.ty i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 22px var(--f-d);white-space:nowrap;background:var(--tagbg);border-radius:5px;padding:0 6px;font-style:normal}
 .dot{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:rgba(76,147,255,.5)}
 .pbar{position:relative;height:8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .pbar .f{position:absolute;top:0;bottom:0}
 .pbar .z{position:absolute;left:37.5%;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .pscale{display:flex;justify-content:space-between;font-size:16px;color:var(--muted);margin-top:2px}
-.m{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:4px 10px;min-width:0}
+.m{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:7px;box-shadow:var(--lift);padding:4px 10px;min-width:0}
 .m .k{font:600 18px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m .v{font:600 32px var(--f-d);line-height:1.1;white-space:nowrap}
 .m .v small{font:500 17px var(--f-b);color:var(--muted);margin-left:2px}
-.frost{position:absolute;inset:0;padding:16px 20px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(24,33,44,.55),rgba(10,14,19,.8));backdrop-filter:blur(7px)}
+.frost{position:absolute;inset:0;padding:16px 20px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,var(--veil1),var(--veil2));backdrop-filter:blur(7px)}
 .frost h2{margin:0;font:600 30px var(--f-d)}
 .kv{display:grid;grid-template-columns:1fr auto;gap:7px 16px;margin:0;font-size:23px}
-.kv dt{color:#a9b8c8}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
-.np{position:absolute;right:12px;top:12px;width:min(56%,420px);display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border-radius:10px;background:rgba(17,24,33,.62);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);z-index:3}
+.kv dt{color:var(--soft)}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.np{position:absolute;right:12px;top:12px;width:min(56%,420px);display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border-radius:10px;background:var(--glass);border:1px solid var(--glassline);backdrop-filter:blur(8px);z-index:3}
 .np img{width:44px;height:44px;border-radius:6px;object-fit:cover;flex:none;background:var(--panel2)}
 .np .t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np .a{font:500 16px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np .x{min-width:0;flex:1}.np .st{font:600 18px var(--f-d);color:var(--muted)}
 .mus{display:flex;gap:16px;align-items:center;margin-top:4px}
 .mus img{width:180px;height:180px;border-radius:12px;object-fit:cover;flex:none;background:var(--panel2);box-shadow:0 6px 24px rgba(0,0,0,.45)}
-.mus .t{font:600 32px var(--f-d);line-height:1.1}.mus .a{font:500 23px var(--f-b);color:#c3cfdb;margin-top:4px}.mus .al{font:500 19px var(--f-b);color:var(--muted);margin-top:2px}
+.mus .t{font:600 32px var(--f-d);line-height:1.1}.mus .a{font:500 23px var(--f-b);color:var(--soft);margin-top:4px}.mus .al{font:500 19px var(--f-b);color:var(--muted);margin-top:2px}
 .src{display:inline-flex;align-items:center;gap:6px;font:600 16px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .src i{width:8px;height:8px;border-radius:50%;background:var(--good)}.src i.p{background:var(--muted)}
-.prog{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.prog b{display:block;height:100%;background:var(--ink)}
+.prog{height:5px;border-radius:3px;background:var(--track);overflow:hidden}.prog b{display:block;height:100%;background:var(--ink)}
 .times{display:flex;justify-content:space-between;font:500 17px var(--f-d);color:var(--muted);margin-top:3px}
 .hint{margin-top:auto;color:var(--muted);font-size:17px}
-.nav{position:relative;min-width:0;overflow:hidden;background:#141b23}
+.nav{position:relative;min-width:0;overflow:hidden;background:var(--panel)}
 #map{position:absolute;inset:0}
 /* the next turn and the now-playing strip share the top of the map without touching */
 .turn:not([hidden])~.np{width:min(40%,420px)}
@@ -95,33 +111,34 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .puck i{width:26px;height:26px;border-radius:50%;background:#1660d0;display:grid;place-items:center}
 .puck svg{width:15px;height:15px;fill:#fff}
 .mapmsg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:18px;text-align:center;max-width:70%}
-.call{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:22px 26px;background:rgba(10,14,19,.74);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:12px}
+.call{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:22px 26px;background:var(--callbg);backdrop-filter:blur(14px);border:1px solid var(--glassline);border-radius:12px}
 .call .cn{font:700 46px var(--f-d);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.call .cs{font:500 22px var(--f-b);color:#c3cfdb}
+.call .cs{font:500 22px var(--f-b);color:var(--soft)}
 .call .cd{font:700 40px var(--f-d);color:var(--good);line-height:1}
 .call .ci{width:58px;height:58px;border-radius:50%;background:var(--good);display:grid;place-items:center}
 .call .ci svg{width:32px;height:32px;fill:#fff}
-.al-row{background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px}
+.al-row{background:var(--tint);border-radius:9px;padding:6px 10px}
 .al-app{font:600 14px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .al-t{font:600 20px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.al-x{font:500 16px var(--f-b);color:#c3cfdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.menu{position:absolute;top:0;left:0;bottom:0;width:50%;z-index:9;background:var(--bg);border-right:2px solid var(--accent);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.al-x{font:500 16px var(--f-b);color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu{position:absolute;top:0;left:0;bottom:0;width:50%;z-index:9;background:linear-gradient(180deg,var(--bg2),var(--bg));border-right:2px solid var(--accent);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
 .mt{display:flex;justify-content:space-between;align-items:baseline;font:700 23px var(--f-d);padding:0 8px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mt small{font:500 16px var(--f-b);color:var(--muted)}
-.mi{height:46px;flex:none;border-radius:10px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:var(--panel2);border:1px solid var(--line)}
+.mi{height:46px;flex:none;border-radius:7px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 25px var(--f-b);background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line)}
 .mi span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mi small{font:500 17px var(--f-b);color:var(--muted);white-space:nowrap;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}
 .mi b{font:700 26px var(--f-d);color:var(--muted);flex:none}
-.mi.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
+.mi.on{background:linear-gradient(180deg,var(--accent2),var(--accent));border-color:var(--edge);color:var(--accent-ink)}.mi.on small,.mi.on b{color:var(--accent-ink)}
 .mi.dim{color:var(--muted);font-size:20px}
 .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:10;font:600 22px var(--f-b);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:8px 18px;white-space:nowrap}
 /* the home screen: one card for each part of the app */
-.home{position:absolute;inset:0;z-index:11;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:10px;padding:10px 4px 6px}
-.card{position:relative;border-radius:16px;border:2px solid var(--line);background:var(--panel2);padding:14px 18px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
-.card svg{width:54px;height:54px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.home{position:absolute;inset:0;z-index:11;background:linear-gradient(180deg,var(--bg2),var(--bg));display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:10px;padding:10px 4px 6px}
+.card{position:relative;border-radius:9px;border:2px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:var(--lift);padding:14px 18px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.card svg{width:54px;height:54px;stroke:var(--hi);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .card .ct{font:700 31px var(--f-d);line-height:1.1}
 .card .cx{font:500 19px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
-.card.on{background:var(--accent);border-color:#cfe2ff;color:var(--accent-ink)}
+.card.car svg{stroke:var(--car)}
+.card.on{background:linear-gradient(180deg,var(--accent2),var(--accent));border-color:var(--edge);color:var(--accent-ink)}
 .card.on svg{stroke:var(--accent-ink)}.card.on .cx{color:var(--accent-ink)}
 .card .cb{position:absolute;top:14px;right:16px;font:700 20px var(--f-d);background:var(--bad);color:#fff;border-radius:14px;padding:1px 11px}
 .hometitle{font:600 21px var(--f-b);color:var(--muted);padding-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -130,7 +147,7 @@ aside{position:relative;padding:8px 10px;display:flex;flex-direction:column;gap:
 .banner{position:absolute;left:12px;top:8px;width:calc(50% - 24px);z-index:12;display:flex;align-items:center;gap:14px;background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:8px 16px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .banner .ba{font:700 24px var(--f-d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .banner .bx{font:500 19px var(--f-b);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.banner .bk{margin-left:auto;font:600 18px var(--f-b);color:var(--accent);white-space:nowrap}
+.banner .bk{margin-left:auto;font:600 18px var(--f-b);color:var(--hi);white-space:nowrap}
 .banner>div{min-width:0}
 .leaflet-container{background:#141b23}
 body.daymap .leaflet-container{background:#e9e6df}
@@ -269,8 +286,8 @@ function showPage(){
   drawPanel();drawNowPlaying();drawHome();
 }
 // the line at the top of every section: its name, and what the knob does there
-const TITLES={Info:'Car colour and info',Alerts:'Phone alerts',Journey:'Journeys and costs',Chargers:'Chargers nearby'};
-function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Car'||p==='Info'||(p==='Chargers'&&chargers.length>0)||(p==='Alerts'&&(D.notes||[]).length>0)}
+const TITLES={Map:'Navigate',Info:'Settings',Alerts:'Phone alerts',Journey:'Journeys and costs',Chargers:'Chargers nearby'};
+function hasOptions(){const p=PAGES[page];return !!D.call||p==='Music'||p==='Map'||p==='Call'||p==='Info'||(p==='Chargers'&&chargers.length>0)||(p==='Alerts'&&(D.notes||[]).length>0)}
 function drawTitle(){const p=PAGES[page];H('#tabs',`<b>${TITLES[p]||p}</b><span><i>Press the knob</i> for ${hasOptions()?'options and Home':'the Home screen'}</span>`)}
 // the car is under way: message text stays off the screen and long lists get shorter
 const moving=()=>(D.speedKmh||0)>3;
@@ -280,8 +297,8 @@ function drawPanel(){
   if(p==='Chargers'){
     const near=nearChargers(5);
     const rows=near.length?near.map(n=>`<div class="al-row" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><div class="al-t">${esc(n.c.name)}</div><div class="al-app" style="white-space:nowrap">${esc(fmtD(n.d*1.25))}${n.c.info?' · '+esc(n.c.info):''}</div></div>`).join(''):
-      `<div style="color:#c3cfdb;font-size:20px">${pos?'Looking for charging points nearby…':'Waiting for the car\'s position.'}</div>`;
-    el.innerHTML=`<div class="frost"><h2>Chargers nearby</h2><div class="al">${rows}</div><div class="hint">${near.length?'<b style="color:var(--accent)">Press the knob</b> to drive to one · ':''}${D.soc!=null?f(D.soc)+'% in the battery':''}</div></div>`;
+      `<div style="color:var(--soft);font-size:20px">${pos?'Looking for charging points nearby…':'Waiting for the car\'s position.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Chargers nearby</h2><div class="al">${rows}</div><div class="hint">${near.length?'<b style="color:var(--hi)">Press the knob</b> to drive to one · ':''}${D.soc!=null?f(D.soc)+'% in the battery':''}</div></div>`;
   }else if(p==='Journey'){
     const all=trips.slice();if(J&&J.km>0.3)all.unshift({start:J.start,km:J.km,kwh:J.kwh,now:true});
     const now=Date.now(),day=864e5,midnight=new Date().setHours(0,0,0,0);
@@ -302,29 +319,29 @@ function drawPanel(){
       ${rows}<div class="hint">Battery energy used + 10% charging losses, at ${f(price/1.1*100,0)}p/kWh (set on the phone)</div></div>`;
   }else if(p==='Music'){
     const m=D.media,art=artUrl||'';
-    if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:#c3cfdb;font-size:18px">${D.mediaPermission===false?'Open the i3D app on your phone and finish the setup list to show what is playing.':'Nothing playing.'}</div>
+    if(!m||!m.title){el.innerHTML=`<div class="frost"><h2>Music</h2><div style="color:var(--soft);font-size:18px">${D.mediaPermission===false?'Open the i3D app on your phone and finish the setup list to show what is playing.':'Nothing playing.'}</div>
       <div style="color:var(--muted);font-size:17px">Press the knob to choose an app and a playlist.</div></div>`;return}
     const pct=m.dur>0?Math.min(100,m.pos/m.dur*100):0;
     el.innerHTML=`<div class="frost"><div class="src"><i class="${m.playing?'':'p'}"></i>${esc(m.app||'Music')} · ${m.playing?'Playing':'Paused'}</div>
       <div class="mus">${art?`<img src="${art}" alt="">`:'<img alt="">'}<div style="min-width:0"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}</div><div class="al">${esc(m.album||'')}</div></div></div>
       ${m.dur>0?`<div><div class="prog"><b style="width:${pct.toFixed(1)}%"></b></div><div class="times"><span>${mmss(m.pos)}</span><span>${mmss(m.dur)}</span></div></div>`:''}
-      <div class="hint"><b style="color:var(--accent)">Press the knob</b> to pause, skip or choose a playlist</div></div>`;
+      <div class="hint"><b style="color:var(--hi)">Press the knob</b> to pause, skip or choose a playlist</div></div>`;
   }else if(p==='Call'){
     const d=menuData(),people=d.contacts.concat(d.recentCalls.filter(r=>!knows(d.contacts,r.number)).map(r=>Object.assign({note:'recent'},r))).slice(0,5);
     const rows=people.length?people.map(x=>`<div class="al-row" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><div class="al-t">${esc(x.name)}</div><div class="al-app">${(x.numbers||[]).length>1?x.numbers.length+' numbers':esc(x.note||'')}</div></div>`).join(''):
-      `<div style="color:#c3cfdb;font-size:20px">${d.canSeeContacts?'No favourites or recent calls yet. Press the knob for all contacts.':'Open the i3D app on your phone and finish the setup list to call from here.'}</div>`;
-    el.innerHTML=`<div class="frost"><h2>Call</h2><div class="al">${rows}</div><div class="hint"><b style="color:var(--accent)">Press the knob</b> to choose who to call</div></div>`;
+      `<div style="color:var(--soft);font-size:20px">${d.canSeeContacts?'No favourites or recent calls yet. Press the knob for all contacts.':'Open the i3D app on your phone and finish the setup list to call from here.'}</div>`;
+    el.innerHTML=`<div class="frost"><h2>Call</h2><div class="al">${rows}</div><div class="hint"><b style="color:var(--hi)">Press the knob</b> to choose who to call</div></div>`;
   }else if(p==='Alerts'){
     const n=D.notes||[];
     const rows=n.length?n.slice(0,5).map(x=>`<div class="al-row"><div class="al-app">${esc(x.app)} · ${new Date(x.when).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="al-t">${esc(x.title||x.text)}</div>${x.title&&x.text&&!moving()?`<div class="al-x">${esc(x.text)}</div>`:''}</div>`).join(''):
-      `<div style="color:#c3cfdb;font-size:20px">${D.notes===null||D.notes===undefined?'Open the i3D app on your phone and finish the setup list to see your alerts here.':'No new alerts.'}</div>`;
+      `<div style="color:var(--soft);font-size:20px">${D.notes===null||D.notes===undefined?'Open the i3D app on your phone and finish the setup list to see your alerts here.':'No new alerts.'}</div>`;
     el.innerHTML=`<div class="frost"><h2>Phone alerts</h2><div class="al">${rows}</div><div class="hint" style="font-size:15px">${moving()?'Message text is hidden while driving · press the knob to hear it':'Newest first · press the knob to hear or answer them'}</div></div>`;
   }else if(p==='Info'){
     const b=Math.floor(paint/4)%9,e=paint%4;
-    el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(10,14,19,0) 50%,rgba(10,14,19,1) 64%);justify-content:flex-end">
-      <h2>${PAINT_NAMES[b]}</h2><div style="color:#c3cfdb">${BELT_NAMES[e]} bonnet &amp; roof</div>
+    el.innerHTML=`<div class="frost" style="backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,transparent 50%,var(--bg) 64%);justify-content:flex-end">
+      <h2>${PAINT_NAMES[b]}</h2><div style="color:var(--soft)">${BELT_NAMES[e]} bonnet &amp; roof</div>
       <dl class="kv" style="font-size:20px;margin-top:4px"><dt>Energy left (est.)</dt><dd>${f(D.soc!=null?D.soc/100*USABLE_KWH:null,1)} of ${USABLE_KWH} kWh</dd><dt>Battery temperature</dt><dd>${D.batteryC!=null?f(temp(D.batteryC))+' '+tu():'--'}</dd><dt>12 V battery</dt><dd>${D.battery12v!=null?f(D.battery12v)+'%':'--'}</dd>${/^no /i.test(tyreInfo())?'':`<dt>Tyres (bar)</dt><dd style="font-size:17px">${esc(tyreInfo())}</dd>`}</dl>
-      <div class="hint" style="margin-top:6px;font-size:15px;color:#c3cfdb">Turn the knob to change colour · press for Home</div></div>`;
+      <div class="hint" style="margin-top:6px;font-size:15px;color:var(--soft)">Turn the knob to change the car colour · press for settings</div></div>`;
   }else el.innerHTML='';
 }
 const WX_SVG={
@@ -470,7 +487,7 @@ function drawCall(){
   H('#call',`<div style="display:flex;align-items:center;gap:16px"><div class="ci"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></div>
     <div><div class="cs">${c.ongoing?'On a call':'Incoming call'}</div>${c.ongoing?`<div class="cd num">${mmss(Math.max(0,Date.now()-c.since))}</div>`:''}</div></div>
     <div class="cn">${esc(who)}</div>${num?`<div class="cs">${esc(num)}</div>`:''}
-    <div class="cs" style="font-size:20px"><b style="color:var(--accent)">Press the knob</b> ${c.ongoing?'to hang up':'to answer or decline'}</div>`);
+    <div class="cs" style="font-size:20px"><b style="color:var(--hi)">Press the knob</b> ${c.ongoing?'to hang up':'to answer or decline'}</div>`);
 }
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function mmss(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -483,7 +500,7 @@ function drawNowPlaying(){
   const el=$('#np');if(el.hidden===show)el.hidden=!show;
   if(!show)return;
   const fresh=nowPlaying&&Date.now()-npSince<30000;
-  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--accent)">No sound? MEDIA › Bluetooth audio</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
+  H('#np',`${artUrl?`<img src="${artUrl}" alt="">`:'<img alt="">'}<div class="x"><div class="t">${esc(m.title)}</div><div class="a">${esc(m.artist||'')}${m.app?' · '+esc(m.app):''}</div>${fresh?`<div class="a" style="color:var(--hi)">No sound? MEDIA › Bluetooth audio</div>`:''}</div><span class="st">${m.playing?'▶':'❚❚'}</span>`);
 }
 /* ---------- the menu: press the knob, turn to choose, press to select ---------- */
 const MENU_ROWS=7,MENU_IDLE_MS=20000;
@@ -537,17 +554,18 @@ function sectionMenu(){
   if(p==='Music')musicMenu();else if(p==='Map')navMenu();else if(p==='Call')callMenu();
   else if(p==='Alerts'&&(D.notes||[]).length)alertsMenu();
   else if(p==='Chargers'&&chargers.length)chargersMenu();
-  else if(p==='Car'||p==='Info')carMenu();
+  else if(p==='Info')settingsMenu();
   else if(D.call){const it=start();it.push({label:'Close menu',act:closeMenu});openMenu(TITLES[p]||p,it,it.length-2)}
   else goHome();
 }
-function carMenu(){
-  const it=start(),back=it.length-1;
-  if(route)it.push({label:'Stop navigation',act(){stopNav();closeMenu()}});
-  it.push(PAGES[page]==='Info'?{label:'Car screen',act(){goPage('Car')}}:{label:'Car colour and info',act(){goPage('Info')}});
+// settings: how the screen looks, and the odd extras
+const THEMES=['auto','day','night'],THEME_NAMES={auto:'Automatic',day:'Day',night:'Night'};
+function settingsMenu(sel){
+  const it=start(),first=it.length,t=store.get('theme','auto');
+  it.push({label:'Display',note:THEME_NAMES[t],act(){store.set('theme',THEMES[(THEMES.indexOf(t)+1)%3]);mapTheme();settingsMenu(first)}});
   if(menuData(true).videos.length)it.push({label:'Video',more:1,note:'parked only',act:videoMenu});
   it.push({label:'Close menu',act:closeMenu});
-  openMenu('Car',it,back);
+  openMenu('Settings',it,sel==null?first:sel);
 }
 function navMenu(){
   const d=menuData(true),it=start(),first=it.length;
@@ -612,7 +630,7 @@ window.i3music=function(r){
   openMenu(r.top?'Music apps':menu.title,it,it.length>1?1:0);
 };
 function videoMenu(){
-  const it=[backTo(PAGES[page]==='Music'?musicMenu:carMenu)];
+  const it=[backTo(PAGES[page]==='Music'?musicMenu:settingsMenu)];
   menuData().videos.forEach(v=>it.push({label:v.title||'YouTube video',act(){
     const r=N.video(v.id||'',v.list||'');closeMenu();
     if(r==='moving')toast('Video only plays while parked');else if(r!=='sent')toast('Could not start the video')}}));
@@ -691,11 +709,12 @@ const ICON={
   Music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   Map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/>',
   Car:'<path d="M5 11l1.6-4.6A2 2 0 0 1 8.5 5h7a2 2 0 0 1 1.9 1.4L19 11M3 17v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4M6 17v2M18 17v2M3 17h18"/><circle cx="7" cy="14" r=".6"/><circle cx="17" cy="14" r=".6"/>',
+  Settings:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   Chargers:'<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/>',
   Journey:'<path d="M4 20h16M5 16l4.5-5.5 3.5 3L19 6M15 6h4v4"/>',
   Alerts:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/>'
 };
-const CARDS=['Navigate','Call','Music','Map','Car','Chargers','Journey','Alerts'];
+const CARDS=['Navigate','Call','Alerts','Music','Car','Journey','Chargers','Settings'];
 function cardLine(k){
   const m=D.media,c=D.call,n=(D.notes||[]).length;
   if(k==='Navigate')return route?'Route running · '+($('#eArr').textContent!=='--'?'arrive '+$('#eArr').textContent:'press to change'):'Places, chargers, addresses';
@@ -703,6 +722,7 @@ function cardLine(k){
   if(k==='Music')return m&&m.title?m.title:'Choose something to play';
   if(k==='Map')return 'The map on the whole screen';
   if(k==='Car')return (D.soc!=null?f(D.soc)+'% · ':'')+(D.rangeKm!=null?f(D.rangeKm)+(miles?' mi':' km'):'Range and trip');
+  if(k==='Settings')return 'Display, car colour';
   if(k==='Chargers'){const n=nearestCharger();return n?fmtD(n.d*1.25)+' · '+n.c.name:'Charging points nearby'}
   if(k==='Journey')return 'Trips and what they cost';
   return n?n+' new':'Nothing new';
@@ -716,10 +736,10 @@ function drawHome(){
   const n=(D.notes||[]).length,badge=k=>k==='Alerts'?n:k==='Call'?(D.missed||0):0;
   // while a route is running, the next turn stays in view above the cards
   H('#hometitle',route&&!$('#turn').hidden?`<b>${esc($('#turnD').textContent)}</b> · ${esc($('#turnI').textContent)} · arrive <b>${esc($('#eArr').textContent)}</b>`:'Turn the knob to choose · press to open');
-  H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${badge(k)?`<span class="cb">${badge(k)}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
+  H('#home',CARDS.map((k,i)=>`<div class="card${i===homeSel?' on':''}${i>3?' car':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${badge(k)?`<span class="cb">${badge(k)}</span>`:''}<div><div class="ct">${k}</div><div class="cx">${esc(cardLine(k))}</div></div></div>`).join(''));
 }
 function openCard(k){
-  home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k);showPage();
+  home=false;page=PAGES.indexOf(k==='Navigate'?'Map':k==='Settings'?'Info':k);showPage();
   if(D.call&&k==='Call')sectionMenu();else if(k==='Navigate')navMenu();else if(k==='Call')callMenu();else if(k==='Chargers'&&chargers.length)chargersMenu();else if(k==='Music'&&!(D.media&&D.media.title))musicMenu();
 }
 window.i3hidden=function(){closeMenu()};
@@ -770,7 +790,7 @@ function sunUp(lat,lon,ms){
   const ha=((18.697374558+24.06570982441908*d)*15+lon)*r-ra;
   return Math.asin(Math.sin(lat*r)*Math.sin(dec)+Math.cos(lat*r)*Math.cos(dec)*Math.cos(ha))/r>-4;
 }
-function wantDay(){if(dayBroken)return false;const p=pos||store.get('lastPos',DEFAULT);return sunUp(p[1],p[0],Date.now())}
+function wantDay(){if(dayBroken)return false;const t=store.get('theme','auto');if(t!=='auto')return t==='day';const p=pos||store.get('lastPos',DEFAULT);return sunUp(p[1],p[0],Date.now())}
 function mapTheme(){
   const day=wantDay();if(day===dayMap)return;
   dayMap=day;document.body.classList.toggle('daymap',day);log('map theme: '+(day?'day':'night'));
@@ -874,7 +894,7 @@ async function routeTo(lat,lon){
     $('#turn').hidden=false;$('#eta').hidden=false;navUpdate();
   }catch(e){log('route failed '+e.message);N.speak('Sorry, I could not find a route');}
 }
-window.i3navigate=(lat,lon,name)=>{home=false;page=0;showPage();routeTo(lat,lon);if(name)N.speak('Navigating to '+name)};
+window.i3navigate=(lat,lon,name)=>{home=false;page=PAGES.indexOf('Map');showPage();routeTo(lat,lon);if(name)N.speak('Navigating to '+name)};
 window.i3recalc=()=>{if(route)routeTo(route.dest[1],route.dest[0])};
 window.i3stopNav=()=>{route=null;routeGeo=null;$('#turn').hidden=true;$('#eta').hidden=true;map&&map.getSource('route')&&map.getSource('route').setData({type:'FeatureCollection',features:[]});flatRoute&&flatRoute.setLatLngs([]);placeCamera()};
 function project(p){

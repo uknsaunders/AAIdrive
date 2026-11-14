@@ -3,6 +3,14 @@
 Newest first. The app is built automatically and published as `i3-dash.apk` on the
 [`i3dash-latest` release](https://github.com/uknsaunders/idash/releases/tag/i3dash-latest), so the date below is when each change was made.
 
+## 14 November 2026, new layout and colours
+
+- **Home screen:** the top row is phone and media (Navigate, Call, Alerts, Music) and the bottom row is the car (Car, Journey, Chargers, Settings). The car row's icons are amber so the two rows are easy to tell apart.
+- **Navigate is the map:** the separate Map card has gone. Navigate opens the full-screen map, and it stays full screen after you choose a place.
+- **Day colours:** in daylight the whole screen is now light, white and silver with dark text and BMW blue, so it can be read in sunshine. At night it stays dark. It follows the sun, as the map already did.
+- **Settings:** a new card. Display can be Automatic, Day or Night. The car colour and the battery details live there too.
+- Tiles and list rows are squarer with a soft gradient, closer to the look of iDrive.
+
 ## 14 November 2026, after the Android Auto and CarPlay review
 
 First batch of changes from comparing i3D with Android Auto and Apple CarPlay. None of it has been tried in the car yet.

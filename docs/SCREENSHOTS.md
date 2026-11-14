@@ -39,10 +39,7 @@ Hang up is first.
 Each shows its name at the top and what the knob does there.
 
 ### Car
-![Car section](screenshots/car.png)
-
-### Car, by day
-![Car section by day](screenshots/car-day.png)
+![Car section](screenshots/car-day.png)
 
 ### Navigating
 Next turn, now-playing strip and arrival bar.
@@ -72,11 +69,13 @@ The nearest charging points. Press the knob to drive to one.
 ### Alerts
 ![Alerts section](screenshots/alerts.png)
 
-### Map
-![Map section](screenshots/map.png)
+### Settings
+Turn the knob to change the car colour. Press for the display setting.
+![Settings section](screenshots/colour.png)
 
-### Car colour
-![Colour section](screenshots/colour.png)
+### At night
+![Home at night](screenshots/home-night.png)
+![Car at night](screenshots/car.png)
 
 ## Finding it in the car (mockup)
 i3D in the car's ConnectedDrive list. Choosing it opens the dash directly.
